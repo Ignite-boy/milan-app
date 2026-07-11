@@ -1,146 +1,158 @@
-# MILAN App — V3 Engagement Engine
+# MILAN — Decentralized Social Space
 
-> **MILAN V3 — 500 Techniques Upgrade** | Your Space. Your People.
+> **Your Space. Your People.** — a privacy-first, decentralized social network where you own your data.
 
-## 🚀 What's New in V3 (500 Techniques Engagement System)
+🌐 **Live:** [https://milanlife.in](https://milanlife.in)
+📦 **Repository:** [github.com/Ignite-boy/milan-app](https://github.com/Ignite-boy/milan-app)
 
-### ✦ Avatar Jaadu (Techniques #1–100)
-- **Story-ring gradient border** around all profile avatars (rotating MILAN-gradient conic animation)
-- **Breathing neon border** on every avatar (pulse animation with brand colors)
-- **3D hover rotation** on profile pictures (CSS perspective transform on hover)
-- **Bouncy pop animation** on avatar upload/tap (spring physics keyframe)
-- **Mini confetti burst** on avatar long-press or tap (canvas particle system anchored to element)
-- **Neon drop-shadow glow** on chat thumbnail avatars
-- **Glassmorphism hover-card** on all profile cards
-
-### ✦ UI/UX Jaadu (Techniques #101–200)
-- **MILAN gradient** applied to empty states, CTA buttons, bottom nav active states
-- **Lottie-style logo animation** on brand logo (glow pulse)
-- **Dynamic dark mode neon accents** (text-shadow glow on headings in dark mode)
-- **120Hz smooth transitions** on all cards, posts, people rows
-- **Time-of-day background gradient** (dawn/morning/day/evening/night ambients)
-- **MILAN gradient bottom nav** active indicator
-
-### ✦ Gamification & Retention (Techniques #201–300)
-- **RPG Level Badge** (Lv.1–∞) shown in sidebar with level-up animation
-- **XP Bar** with animated MILAN gradient fill (200 XP per level)
-- **Daily Login Streak Calendar** (7-day grid, fire indicator for active days)
-- **Badge Wall** (8 badges: Hot Streak, Diamond, Explorer, Connected, Creator, Champion + locked)
-- **Mystery Reward Popup** (animated reveal modal with confetti on claim)
-- **Streak milestones** (confetti + reward at 3, 7, 14, 30, 60, 100 days)
-- **Milestone detection** at 10, 50, 100, 500, 1000, 5000 connections
-- **"You're on a roll!"** ambient encouragement toast every 5 actions
-- **Exclusive Avatar Frames** (gold conic, diamond rainbow CSS frames)
-- **Animated Leaderboard** rows with rank styling (🥇🥈🥉)
-
-### ✦ Advanced AI & Personalization (Techniques #301–400)
-- **AI Chips** on composer: Smart Caption, Style Filter, Best Time to Post, Auto-Translate, Target Audience
-- **Typing indicator** component (`milanShowTyping()`) for comments/chat
-
-### ✦ Frontend & Backend Architecture (Techniques #401–500)
-- **Live indicator badge** in feed header (WebSocket-style green dot)
-- **V3 Backend XP routes**: `GET /api/v3/xp/:userId`, `POST /api/v3/xp/:userId/award`
-- **V3 Streak routes**: `POST /api/v3/streak/:userId` (tracks streak server-side)
-- **V3 Badge routes**: `GET /api/v3/badges/:userId`
-- **V3 Leaderboard**: `GET /api/v3/leaderboard` (top 10 by XP)
-- **Haptic feedback** on all primary button interactions (`navigator.vibrate`)
+MILAN is a no-ads, no-tracking social platform built on decentralized identity. Every user gets
+their own isolated data space backed by a Decentralized Web Node (DWN) and a Decentralized
+Identifier (DID) — so posts, media, and connections stay under the owner's control instead of a
+central database.
 
 ---
 
-# MILAN App - One User, One Isolated DWN
+## Core idea
 
-This build implements the required MILAN architecture:
+> **One User = One DID = One Isolated DWN Space**
 
-> One User = One DID = One Isolated DWN Space
+On registration each user is provisioned a unique DID and a private storage root. Records and media
+are written into that user's own isolated space. Another user can only read a record when the owner
+explicitly makes it `public` or shares it with that user's DID.
 
-Every user gets a separate DWN endpoint identity and a separate storage root under `backend/dwn-data/isolated-users/`. User records and media are written into that user's own isolated storage directory. Other users can only read records when the owner explicitly shares the record with their DID.
+Access modes for every post:
 
-## What is included
+- **private** — visible only to the owner
+- **public** — visible in the public feed
+- **shared_did** — visible only to specific DIDs the owner grants
 
-- MILAN web app and backend.
-- Per-user isolated DWN provisioning on registration/login.
-- DID-based user identity.
-- Owner-only default storage policy.
-- `private`, `public`, and `shared_did` access modes.
-- Explicit DID sharing and access request approval.
-- Reels-style media viewing and streaming uploads.
-- Docker local DID-DHT gateway files included in the complete stack.
-- DWN CLI installer included and patched to use local DID-DHT gateway.
+---
 
-## Run MILAN App
+## Features
 
-```cmd
-cd milan-app\backend
+- **Decentralized identity** — DID + per-user isolated DWN storage (`@web5/dids`, `dwn-sdk-js`)
+- **Social layer** — home / public / friends / my-posts feeds, DID-based friend requests,
+  reactions, comments, notifications, saved posts, profile editing
+- **Media posts** — image / video / audio / text with streaming uploads and reels-style playback
+- **MILAN Music** — free music search + player (Audius + YouTube) with real **background audio**
+  that keeps playing when the app is minimized or the screen is locked
+- **Live updates** — instant notification push over Server-Sent Events (`/api/events`) and
+  WebSocket (`/ws`), so the app refreshes without heavy polling
+- **PWA** — installable app with a service worker, offline fallback, and a mobile-optimized UI
+- **Fast, seamless login** — the home feed opens instantly from a warm cache, then refreshes in
+  the background (no login-screen flash)
+- **Gamification (V3)** — XP, levels, streaks, badges, and a leaderboard
+  (`/api/v3/xp`, `/api/v3/streak`, `/api/v3/badges`, `/api/v3/leaderboard`)
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Node.js 18+ (tested on v22) |
+| Server | Express, `compression`, single-process (pm2 **fork** mode) |
+| Auth | JWT (`jsonwebtoken`) + bcrypt (`bcryptjs`, run in `worker_threads`) |
+| Identity / storage | `@tbd54566975/dwn-sdk-js`, `@web5/dids`, `@web5/crypto` |
+| Realtime | Server-Sent Events + WebSocket (`ws`) |
+| Media | `ffmpeg-static`, `ffprobe-static`, `yt-dlp` (audio proxy) |
+| Email | `nodemailer` |
+| Frontend | Vanilla HTML/CSS/JS PWA (served statically by the backend) |
+
+---
+
+## Getting started
+
+```bash
+# 1. Clone
+git clone https://github.com/Ignite-boy/milan-app.git
+cd milan-app/backend
+
+# 2. Install dependencies
 npm install
+
+# 3. Configure environment (see below), then start
 npm start
 ```
 
-Open:
+Open **http://localhost:5000**
 
-```txt
-http://localhost:5000
+### Environment variables
+
+Copy `backend/.env.example` to `backend/.env` and fill in your values. Key settings:
+
+| Variable | Purpose |
+|----------|---------|
+| `JWT_SECRET` | **Required in production** — long random string used to sign sessions |
+| `YOUTUBE_API_KEY` | Optional — enables the YouTube Data API for music search (keyless fallbacks work without it) |
+| `RESEND_API_KEY`, `MAIL_*` | Email delivery (verification, login alerts) |
+| `ADMIN_TOKEN` | Guards admin endpoints |
+
+> `.env`, user data (`backend/dwn/`, `backend/real-dwn-engine/`), and `node_modules/` are
+> git-ignored and must never be committed.
+
+### Audio streaming dependency
+
+Background music streaming uses `yt-dlp` at `backend/bin/yt-dlp` (not tracked in git). On a fresh
+clone, install it once:
+
+```bash
+mkdir -p backend/bin
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o backend/bin/yt-dlp
+chmod +x backend/bin/yt-dlp
 ```
 
-## Per-user isolated DWN model
+---
 
-For every registered user, the backend creates:
+## Project structure
 
-```txt
-backend/dwn-data/isolated-users/<spaceId>/manifest.json
-backend/dwn-data/isolated-users/<spaceId>/records/
-backend/dwn-data/isolated-users/<spaceId>/media/
-backend/dwn-data/isolated-users/<spaceId>/audit/
+```
+milan-app/
+├── backend/            Express server + APIs + data stores
+│   ├── server.js       App entry (port 5000; serves frontend/ statically)
+│   ├── routes/         auth, social, connections, music, profile, settings, …
+│   ├── services/       livePush (SSE/WS), cryptoPool (worker bcrypt), DWN registry
+│   ├── dwn/            Per-user isolated DWN spaces + JSON stores  (git-ignored)
+│   └── real-dwn-engine/ Per-user real DWN nodes                    (git-ignored)
+├── frontend/           PWA — app.html, music.html, service worker, assets
+├── docs/               Design, SEO, and release documentation
+├── scripts/            Release / deploy tooling
+└── deploy.sh           Server-side deploy script
 ```
 
-The DID document exposes the user's own DWN service endpoint.
+---
 
-## Start local DID-DHT Gateway
+## Deployment
 
-From the complete stack root:
+The production instance runs under **pm2 in fork mode** (single process):
 
-```cmd
-start-did-dht-gateway.bat
+```bash
+cd backend
+NODE_ENV=production pm2 start ecosystem.config.js
+pm2 save
 ```
 
-Keep the gateway window open while creating `did:dht` identifiers.
+> ⚠️ **Never run pm2 cluster mode.** MILAN's JSON stores and the embedded LevelDB lock to a single
+> process — multiple workers would corrupt data. To scale horizontally, move shared state to
+> Redis/Postgres first.
 
-## Create DID through DWN CLI
+The backend serves the frontend directly, so a frontend change is live immediately (no build step);
+versioned assets use `?v=` cache-busters.
 
-```cmd
-cd dwn-cli-installer\dwn-cli-sample
-node .\bin\run.js create-did --password "YourStrongPasswordHere"
-```
+---
 
-## Stop Docker after work
+## API overview
 
-```cmd
-stop-docker-after-work.bat
-```
+Grouped under `/api`:
 
-## Production notes
+`auth` · `social` · `connections` · `requests` · `profile` · `settings` · `records` ·
+`music` · `did` · `crypto` · `protocols` · `isolated-dwn` · `cloud-dwn` · `activity` ·
+`security` · `admin` · `ai` · `backup` · `v3` (xp / streak / badges / leaderboard)
 
-For production, move isolated DWN spaces from local folders into managed isolated containers/VPS instances per user or per tenant. The app is now structured around the isolation model, so the storage backend can be upgraded without changing the frontend permission logic.
+Realtime: `GET /api/events` (SSE) and `GET /ws?token=…` (WebSocket).
 
+---
 
-## MILAN Social Boom Upgrade
+## License
 
-This build adds a Milan-style social layer while keeping the original privacy promise:
-
-- Home feed, public feed, friends feed, and my posts.
-- People discovery and DID-based friend requests.
-- Reactions, comments, notifications, and profile editing.
-- Image/video/text posts with privacy modes: private, public, shared DID.
-- Every record remains stored under the owner's isolated DWN-backed space.
-- Other users only see a record if its owner selected public or granted DID-level permission.
-
-Run order:
-1. start-docker-engine.bat
-2. start-did-dht-gateway.bat
-3. start-milan-app.bat
-4. Open http://localhost:5000
-
-Recommended quick test:
-1. Register User A and create a private post.
-2. Register User B and confirm User A private post is hidden.
-3. User A creates public post and confirm it appears in public feed.
-4. User A shares a private post with User B DID and confirm only User B can see it.
+See [LICENSE](LICENSE).
