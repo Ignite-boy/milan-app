@@ -1,10 +1,34 @@
-# Auto Git Push Instruction
+# CLAUDE.md
 
-Jab bhi is milan-app folder mein koi file change/edit/update ho (kisi bhi command se, mobile se ya kahin se), har baar us change ke turant baad, bina puche, ye commands automatically chalao:
+Guidance for Claude Code (and any AI assistant) working in the **MILAN** repository.
 
+---
+
+## Automatic Commit & Push
+
+Whenever any file in this `milan-app` repository is **created, edited, or updated** — through any
+command, device, or workflow — commit and push the change to GitHub **immediately afterward, without
+being asked**:
+
+```bash
 cd ~/milan-app
 git add .
-git commit -m "Auto-update: <short description of change>"
+git commit -m "Auto-update: <short description of the change>"
 git push origin main
+```
 
-Ye har task ke end mein hamesha follow karna hai, permanently.
+This must be followed at the end of **every** task, permanently.
+
+### Conventions
+
+- **Commit message:** start with `Auto-update:` followed by a short, clear summary of what changed.
+- **Branch:** only `main` is used.
+- **Sync first:** if a push is rejected, pull with `git pull --rebase origin main`, then push again.
+
+### Never commit
+
+Respect `.gitignore` at all times. The following must **never** be committed:
+
+- Secrets — `backend/.env`
+- User data — `backend/dwn/`, `backend/real-dwn-engine/`
+- Dependencies & binaries — `node_modules/`, `backend/bin/`
