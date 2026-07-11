@@ -1,0 +1,35 @@
+# ── GitHub Linguist language detection ─────────────────────────────────────
+# MILAN is a JavaScript / Node.js full-stack app. GitHub's language bar counts
+# raw bytes, so the large SEO / marketing / legal CONTENT pages (not code) were
+# inflating "HTML". These are marked as documentation so the language bar
+# reflects what the project is actually built in.
+
+# SEO & marketing landing pages (content, not application code)
+frontend/keywords.html              linguist-documentation
+frontend/decentralized-social-media.html linguist-documentation
+frontend/private-social-network.html linguist-documentation
+frontend/best-social-media-apps.html linguist-documentation
+frontend/what-is-web5.html          linguist-documentation
+frontend/social-media-privacy.html  linguist-documentation
+frontend/about.html                 linguist-documentation
+frontend/launch.html                linguist-documentation
+frontend/city/*.html                linguist-documentation
+
+# Legal / policy pages (content)
+frontend/privacy.html               linguist-documentation
+frontend/terms.html                 linguist-documentation
+frontend/disclaimer.html            linguist-documentation
+frontend/cookie-policy.html         linguist-documentation
+
+# Transactional / utility pages (content shells)
+frontend/verify-email.html          linguist-documentation
+frontend/reset-password.html        linguist-documentation
+frontend/offline.html               linguist-documentation
+frontend/404.html                   linguist-documentation
+
+# Documentation & data folders
+docs/**                             linguist-documentation
+frontend/keywords.json              linguist-generated
+frontend/*.xml                      linguist-generated
+frontend/llms.txt                   linguist-generated
+frontend/robots.txt                 linguist-generated
