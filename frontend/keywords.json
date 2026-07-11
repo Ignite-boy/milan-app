@@ -3,12 +3,12 @@
  "url": "https://milanlife.in",
  "description": "Full keyword / topic index for MILAN — a privacy-first decentralized social media platform (DWN + DID) founded by Nitesh Pandey.",
  "updatedAt": "2026-06-27T00:00:00.000000Z",
- "totalKeywords": 5033,
+ "totalKeywords": 5034,
  "clusters": [
   {
    "id": "milan-featured",
    "title": "Featured MILAN Topics",
-   "count": 33,
+   "count": 34,
    "keywords": [
     "MILAN",
     "Milan App",
@@ -42,7 +42,8 @@
     "information security social media",
     "social media that never sells your data",
     "digital society",
-    "digital social media"
+    "digital social media",
+    "India Social media"
    ]
   },
   {
