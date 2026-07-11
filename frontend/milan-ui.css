@@ -1,12 +1,12 @@
 /* ============================================================
-   MILAN V7.2 — UI overhaul to match the approved mockup.
-   Authoritative layer. Scoped under html.milan-v72 and loaded LAST
+   MILAN — UI overhaul to match the approved mockup.
+   Authoritative layer. Scoped under html.milan-shell and loaded LAST
    so it wins the cascade over every earlier theme (Krishna, V2, V4,
    premium-sober, premium-ui). Presentation only — no logic touched.
    ============================================================ */
 
-html.milan-v72,
-html.milan-v72 body {
+html.milan-shell,
+html.milan-shell body {
   --v72-bg:        #0b1220;
   --v72-bg-2:      #0d1526;
   --v72-panel:     #131c2e;
@@ -25,30 +25,30 @@ html.milan-v72 body {
 }
 
 /* ---- base canvas ---- */
-html.milan-v72 body {
+html.milan-shell body {
   background: var(--v72-bg) !important;
   color: var(--v72-text) !important;
   font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif !important;
   letter-spacing: -.005em;
 }
-html.milan-v72 body.dark { background: var(--v72-bg) !important; }
-html.milan-v72 body::after,
-html.milan-v72 body::before { display: none !important; content: none !important; }
+html.milan-shell body.dark { background: var(--v72-bg) !important; }
+html.milan-shell body::after,
+html.milan-shell body::before { display: none !important; content: none !important; }
 
 /* kill leftover decorative animation layers from older themes */
-html.milan-v72 .heroStar,
-html.milan-v72 #milan-confetti-canvas,
-html.milan-v72 .milan-aurora-bar::before { display: none !important; }
+html.milan-shell .heroStar,
+html.milan-shell #milan-confetti-canvas,
+html.milan-shell .milan-aurora-bar::before { display: none !important; }
 
 /* ---- TOP BAR ---- */
-html.milan-v72 .topbar {
+html.milan-shell .topbar {
   background: var(--v72-bg-2) !important;
   border-bottom: 1px solid var(--v72-line) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   position: sticky; top: 0; z-index: 60;
 }
-html.milan-v72 .topinner {
+html.milan-shell .topinner {
   max-width: 1640px !important;
   margin: auto !important;
   display: grid !important;
@@ -57,8 +57,8 @@ html.milan-v72 .topinner {
   gap: 20px !important;
   padding: 14px 26px !important;
 }
-html.milan-v72 .brand { display: flex; align-items: center; gap: 12px; }
-html.milan-v72 .brand img {
+html.milan-shell .brand { display: flex; align-items: center; gap: 12px; }
+html.milan-shell .brand img {
   height: 46px !important; width: 46px !important;
   border-radius: 12px !important;
   background: transparent !important;
@@ -66,7 +66,7 @@ html.milan-v72 .brand img {
   padding: 0 !important;
   animation: none !important;
 }
-html.milan-v72 .brand h1 {
+html.milan-shell .brand h1 {
   font-size: 30px !important;
   font-weight: 900 !important;
   letter-spacing: .14em !important;
@@ -75,7 +75,7 @@ html.milan-v72 .brand h1 {
   color: transparent !important;
   margin: 0 !important;
 }
-html.milan-v72 .brand .tag {
+html.milan-shell .brand .tag {
   display: block !important;
   color: var(--v72-muted) !important;
   font-size: 12px !important; font-weight: 600 !important;
@@ -83,13 +83,13 @@ html.milan-v72 .brand .tag {
 }
 
 /* search in the centre */
-html.milan-v72 .search {
+html.milan-shell .search {
   display: grid !important;
   grid-template-columns: 1fr !important;
   position: relative;
 }
-html.milan-v72 .search select { display: none !important; } /* moved into Filters */
-html.milan-v72 #globalSearch {
+html.milan-shell .search select { display: none !important; } /* moved into Filters */
+html.milan-shell #globalSearch {
   height: 46px !important;
   border-radius: 999px !important;
   background: var(--v72-panel) !important;
@@ -98,21 +98,21 @@ html.milan-v72 #globalSearch {
   padding: 0 18px 0 44px !important;
   font-size: 14px !important;
 }
-html.milan-v72 .search::before {
+html.milan-shell .search::before {
   content: "🔍";
   position: absolute; left: 16px; top: 50%;
   transform: translateY(-50%);
   font-size: 14px; opacity: .5; pointer-events: none; z-index: 2;
 }
-html.milan-v72 #globalSearch::placeholder { color: var(--v72-faint) !important; }
+html.milan-shell #globalSearch::placeholder { color: var(--v72-faint) !important; }
 
 /* top action cluster */
-html.milan-v72 .topActions {
+html.milan-shell .topActions {
   display: flex !important; align-items: center !important;
   justify-content: flex-end !important; gap: 10px !important;
   flex-wrap: nowrap !important;
 }
-html.milan-v72 .topActions button {
+html.milan-shell .topActions button {
   height: 42px !important;
   border-radius: 12px !important;
   background: var(--v72-panel) !important;
@@ -123,46 +123,46 @@ html.milan-v72 .topActions button {
   padding: 0 16px !important;
   display: inline-flex; align-items: center; gap: 8px;
 }
-html.milan-v72 .topActions button:hover {
+html.milan-shell .topActions button:hover {
   background: var(--v72-panel-2) !important;
   border-color: var(--v72-line-2) !important;
   transform: none !important; filter: none !important;
 }
-html.milan-v72 .topActions .danger { background: var(--v72-panel) !important; color: #f87171 !important; }
+html.milan-shell .topActions .danger { background: var(--v72-panel) !important; color: #f87171 !important; }
 
 /* the stacked status pills (Cloud DWN / AI / DWN) live in .navlinks slot */
-html.milan-v72 .navlinks {
+html.milan-shell .navlinks {
   display: flex !important; flex-direction: column !important;
   align-items: flex-start !important; gap: 3px !important;
   margin-left: 4px;
 }
-html.milan-v72 .navlinks a {
+html.milan-shell .navlinks a {
   display: none !important; /* old text links hidden; status injected by JS */
 }
-html.milan-v72 #milan-v72-status {
+html.milan-shell #milan-shell-status {
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12.5px; font-weight: 700; white-space: nowrap;
 }
-html.milan-v72 #milan-v72-status .st { display: flex; align-items: center; gap: 7px; color: var(--v72-muted); }
-html.milan-v72 #milan-v72-status .dot {
+html.milan-shell #milan-shell-status .st { display: flex; align-items: center; gap: 7px; color: var(--v72-muted); }
+html.milan-shell #milan-shell-status .dot {
   width: 8px; height: 8px; border-radius: 50%; background: var(--v72-green);
   box-shadow: 0 0 8px rgba(34,197,94,.5);
 }
-html.milan-v72 #milan-v72-status .ok { color: var(--v72-green); }
+html.milan-shell #milan-shell-status .ok { color: var(--v72-green); }
 
 /* avatar + dropdown trigger */
-html.milan-v72 #milan-v72-userbtn {
+html.milan-shell #milan-shell-userbtn {
   display: inline-flex; align-items: center; gap: 6px;
   height: 42px; padding: 0 8px 0 4px;
   border-radius: 12px; background: var(--v72-panel);
   border: 1px solid var(--v72-line); cursor: pointer; color: var(--v72-text);
 }
-html.milan-v72 #milan-v72-userbtn .av {
+html.milan-shell #milan-shell-userbtn .av {
   width: 32px; height: 32px; border-radius: 9px;
   display: grid; place-items: center; font-weight: 900; font-size: 13px; color: #fff;
   background: linear-gradient(135deg,#3b82f6,#7c3aed);
 }
-html.milan-v72 #milan-v72-menu {
+html.milan-shell #milan-shell-menu {
   position: absolute; top: 70px; right: 26px; z-index: 200;
   min-width: 220px; padding: 8px;
   background: var(--v72-panel) !important;
@@ -170,30 +170,30 @@ html.milan-v72 #milan-v72-menu {
   border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.5);
   display: none; flex-direction: column; gap: 2px;
 }
-html.milan-v72 #milan-v72-menu.open { display: flex; }
-html.milan-v72 #milan-v72-menu button {
+html.milan-shell #milan-shell-menu.open { display: flex; }
+html.milan-shell #milan-shell-menu button {
   width: 100%; text-align: left; background: transparent !important;
   border: 0 !important; color: var(--v72-text) !important;
   padding: 11px 12px !important; border-radius: 10px !important;
   font-weight: 600 !important; display: flex; align-items: center; gap: 10px;
   box-shadow: none !important; height: auto !important;
 }
-html.milan-v72 #milan-v72-menu button:hover { background: var(--v72-panel-2) !important; }
-html.milan-v72 #milan-v72-menu .sep { height: 1px; background: var(--v72-line); margin: 4px 6px; }
+html.milan-shell #milan-shell-menu button:hover { background: var(--v72-panel-2) !important; }
+html.milan-shell #milan-shell-menu .sep { height: 1px; background: var(--v72-line); margin: 4px 6px; }
 
 /* ---- 3-COLUMN LAYOUT ---- */
-html.milan-v72 .layout {
+html.milan-shell .layout {
   max-width: 1640px !important;
   grid-template-columns: 300px minmax(440px,1fr) 360px !important;
   gap: 22px !important;
   padding: 22px 26px !important;
 }
-html.milan-v72 .card,
-html.milan-v72 .composer,
-html.milan-v72 .post,
-html.milan-v72 .rightBox,
-html.milan-v72 .profileCard,
-html.milan-v72 .quickCard {
+html.milan-shell .card,
+html.milan-shell .composer,
+html.milan-shell .post,
+html.milan-shell .rightBox,
+html.milan-shell .profileCard,
+html.milan-shell .quickCard {
   background: var(--v72-panel) !important;
   border: 1px solid var(--v72-line) !important;
   border-radius: var(--v72-radius-lg) !important;
@@ -202,9 +202,9 @@ html.milan-v72 .quickCard {
 }
 
 /* ---- LEFT SIDEBAR ---- */
-html.milan-v72 .leftRail .profileCard { text-align: center; padding: 24px 18px !important; }
-html.milan-v72 .profileRow { flex-direction: column !important; align-items: center !important; gap: 10px !important; }
-html.milan-v72 .avatar.lg {
+html.milan-shell .leftRail .profileCard { text-align: center; padding: 24px 18px !important; }
+html.milan-shell .profileRow { flex-direction: column !important; align-items: center !important; gap: 10px !important; }
+html.milan-shell .avatar.lg {
   width: 96px !important; height: 96px !important; border-radius: 999px !important;
   font-size: 34px !important;
   background: var(--v72-elev) !important;
@@ -213,21 +213,21 @@ html.milan-v72 .avatar.lg {
   color: var(--v72-text) !important;
   position: relative;
 }
-html.milan-v72 .profileCard b, html.milan-v72 #myName { font-size: 19px !important; font-weight: 800 !important; }
-html.milan-v72 #myEmail { color: var(--v72-muted) !important; font-size: 13px !important; }
-html.milan-v72 .did { display: none !important; } /* DID hidden in this clean look */
-html.milan-v72 .profileCard .mini a,
-html.milan-v72 #milan-v72-viewprofile {
+html.milan-shell .profileCard b, html.milan-shell #myName { font-size: 19px !important; font-weight: 800 !important; }
+html.milan-shell #myEmail { color: var(--v72-muted) !important; font-size: 13px !important; }
+html.milan-shell .did { display: none !important; } /* DID hidden in this clean look */
+html.milan-shell .profileCard .mini a,
+html.milan-shell #milan-shell-viewprofile {
   color: var(--v72-blue) !important; font-weight: 700; font-size: 13px; text-decoration: none;
 }
 
 /* nav menu list */
-html.milan-v72 .menu {
+html.milan-shell .menu {
   padding: 10px !important; margin-top: 14px;
   display: flex !important; flex-direction: column !important; gap: 4px !important;
   grid-template-columns: none !important;
 }
-html.milan-v72 .menu button {
+html.milan-shell .menu button {
   width: 100% !important; justify-content: flex-start !important; text-align: left !important;
   background: transparent !important; color: var(--v72-muted) !important;
   border-radius: 12px !important; padding: 13px 16px !important;
@@ -235,148 +235,148 @@ html.milan-v72 .menu button {
   margin: 0 !important; box-shadow: none !important; min-height: 0 !important;
   display: flex; align-items: center; gap: 14px;
 }
-html.milan-v72 .menu button:hover { background: var(--v72-panel-2) !important; color: var(--v72-text) !important; }
-html.milan-v72 .menu button.active {
+html.milan-shell .menu button:hover { background: var(--v72-panel-2) !important; color: var(--v72-text) !important; }
+html.milan-shell .menu button.active {
   background: var(--v72-panel-2) !important; color: var(--v72-text) !important;
   border-left: 3px solid var(--v72-blue) !important;
 }
 
 /* System Status card (built from .stats) */
-html.milan-v72 #milan-v72-sysstatus {
+html.milan-shell #milan-shell-sysstatus {
   margin-top: 14px; padding: 18px;
   background: var(--v72-panel) !important; border: 1px solid var(--v72-line);
   border-radius: var(--v72-radius-lg);
 }
-html.milan-v72 #milan-v72-sysstatus h4 {
+html.milan-shell #milan-shell-sysstatus h4 {
   margin: 0 0 12px; font-size: 16px; font-weight: 800; color: var(--v72-text);
 }
-html.milan-v72 #milan-v72-sysstatus .row {
+html.milan-shell #milan-shell-sysstatus .row {
   display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px;
 }
-html.milan-v72 #milan-v72-sysstatus .row span { color: var(--v72-muted); }
-html.milan-v72 #milan-v72-sysstatus .row b { color: var(--v72-text); font-weight: 800; }
-html.milan-v72 .stats { display: none !important; } /* original 2x2 stat grid hidden, replaced */
+html.milan-shell #milan-shell-sysstatus .row span { color: var(--v72-muted); }
+html.milan-shell #milan-shell-sysstatus .row b { color: var(--v72-text); font-weight: 800; }
+html.milan-shell .stats { display: none !important; } /* original 2x2 stat grid hidden, replaced */
 
 /* ---- COMPOSER (Create Post) ---- */
-html.milan-v72 .composer { padding: 22px !important; }
-html.milan-v72 .composerHead { display: block !important; }
-html.milan-v72 #composerAvatar { display: none !important; }
-html.milan-v72 .composer::before {
+html.milan-shell .composer { padding: 22px !important; }
+html.milan-shell .composerHead { display: block !important; }
+html.milan-shell #composerAvatar { display: none !important; }
+html.milan-shell .composer::before {
   content: "Create Post"; display: block;
   font-size: 22px; font-weight: 800; margin-bottom: 16px; color: var(--v72-text);
 }
-html.milan-v72 #postTitle, html.milan-v72 #postText {
+html.milan-shell #postTitle, html.milan-shell #postText {
   background: var(--v72-bg-2) !important;
   border: 1px solid var(--v72-line) !important;
   border-radius: 14px !important; color: var(--v72-text) !important;
 }
-html.milan-v72 #postTitle { height: 52px !important; font-size: 16px !important; margin-bottom: 12px; }
-html.milan-v72 #postText { min-height: 150px !important; font-size: 15px !important; }
-html.milan-v72 #postTitle::placeholder, html.milan-v72 #postText::placeholder { color: var(--v72-faint) !important; }
+html.milan-shell #postTitle { height: 52px !important; font-size: 16px !important; margin-bottom: 12px; }
+html.milan-shell #postText { min-height: 150px !important; font-size: 15px !important; }
+html.milan-shell #postTitle::placeholder, html.milan-shell #postText::placeholder { color: var(--v72-faint) !important; }
 
-html.milan-v72 #publishBtn {
+html.milan-shell #publishBtn {
   width: 100% !important; height: 52px !important; margin-top: 6px !important;
   border-radius: 14px !important;
   background: var(--v72-panel-2) !important; color: var(--v72-muted) !important;
   border: 1px solid var(--v72-line) !important; font-size: 16px !important; font-weight: 800 !important;
   box-shadow: none !important;
 }
-html.milan-v72 #publishBtn:hover { background: var(--v72-elev) !important; color: var(--v72-text) !important; }
+html.milan-shell #publishBtn:hover { background: var(--v72-elev) !important; color: var(--v72-text) !important; }
 
 /* Photo/Video button (the modern-upload dropzone trigger / file row) */
-html.milan-v72 .milan-mu-trigger, html.milan-v72 label[for="mediaFile"] {
+html.milan-shell .milan-mu-trigger, html.milan-shell label[for="mediaFile"] {
   background: var(--v72-blue) !important; color: #fff !important;
   border-radius: 12px !important; font-weight: 800 !important;
 }
-html.milan-v72 #privacy {
+html.milan-shell #privacy {
   background: var(--v72-bg-2) !important; border: 1px solid var(--v72-line) !important;
   color: var(--v72-text) !important; border-radius: 12px !important; height: 46px !important;
 }
 
 /* ---- AI ASSISTANT inline panel ---- */
-html.milan-v72 #milan-ai-assist, html.milan-v72 .milan-ai-panel {
+html.milan-shell #milan-ai-assist, html.milan-shell .milan-ai-panel {
   background: var(--v72-bg-2) !important;
   border: 1px solid var(--v72-line) !important;
   border-radius: 16px !important;
 }
-html.milan-v72 .milan-ai-chip,
-html.milan-v72 .milan-ai-btn {
+html.milan-shell .milan-ai-chip,
+html.milan-shell .milan-ai-btn {
   background: var(--v72-panel-2) !important;
   border: 1px solid var(--v72-line) !important;
   color: var(--v72-text) !important; border-radius: 12px !important;
 }
 
 /* ---- RIGHT RAIL ---- */
-html.milan-v72 .rightBox { padding: 20px !important; }
-html.milan-v72 .sectionTitle { font-size: 18px !important; font-weight: 800 !important; margin-bottom: 14px !important; }
-html.milan-v72 #peopleSearch {
+html.milan-shell .rightBox { padding: 20px !important; }
+html.milan-shell .sectionTitle { font-size: 18px !important; font-weight: 800 !important; margin-bottom: 14px !important; }
+html.milan-shell #peopleSearch {
   background: var(--v72-bg-2) !important; border: 1px solid var(--v72-line) !important;
   border-radius: 999px !important; height: 44px !important; color: var(--v72-text) !important;
 }
-html.milan-v72 .person {
+html.milan-shell .person {
   background: transparent !important; border: 0 !important;
   border-bottom: 1px solid var(--v72-line) !important; border-radius: 0 !important;
   padding: 12px 2px !important;
 }
-html.milan-v72 .person:last-child { border-bottom: 0 !important; }
-html.milan-v72 .personDid { display: none !important; }
-html.milan-v72 .avatar {
+html.milan-shell .person:last-child { border-bottom: 0 !important; }
+html.milan-shell .personDid { display: none !important; }
+html.milan-shell .avatar {
   border-radius: 999px !important;
   background: linear-gradient(135deg,#3b82f6,#7c3aed) !important;
 }
-html.milan-v72 .notifList .bubble, html.milan-v72 .bubble {
+html.milan-shell .notifList .bubble, html.milan-shell .bubble {
   background: transparent !important; border: 0 !important;
   border-bottom: 1px solid var(--v72-line) !important; border-radius: 0 !important;
   padding: 12px 2px !important;
 }
-html.milan-v72 #markReadBtn {
+html.milan-shell #markReadBtn {
   width: 100% !important; margin-top: 10px !important;
   background: var(--v72-panel-2) !important; border: 1px solid var(--v72-line) !important;
   color: var(--v72-text) !important; border-radius: 12px !important; font-weight: 800 !important;
 }
 
 /* ---- FEED POSTS ---- */
-html.milan-v72 .post { overflow: hidden !important; }
-html.milan-v72 .postHead { padding: 18px 18px 8px !important; }
-html.milan-v72 .postTitle { font-size: 17px !important; font-weight: 800 !important; }
-html.milan-v72 .reactionBar {
+html.milan-shell .post { overflow: hidden !important; }
+html.milan-shell .postHead { padding: 18px 18px 8px !important; }
+html.milan-shell .postTitle { font-size: 17px !important; font-weight: 800 !important; }
+html.milan-shell .reactionBar {
   display: flex !important; gap: 4px !important; padding: 6px 12px 12px !important;
   border-top: 1px solid var(--v72-line) !important;
 }
-html.milan-v72 .reactionBar button {
+html.milan-shell .reactionBar button {
   flex: 1; background: transparent !important; color: var(--v72-muted) !important;
   border-radius: 12px !important; font-weight: 700 !important;
 }
-html.milan-v72 .reactionBar button:hover,
-html.milan-v72 .reactionBar button.active {
+html.milan-shell .reactionBar button:hover,
+html.milan-shell .reactionBar button.active {
   background: var(--v72-panel-2) !important; color: var(--v72-text) !important;
 }
-html.milan-v72 .media { border-radius: 14px !important; margin: 0 16px 12px !important; background:#05070d !important; }
-html.milan-v72 .badge {
+html.milan-shell .media { border-radius: 14px !important; margin: 0 16px 12px !important; background:#05070d !important; }
+html.milan-shell .badge {
   background: var(--v72-panel-2) !important; border: 1px solid var(--v72-line) !important;
   color: var(--v72-muted) !important;
 }
 
 /* health pill in topbar */
-html.milan-v72 .health { display: none !important; } /* replaced by status stack */
+html.milan-shell .health { display: none !important; } /* replaced by status stack */
 
 /* scrollbar */
-html.milan-v72 ::-webkit-scrollbar { width: 8px; height: 8px; }
-html.milan-v72 ::-webkit-scrollbar-thumb { background: var(--v72-line-2); border-radius: 99px; }
-html.milan-v72 ::-webkit-scrollbar-track { background: transparent; }
+html.milan-shell ::-webkit-scrollbar { width: 8px; height: 8px; }
+html.milan-shell ::-webkit-scrollbar-thumb { background: var(--v72-line-2); border-radius: 99px; }
+html.milan-shell ::-webkit-scrollbar-track { background: transparent; }
 
 /* ---- responsive ---- */
 @media (max-width: 1200px) {
-  html.milan-v72 .topinner { grid-template-columns: 1fr auto !important; }
-  html.milan-v72 .search { grid-column: 1 / -1 !important; order: 3; }
-  html.milan-v72 .layout { grid-template-columns: 260px 1fr !important; }
-  html.milan-v72 .rightRail { display: none !important; }
+  html.milan-shell .topinner { grid-template-columns: 1fr auto !important; }
+  html.milan-shell .search { grid-column: 1 / -1 !important; order: 3; }
+  html.milan-shell .layout { grid-template-columns: 260px 1fr !important; }
+  html.milan-shell .rightRail { display: none !important; }
 }
 @media (max-width: 760px) {
-  html.milan-v72 .topinner { grid-template-columns: 1fr !important; gap: 12px !important; padding: 12px !important; }
-  html.milan-v72 .layout { display: block !important; padding: 12px !important; }
-  html.milan-v72 .leftRail { margin-bottom: 14px; }
-  html.milan-v72 .menu { flex-direction: row !important; flex-wrap: wrap !important; }
-  html.milan-v72 .menu button { flex: 1 1 40%; justify-content: center !important; }
-  html.milan-v72 #milan-v72-status { flex-direction: row !important; flex-wrap: wrap; gap: 10px; }
+  html.milan-shell .topinner { grid-template-columns: 1fr !important; gap: 12px !important; padding: 12px !important; }
+  html.milan-shell .layout { display: block !important; padding: 12px !important; }
+  html.milan-shell .leftRail { margin-bottom: 14px; }
+  html.milan-shell .menu { flex-direction: row !important; flex-wrap: wrap !important; }
+  html.milan-shell .menu button { flex: 1 1 40%; justify-content: center !important; }
+  html.milan-shell #milan-shell-status { flex-direction: row !important; flex-wrap: wrap; gap: 10px; }
 }

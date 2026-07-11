@@ -1,4 +1,4 @@
-/* MILAN V7.2 — Master interaction layer (loaded on every page).
+/* MILAN — Master interaction layer (loaded on every page).
    Additive only: FAB, free-music banner, footer nav, install button, a11y polish. */
 
 /* Scroll-to-top FAB */
@@ -67,7 +67,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible{
 }
 
 /* ============================================================
-   MILAN V7.2 — Unified floating action dock (right edge).
+   MILAN — Unified floating action dock (right edge).
    Organizes scattered FABs (Music, Ask MILAN, Theme, Flow, Top)
    into one tidy, non-overlapping vertical column. Clears the sidebar.
    ============================================================ */
@@ -116,7 +116,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible{
 }
 
 /* ============================================================
-   MILAN V7.2 — Mobile safety & responsiveness (no horizontal scroll)
+   MILAN — Mobile safety & responsiveness (no horizontal scroll)
    Conservative: does not touch sticky/positioned layout ancestors.
    ============================================================ */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -140,7 +140,7 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 #milan-toast { max-width: calc(100vw - 24px); }
 
 /* ============================================================
-   MILAN V7.2 — Premium mobile drawer (hamburger + Logout).
+   MILAN — Premium mobile drawer (hamburger + Logout).
    Hamburger shows only on small screens; drawer is dark glass.
    ============================================================ */
 #milan-burger {
@@ -201,7 +201,7 @@ body.milan-mobile-ui #milan-burger {
 }
 
 /* ============================================================
-   MILAN V7.2 — Global responsive hardening (every page).
+   MILAN — Global responsive hardening (every page).
    Goal: zero horizontal overflow + nothing pushed off-screen,
    WITHOUT redesigning or changing the box model / existing layout.
    - overflow-x:clip prevents the horizontal scrollbar but (unlike
@@ -238,7 +238,7 @@ img, svg, video, canvas, iframe, table, embed, object { max-width: 100%; }
 }
 
 /* ============================================================
-   MILAN V7.2 — Launch polish (a11y skip link + offline state).
+   MILAN — Launch polish (a11y skip link + offline state).
    ============================================================ */
 .milan-skip {
   position: fixed; left: 12px; top: -64px; z-index: 100001;
@@ -255,7 +255,7 @@ img, svg, video, canvas, iframe, table, embed, object { max-width: 100%; }
 }
 
 /* ============================================================
-   MILAN V7.2 — FACEBOOK-STYLE FEED-FIRST MOBILE (real /app).
+   MILAN — FACEBOOK-STYLE FEED-FIRST MOBILE (real /app).
    Mobile par profile+nav-menu stack hatao → feed sabse upar.
    Saari nav hamburger drawer (milan-mobile-nav.js) mein already hai.
    Android APK (body.native-apk) ko chhodo — uska apna layout hai.
@@ -298,7 +298,7 @@ img, svg, video, canvas, iframe, table, embed, object { max-width: 100%; }
 }
 
 /* ============================================================
-   MILAN V7.2 — FACEBOOK FEED-FIRST (DESKTOP + TABLET, real /app).
+   MILAN — FACEBOOK FEED-FIRST (DESKTOP + TABLET, real /app).
    .main children verified direct: reorder via flex so feed is first;
    dashboard/stat cards (.advancedStrip) go BELOW the feed.
    Sidebars sticky → only the feed scrolls. (Android APK untouched.)
@@ -322,7 +322,7 @@ body:not(.native-apk) .layout .main > .advancedStrip { order: 90 !important; mar
 }
 
 /* ============================================================
-   MILAN V7.2 — Facebook-style COMPACT composer (real /app).
+   MILAN — Facebook-style COMPACT composer (real /app).
    Collapsed by default = slim "What's on your mind?" bar.
    Expands to full composer (upload, publish, AI chips) on focus/click.
    So the FEED is what dominates the screen, not a giant create-post form.

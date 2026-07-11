@@ -1,4 +1,4 @@
-/* MILAN V7.2 — Premium mobile navigation drawer (hamburger + Logout).
+/* MILAN — Premium mobile navigation drawer (hamburger + Logout).
  * Self-contained: builds its own overlay drawer and forwards clicks to the
  * page's REAL menu buttons + #logoutBtn, so nothing existing is renamed or broken.
  * Activates only on the post-login app surface and only on small screens.

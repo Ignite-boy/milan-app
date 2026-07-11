@@ -1,4 +1,4 @@
-/* MILAN V7.2 — Master interaction layer.
+/* MILAN — Master interaction layer.
  * Additive only. Loaded on every page. Never renames/removes existing handlers.
  * Provides: toast, dead-link guard, scroll-top FAB, free-music banner,
  * footer nav, service-worker register, install prompt, Esc-closes-modals, share/copy.

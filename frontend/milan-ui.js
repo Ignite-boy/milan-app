@@ -1,10 +1,10 @@
-/* MILAN V7.2 UI activator — load LAST. Adds the structural bits the mockup
+/* MILAN UI activator — load LAST. Adds the structural bits the mockup
    needs (status stack, avatar menu, System Status card, nav icons) on top of
    the existing markup. Pure presentation/DOM decoration; no app logic changed. */
 (function () {
   'use strict';
 
-  document.documentElement.classList.add('milan-v72');
+  document.documentElement.classList.add('milan-shell');
 
   function $(s, r) { return (r || document).querySelector(s); }
   function el(tag, cls, html) {
@@ -17,8 +17,8 @@
   // ---- 1. Top-bar status stack (Cloud DWN / AI / DWN) ----
   function buildStatus() {
     var nav = $('.navlinks');
-    if (!nav || $('#milan-v72-status')) return;
-    var box = el('div'); box.id = 'milan-v72-status';
+    if (!nav || $('#milan-shell-status')) return;
+    var box = el('div'); box.id = 'milan-shell-status';
     box.innerHTML =
       '<div class="st"><span class="dot"></span>Cloud DWN: <span class="ok">Online</span></div>' +
       '<div class="st"><span class="dot"></span>AI: <span class="ok">Ready</span></div>' +
@@ -30,16 +30,16 @@
   // ---- 2. Avatar button + dropdown (Usage Stats / Admin / Logout) ----
   function buildUserMenu() {
     var actions = $('.topActions');
-    if (!actions || $('#milan-v72-userbtn')) return;
+    if (!actions || $('#milan-shell-userbtn')) return;
 
     var name = ($('#myName') && $('#myName').textContent) || 'NP';
     var inits = name.trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0] || ''; }).join('').toUpperCase() || 'NP';
 
-    var btn = el('button'); btn.id = 'milan-v72-userbtn';
+    var btn = el('button'); btn.id = 'milan-shell-userbtn';
     btn.innerHTML = '<span class="av">' + inits + '</span><span>▾</span>';
     actions.appendChild(btn);
 
-    var menu = el('div'); menu.id = 'milan-v72-menu';
+    var menu = el('div'); menu.id = 'milan-shell-menu';
     menu.innerHTML =
       '<button data-act="usage">📊 Usage Stats</button>' +
       '<button data-act="admin">⚙️ Admin Panel</button>' +
@@ -70,9 +70,9 @@
   // ---- 3. View Profile link under the avatar ----
   function buildViewProfile() {
     var card = $('.leftRail .profileCard');
-    if (!card || $('#milan-v72-viewprofile')) return;
+    if (!card || $('#milan-shell-viewprofile')) return;
     var emailEl = $('#myEmail', card);
-    var link = el('a'); link.id = 'milan-v72-viewprofile';
+    var link = el('a'); link.id = 'milan-shell-viewprofile';
     link.href = 'javascript:void 0'; link.textContent = 'View Profile';
     link.style.cssText = 'display:block;margin-top:6px;';
     link.onclick = function () { var p = $('#profileBtn'); if (p) p.click(); };
@@ -104,9 +104,9 @@
   // ---- 5. System Status card from the summary counters ----
   function buildSysStatus() {
     var leftRail = $('.leftRail');
-    if (!leftRail || $('#milan-v72-sysstatus')) return;
+    if (!leftRail || $('#milan-shell-sysstatus')) return;
     function val(id) { var e = document.getElementById(id); return e ? (e.textContent || '0') : '0'; }
-    var box = el('div'); box.id = 'milan-v72-sysstatus';
+    var box = el('div'); box.id = 'milan-shell-sysstatus';
     box.innerHTML =
       '<h4>System Status</h4>' +
       '<div class="row"><span>People:</span><b id="v72-ppl">' + val('peopleCount') + '</b></div>' +
@@ -143,5 +143,5 @@
   setTimeout(run, 1200);
   setTimeout(run, 2500);
 
-  try { console.log('%c[MILAN V7.2] UI active', 'color:#3b82f6;font-weight:800;'); } catch (_) {}
+  try { console.log('%c[MILAN] UI active', 'color:#3b82f6;font-weight:800;'); } catch (_) {}
 })();
