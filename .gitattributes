@@ -1,35 +1,84 @@
-# ── GitHub Linguist language detection ─────────────────────────────────────
-# MILAN is a JavaScript / Node.js full-stack app. GitHub's language bar counts
-# raw bytes, so the large SEO / marketing / legal CONTENT pages (not code) were
-# inflating "HTML". These are marked as documentation so the language bar
-# reflects what the project is actually built in.
+# =============================================================================
+#  MILAN — .gitattributes
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+#  Line endings — normalize to LF in the repository, native on checkout
+# -----------------------------------------------------------------------------
+* text=auto
+
+# Source & text files
+*.js      text
+*.mjs     text
+*.cjs     text
+*.json    text
+*.html    text
+*.css     text
+*.md      text
+*.xml     text
+*.svg     text
+*.txt     text
+*.yml     text
+*.yaml    text
+
+# Scripts must always use LF (CRLF breaks execution on Linux)
+*.sh      text eol=lf
+
+# -----------------------------------------------------------------------------
+#  Binary files — never diff, never normalize line endings
+# -----------------------------------------------------------------------------
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.eot     binary
+*.mp3     binary
+*.mp4     binary
+*.webm    binary
+*.zip     binary
+*.gz      binary
+*.exe     binary
+*.docx    binary
+
+# -----------------------------------------------------------------------------
+#  GitHub Linguist — language detection
+#  MILAN is a JavaScript / Node.js app. GitHub's language bar counts raw bytes,
+#  so large SEO / marketing / legal CONTENT pages (not application code) are
+#  marked as documentation, and generated data as generated, so the language
+#  bar reflects what the project is actually built in.
+# -----------------------------------------------------------------------------
 
 # SEO & marketing landing pages (content, not application code)
-frontend/keywords.html              linguist-documentation
-frontend/decentralized-social-media.html linguist-documentation
-frontend/private-social-network.html linguist-documentation
-frontend/best-social-media-apps.html linguist-documentation
-frontend/what-is-web5.html          linguist-documentation
-frontend/social-media-privacy.html  linguist-documentation
-frontend/about.html                 linguist-documentation
-frontend/launch.html                linguist-documentation
-frontend/city/*.html                linguist-documentation
+frontend/keywords.html                    linguist-documentation
+frontend/decentralized-social-media.html  linguist-documentation
+frontend/private-social-network.html      linguist-documentation
+frontend/best-social-media-apps.html      linguist-documentation
+frontend/what-is-web5.html                linguist-documentation
+frontend/social-media-privacy.html        linguist-documentation
+frontend/about.html                       linguist-documentation
+frontend/launch.html                      linguist-documentation
+frontend/city/*.html                      linguist-documentation
 
 # Legal / policy pages (content)
-frontend/privacy.html               linguist-documentation
-frontend/terms.html                 linguist-documentation
-frontend/disclaimer.html            linguist-documentation
-frontend/cookie-policy.html         linguist-documentation
+frontend/privacy.html                     linguist-documentation
+frontend/terms.html                       linguist-documentation
+frontend/disclaimer.html                  linguist-documentation
+frontend/cookie-policy.html               linguist-documentation
 
 # Transactional / utility pages (content shells)
-frontend/verify-email.html          linguist-documentation
-frontend/reset-password.html        linguist-documentation
-frontend/offline.html               linguist-documentation
-frontend/404.html                   linguist-documentation
+frontend/verify-email.html                linguist-documentation
+frontend/reset-password.html              linguist-documentation
+frontend/offline.html                     linguist-documentation
+frontend/404.html                         linguist-documentation
 
-# Documentation & data folders
-docs/**                             linguist-documentation
-frontend/keywords.json              linguist-generated
-frontend/*.xml                      linguist-generated
-frontend/llms.txt                   linguist-generated
-frontend/robots.txt                 linguist-generated
+# Documentation & generated data
+docs/**                                   linguist-documentation
+frontend/keywords.json                    linguist-generated
+frontend/*.xml                            linguist-generated
+frontend/llms.txt                         linguist-generated
+frontend/robots.txt                       linguist-generated
