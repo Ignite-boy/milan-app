@@ -117,23 +117,15 @@ Each post carries one of three access modes:
 
 ## 🏗️ Architecture
 
-```
-                        ┌──────────────────────────────┐
-   Browser / PWA  ◀────▶│  Reverse proxy (HTTPS)        │
-                        └───────────────┬──────────────┘
-                                        │
-                         ┌──────────────▼───────────────┐
-                         │  Express (Node.js, pm2 fork)  │
-                         │  • REST API  /api/*           │
-                         │  • Realtime  SSE + WebSocket  │
-                         │  • Serves the PWA frontend    │
-                         └──────┬─────────────────┬──────┘
-                                │                 │
-                 ┌──────────────▼───┐     ┌───────▼──────────────┐
-                 │  Per-user DWN     │     │  Auth / JWT           │
-                 │  (isolated node   │     │  bcrypt in            │
-                 │   per DID)        │     │  worker_threads       │
-                 └───────────────────┘     └───────────────────────┘
+```mermaid
+flowchart TD
+    U["Browser / PWA"] <-->|HTTPS| P["Reverse Proxy"]
+    P --> S["Express · Node.js<br/>(pm2 fork mode)"]
+    S --> API["REST API<br/>/api/*"]
+    S --> RT["Realtime<br/>SSE + WebSocket"]
+    S --> FE["Serves PWA<br/>Frontend"]
+    S --> DWN[("Per-user DWN<br/>isolated node per DID")]
+    S --> AUTH["Auth · JWT<br/>bcrypt in worker_threads"]
 ```
 
 ---
