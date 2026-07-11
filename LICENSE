@@ -1,14 +1,89 @@
-Copyright (c) 2025-2026 Nitesh Pandey — MILAN (milanlife.in)
-
+MILAN — PROPRIETARY SOFTWARE LICENSE
+Copyright (c) 2025–2026 Nitesh Pandey — MILAN (milanlife.in)
 All Rights Reserved.
 
-This source code is made available for viewing and reference only.
-No permission is granted to use, copy, modify, merge, publish,
-distribute, sublicense, sell, or create derivative works of this
-software, in whole or in part, for any purpose, commercial or
-non-commercial, without prior written permission from the copyright
-holder.
+────────────────────────────────────────────────────────────────────────────
 
-The MILAN name, logo, and brand are the property of Nitesh Pandey.
+1. DEFINITIONS
 
-For licensing enquiries: support@milanlife.in
+   "Software" means the MILAN source code, object code, assets, documentation,
+   and all related materials contained in this repository.
+
+   "Licensor" means Nitesh Pandey, the sole copyright holder of the Software.
+
+   "You" means any individual or entity accessing or viewing the Software.
+
+2. OWNERSHIP
+
+   The Software is proprietary and confidential. It is owned by the Licensor
+   and is protected by copyright and other intellectual-property laws and
+   international treaties. All right, title, and interest in and to the
+   Software, including all intellectual-property rights, remain exclusively
+   with the Licensor.
+
+3. LIMITED PERMISSION
+
+   The Software is made available for viewing and reference purposes only.
+   No license or right is granted to You except the limited right to view the
+   Software as published in this repository.
+
+4. RESTRICTIONS
+
+   Except with the prior written permission of the Licensor, You may NOT:
+
+   (a) use the Software, in whole or in part, for any purpose, commercial or
+       non-commercial;
+   (b) copy, reproduce, host, or redistribute the Software;
+   (c) modify, adapt, translate, or create derivative works of the Software;
+   (d) merge, publish, sublicense, sell, rent, lease, or otherwise transfer
+       the Software or any rights in it;
+   (e) reverse engineer, decompile, or disassemble any part of the Software,
+       except to the extent such restriction is prohibited by applicable law;
+   (f) remove, alter, or obscure any copyright, trademark, or other
+       proprietary notices.
+
+5. TRADEMARKS
+
+   "MILAN", the MILAN logo, the tagline "Your Space. Your People.", and all
+   related names and branding are trademarks of the Licensor. Nothing in this
+   License grants You any right to use them.
+
+6. THIRD-PARTY COMPONENTS
+
+   The Software may include or depend on third-party open-source components,
+   each of which remains governed by its own respective license. This License
+   applies only to the original work of the Licensor and does not modify the
+   terms of any third-party component.
+
+7. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+8. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+9. TERMINATION
+
+   Any breach of this License automatically and immediately terminates the
+   limited permission granted in Section 3, without notice. Upon termination,
+   You must cease all access to and destroy any copies of the Software.
+
+10. GOVERNING LAW
+
+    This License is governed by and construed in accordance with the laws of
+    India, without regard to its conflict-of-law provisions. The courts
+    located in India shall have exclusive jurisdiction over any dispute
+    arising out of or relating to this License.
+
+11. CONTACT
+
+    For licensing enquiries or permissions, contact:
+    Nitesh Pandey — support@milanlife.in — https://milanlife.in
+
+────────────────────────────────────────────────────────────────────────────
