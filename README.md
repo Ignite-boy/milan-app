@@ -75,7 +75,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:5000**
+Live app: **https://www.milanlife.in/** — or **http://localhost:5000** when running locally.
 
 ### Environment variables
 
