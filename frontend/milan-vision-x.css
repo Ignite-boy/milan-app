@@ -1,0 +1,476 @@
+/* ============================================================================
+   MILAN VISION X — Design System  (Milestone 1)
+   An original, premium visual language for the live MILAN app.
+
+   COHERENCE LOCK — force the dark premium theme on the app shell, beating any
+   leftover light rules scoped to body.milan-next-era (specificity-matched).
+   ------------------------------------------------------------------------- */
+body.milan-next-era { background: var(--vx-bg, #08080d) !important; color: var(--vx-ink, #f3f4fb) !important; }
+body.milan-next-era #appView { color: var(--vx-ink, #f3f4fb) !important; }
+body.milan-next-era .topbar,
+body.milan-next-era header.topbar {
+  background: linear-gradient(180deg, rgba(13,13,21,0.92), rgba(13,13,21,0.7)) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+body.milan-next-era .brand,
+body.milan-next-era .brand * { color: #f3f4fb !important; }
+body.milan-next-era .card,
+body.milan-next-era .rightRail .card,
+body.milan-next-era .quickCard,
+body.milan-next-era .profileCard,
+body.milan-next-era .savedList { background: rgba(22,22,32,0.78) !important; color: #f3f4fb !important; }
+body.milan-next-era .menu button:hover { background: rgba(255,255,255,0.05) !important; }
+body.milan-next-era input,
+body.milan-next-era textarea,
+body.milan-next-era select {
+  background: rgba(255,255,255,0.04) !important; color: #f3f4fb !important;
+}
+body.milan-next-era textarea::placeholder,
+body.milan-next-era input::placeholder { color: #6b7090 !important; }
+body.milan-next-era label,
+body.milan-next-era .postHead .mini,
+body.milan-next-era .tag { color: #c2c8de !important; }
+
+/* ── Design tokens ─────────────────────────────────────────────────────── */
+:root {
+  /* Canvas & surfaces */
+  --vx-bg:        #08080d;
+  --vx-bg-2:      #0d0d15;
+  --vx-surface:   rgba(22, 22, 32, 0.72);
+  --vx-surface-2: rgba(28, 28, 40, 0.82);
+  --vx-elevated:  rgba(32, 32, 46, 0.92);
+  --vx-hair:      rgba(255, 255, 255, 0.07);
+  --vx-hair-2:    rgba(255, 255, 255, 0.12);
+
+  /* Ink */
+  --vx-ink:    #f3f4fb;
+  --vx-muted:  #9aa0b8;
+  --vx-faint:  #6b7090;
+
+  /* Signature */
+  --vx-iris:   #6d5dfc;
+  --vx-iris-2: #9d7bff;
+  --vx-cyan:   #36d6e7;
+  --vx-gold:   #e6b45a;
+  --vx-grad:   linear-gradient(135deg, #5b6cff 0%, #6d5dfc 45%, #9d7bff 100%);
+  --vx-grad-soft: linear-gradient(135deg, rgba(91,108,255,0.16), rgba(157,123,255,0.16));
+
+  /* States */
+  --vx-ok:    #34d399;
+  --vx-warn:  #f5b045;
+  --vx-err:   #fb6f6f;
+
+  /* Form */
+  --vx-r-sm: 10px;
+  --vx-r:    14px;
+  --vx-r-lg: 20px;
+  --vx-shadow:   0 10px 34px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.05);
+  --vx-shadow-lg:0 26px 70px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
+  --vx-ring:     0 0 0 3px rgba(109,93,252,0.35);
+  --vx-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Canvas ──────────────────────────────────────────────────────────── */
+body {
+  background: var(--vx-bg) !important;
+  color: var(--vx-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(1100px 720px at 8% -8%, rgba(109,93,252,0.16), transparent 60%),
+    radial-gradient(900px 640px at 96% 0%, rgba(157,123,255,0.13), transparent 60%),
+    radial-gradient(820px 560px at 50% 118%, rgba(54,214,231,0.08), transparent 60%),
+    var(--vx-bg);
+}
+
+::selection { background: rgba(109,93,252,0.36); color: #fff; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(154,160,184,0.22); border-radius: 99px;
+  border: 3px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(154,160,184,0.38); background-clip: padding-box; }
+
+/* ── Typography ──────────────────────────────────────────────────────── */
+body, button, input, textarea, select {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+h1, h2, h3, .sectionTitle, .gamify-title, .postTitle {
+  letter-spacing: -0.02em;
+  color: var(--vx-ink);
+}
+.sectionTitle { font-weight: 800; }
+.mini, .minfo { color: var(--vx-muted); letter-spacing: 0; }
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.topbar {
+  background: linear-gradient(180deg, rgba(13,13,21,0.86), rgba(13,13,21,0.62)) !important;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--vx-hair) !important;
+}
+.topinner { gap: 12px; }
+.brand { font-weight: 900; letter-spacing: -0.03em; }
+.brand img { border-radius: 10px; box-shadow: 0 6px 22px rgba(109,93,252,0.35); }
+
+/* ── Cards / surfaces ────────────────────────────────────────────────── */
+.card, .quickCard, .heroCard, .profileCard, .milan-model-card, .rightBox, .savedList {
+  background: var(--vx-surface) !important;
+  border: 1px solid var(--vx-hair) !important;
+  border-radius: var(--vx-r-lg) !important;
+  box-shadow: var(--vx-shadow);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  transition: transform 0.25s var(--vx-ease), border-color 0.25s, box-shadow 0.25s;
+}
+.card:hover, .quickCard:hover {
+  border-color: var(--vx-hair-2) !important;
+  box-shadow: var(--vx-shadow-lg);
+}
+.heroCard {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(109,93,252,0.18), transparent 55%),
+    var(--vx-surface-2) !important;
+  border-color: rgba(109,93,252,0.28) !important;
+}
+.heroPill, .securePill, .chip, .tag {
+  border-radius: 999px !important;
+  border: 1px solid var(--vx-hair-2) !important;
+  background: var(--vx-grad-soft) !important;
+  color: var(--vx-ink) !important;
+}
+
+/* ── Quick stats ─────────────────────────────────────────────────────── */
+.quickCard b, .stat b { color: var(--vx-ink); font-weight: 900; letter-spacing: -0.02em; }
+.privacyMeter { background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.privacyMeter > span, #privacyBar { background: var(--vx-grad) !important; }
+
+/* ── Side menu (nav) ─────────────────────────────────────────────────── */
+.menu { gap: 4px; }
+.menu button, .side button {
+  position: relative;
+  border-radius: var(--vx-r) !important;
+  color: var(--vx-muted) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  transition: color 0.18s, background 0.18s, transform 0.12s var(--vx-ease);
+}
+.menu button:hover, .side button:hover {
+  color: var(--vx-ink) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+.menu button:active { transform: scale(0.98); }
+.menu button.active {
+  color: var(--vx-ink) !important;
+  background: var(--vx-grad-soft) !important;
+  border-color: rgba(109,93,252,0.32) !important;
+}
+.menu button.active::before {
+  content: ""; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 99px; background: var(--vx-grad);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+button.ok, button.primary, .actionRow .ok, button[type="submit"]:not(.ghost):not(.danger) {
+  background: var(--vx-grad) !important;
+  background-size: 160% 160% !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: var(--vx-r) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 26px rgba(109,93,252,0.34);
+  transition: background-position 0.4s var(--vx-ease), transform 0.12s var(--vx-ease), box-shadow 0.2s;
+}
+button.ok:hover, button.primary:hover { background-position: 100% 50% !important; box-shadow: 0 12px 34px rgba(109,93,252,0.45); }
+button.ok:active, button.primary:active { transform: scale(0.98); }
+
+button.ghost, .ghost {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid var(--vx-hair-2) !important;
+  color: var(--vx-ink) !important;
+  border-radius: var(--vx-r) !important;
+  font-weight: 700 !important;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s var(--vx-ease);
+}
+button.ghost:hover, .ghost:hover { background: rgba(255,255,255,0.09) !important; border-color: var(--vx-hair-2) !important; }
+button.ghost:active, .ghost:active { transform: scale(0.98); }
+
+button.danger, .danger {
+  background: rgba(251,111,111,0.12) !important;
+  border: 1px solid rgba(251,111,111,0.4) !important;
+  color: #ff9b9b !important;
+  border-radius: var(--vx-r) !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────────── */
+input:not([type="checkbox"]):not([type="radio"]), textarea, select {
+  background: rgba(255,255,255,0.035) !important;
+  border: 1px solid var(--vx-hair) !important;
+  border-radius: var(--vx-r) !important;
+  color: var(--vx-ink) !important;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+/* Don't double-box the search grid container itself. */
+.search { background: transparent !important; border: 0 !important; }
+/* Global search field — clean pill with a properly centred magnifier icon. */
+#globalSearch {
+  width: 100% !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  padding: 0 14px 0 42px !important;
+  background:
+    rgba(255,255,255,0.04)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa0b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E")
+    no-repeat 14px center !important;
+  background-size: auto, 16px 16px !important;
+  border: 1px solid var(--vx-hair) !important;
+  border-radius: 14px !important;
+  color: var(--vx-ink) !important;
+}
+#globalSearch:focus {
+  border-color: rgba(109,93,252,0.6) !important;
+  box-shadow: 0 0 0 3px rgba(109,93,252,0.25) !important;
+  outline: none !important;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: rgba(109,93,252,0.6) !important;
+  box-shadow: var(--vx-ring) !important;
+  background: rgba(255,255,255,0.05) !important;
+}
+::placeholder { color: var(--vx-faint) !important; }
+
+/* ── Avatars ─────────────────────────────────────────────────────────── */
+.avatar {
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 2px rgba(109,93,252,0.45), 0 6px 18px rgba(0,0,0,0.4);
+}
+
+/* ── Feed: post cards ────────────────────────────────────────────────── */
+.postHead { gap: 12px; }
+.postUser { font-weight: 800; color: var(--vx-ink); letter-spacing: -0.01em; }
+.postTitle { font-weight: 800; letter-spacing: -0.02em; }
+.postText, .postBody { color: rgba(243,244,251,0.92); line-height: 1.55; }
+.postMetrics, .postMetrics * { color: var(--vx-muted); }
+.media, .postBody .media, img.media, video.media {
+  border-radius: var(--vx-r) !important;
+  border: 1px solid var(--vx-hair);
+}
+
+/* ── Reaction bar ────────────────────────────────────────────────────── */
+.reactionBar { border-top: 1px solid var(--vx-hair); gap: 6px; }
+.reactionBar button {
+  border-radius: var(--vx-r-sm) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--vx-muted) !important;
+  transition: transform 0.14s var(--vx-ease), background 0.16s, color 0.16s;
+}
+.reactionBar button:hover {
+  background: rgba(255,255,255,0.06) !important;
+  color: var(--vx-ink) !important;
+  transform: translateY(-1px);
+}
+.reactionBar button:active { transform: scale(0.92); }
+.reactionTotal { color: var(--vx-muted); }
+
+/* ── Badges / pills ──────────────────────────────────────────────────── */
+.badge {
+  border-radius: 999px !important;
+  background: var(--vx-grad-soft) !important;
+  border: 1px solid var(--vx-hair-2) !important;
+  color: var(--vx-ink) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Empty & loading states ──────────────────────────────────────────── */
+.empty {
+  border: 1px dashed var(--vx-hair-2) !important;
+  border-radius: var(--vx-r-lg) !important;
+  background: rgba(255,255,255,0.02) !important;
+  color: var(--vx-muted) !important;
+}
+.milan-skeleton, .sk-line, .sk-media, .sk-avatar, .sk-name, .sk-sub {
+  position: relative; overflow: hidden;
+  background: rgba(255,255,255,0.06) !important; border-radius: 10px;
+}
+.milan-skeleton::after, .sk-line::after, .sk-media::after, .sk-avatar::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  animation: vx-shimmer 1.6s infinite;
+}
+@keyframes vx-shimmer { 100% { transform: translateX(100%); } }
+
+/* ── Toast ───────────────────────────────────────────────────────────── */
+.toast {
+  background: var(--vx-elevated) !important;
+  border: 1px solid var(--vx-hair-2) !important;
+  border-radius: var(--vx-r) !important;
+  box-shadow: var(--vx-shadow-lg) !important;
+  color: var(--vx-ink) !important;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+.tabs { gap: 4px; }
+.tab, .mai-tab {
+  border-radius: var(--vx-r-sm) !important;
+  color: var(--vx-muted) !important;
+  transition: color 0.16s, background 0.16s;
+}
+.tab.active, .mai-tab.active {
+  color: var(--vx-ink) !important;
+  background: var(--vx-grad-soft) !important;
+}
+
+/* ── Dividers ────────────────────────────────────────────────────────── */
+.socialDivider, hr { border-color: var(--vx-hair) !important; }
+
+/* ── Links ───────────────────────────────────────────────────────────── */
+a { color: var(--vx-iris-2); text-underline-offset: 3px; }
+a:hover { color: #b9a4ff; }
+
+/* ── Hide the PWA "Install MILAN" floating button ─────────────────────── */
+#milan-install-btn { display: none !important; }
+
+/* ── Login screen: GUARANTEE nothing is ever hidden ─────────────────────
+   The panel had overflow:hidden + a forced height, which clipped the bottom
+   (OR + social/DID login) on shorter windows. Here everything sizes to its
+   content and the page scrolls if it's tall, so no part can be cut off.
+   A compact pass keeps it on one screen in the common case. */
+#authView.auth {
+  min-height: 100vh !important; height: auto !important;
+  overflow: visible !important; align-items: start !important;
+}
+#authView .authHero { min-height: 0 !important; }
+#authView .authBox.card {
+  min-height: 0 !important; height: auto !important; max-height: none !important;
+  overflow: visible !important;
+  padding: 16px 22px !important; gap: 9px !important;
+}
+html.milan-v72 body { overflow-y: auto !important; height: auto !important; }
+
+/* Compact: shrink the logo block + tighten spacing (right panel only). */
+#authView .authBox.card .authTop { zoom: 0.7; margin-bottom: 0 !important; }
+#authView .authBox.card .authText { font-size: 12px !important; margin: 0 0 4px !important; }
+#authView .authBox.card .tabs { margin: 4px 0 6px !important; }
+#authView .authBox.card label { margin-top: 2px !important; }
+#authView .authBox.card input { height: 44px !important; }
+#authView .authBox.card .authLinks { margin: 4px 0 !important; }
+
+/* ── Full-screen app shell — DESKTOP (≥992px) ────────────────────────────
+   The app fills the viewport. The PAGE itself never scrolls; the left & right
+   rails stay fixed; ONLY the centre feed (.main) scrolls.
+   Robust by design: #appView is itself the height-locked flex shell with
+   overflow:hidden, and display:flex is forced with !important so an inline
+   display set by JS can't break the height chain (that caused the earlier
+   "scroll stopped" bug). Login screen & mobile (<992px) are untouched. */
+@media (min-width: 992px) {
+  /* ───────────────────────────────────────────────────────────────────────
+     NATURAL page scroll (guaranteed to work — this app's feed lives in a
+     nested container, so a fixed-height flex shell can't scroll it). The
+     topbar and BOTH rails are sticky, so they stay pinned while the feed
+     scrolls past them — they read as "fixed" (facebook.com behaviour) and the
+     scroll can never break. A small body zoom makes everything compact without
+     touching the scroll. ───────────────────────────────────────────────── */
+  /* Lock the page so it can't scroll; each column scrolls on its own. */
+  html.milan-v72:has(#appView:not(.hidden)) body {
+    margin: 0 !important; padding: 0 !important;
+    height: 100vh !important; overflow: hidden !important;
+  }
+
+  html.milan-v72 #appView .topbar { position: sticky !important; top: 0; z-index: 60; }
+
+  html.milan-v72 #appView .layout {
+    display: grid !important;
+    grid-template-columns: 300px minmax(0, 1fr) 360px !important;
+    gap: 16px !important;
+    width: 100% !important; max-width: 100% !important; margin: 0 !important;
+    padding: 16px !important;
+    align-items: start !important;
+  }
+
+  /* Left, right AND centre each get an EXPLICIT viewport height — not 100% of a
+     parent (whose height never resolved here), not max-height — an absolute
+     calc(). That guarantees a real scroll box, so the rails stay fixed and the
+     feed scrolls, every time. ~108px = sticky topbar + the grid padding. */
+  html.milan-v72 #appView .leftRail.side,
+  html.milan-v72 #appView .rightRail.side,
+  html.milan-v72 #appView .main {
+    height: calc(100vh - 108px) !important;
+    overflow-y: auto !important; overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    min-width: 0;
+  }
+  /* .main is a fixed-height flex column — stop its children from being SHRUNK
+     to fit (flex-shrink:1 was clipping the feed-tab / pill rows). They keep
+     their natural height; .main just scrolls. */
+  html.milan-v72 #appView .main > * { flex-shrink: 0 !important; }
+  html.milan-v72 #appView .leftRail.side > *,
+  html.milan-v72 #appView .rightRail.side > * { flex-shrink: 0 !important; }
+  html.milan-v72 #appView .leftRail.side,
+  html.milan-v72 #appView .rightRail.side { scrollbar-width: none; }
+  html.milan-v72 #appView .leftRail.side::-webkit-scrollbar,
+  html.milan-v72 #appView .rightRail.side::-webkit-scrollbar { width: 0; height: 0; }
+  html.milan-v72 #appView .main::-webkit-scrollbar { width: 8px; }
+  html.milan-v72 #appView .main::-webkit-scrollbar-thumb {
+    background: rgba(154,160,184,0.28); border-radius: 99px;
+  }
+}
+
+/* ── Feed: facebook-flavoured post cards ─────────────────────────────── */
+html.milan-v72 .main { min-width: 0; }     /* prevent overflow blowouts */
+html.milan-v72 .feedCard,
+html.milan-v72 .postCard,
+html.milan-v72 .post {
+  background: var(--vx-surface) !important;
+  border: 1px solid var(--vx-hair) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--vx-shadow);
+  overflow: hidden;                        /* let media sit flush to edges */
+  margin-bottom: 16px;
+}
+html.milan-v72 .post .media,
+html.milan-v72 .postBody .media,
+html.milan-v72 .feedCard img.media,
+html.milan-v72 .feedCard video.media {
+  width: 100%;
+  border-radius: 0 !important;             /* edge-to-edge like FB */
+  border-left: 0; border-right: 0;
+}
+html.milan-v72 .postHead { padding: 12px 14px 0; }
+html.milan-v72 .postBody,
+html.milan-v72 .postText { padding-left: 14px; padding-right: 14px; }
+html.milan-v72 .reactionBar {
+  padding: 6px 8px;
+  margin-top: 6px;
+  border-top: 1px solid var(--vx-hair) !important;
+}
+html.milan-v72 .reactionBar button { flex: 1; justify-content: center; }
+
+/* ── Mobile: first-class touch experience ────────────────────────────── */
+@media (max-width: 720px) {
+  .card, .quickCard, .heroCard, .profileCard { border-radius: var(--vx-r) !important; }
+  .menu button, .side button { min-height: 46px; font-size: 15px !important; }
+  .reactionBar button { min-height: 42px; min-width: 42px; }
+  button.ok, button.ghost, button.primary { min-height: 46px; }
+  input, textarea, select { font-size: 16px !important; } /* prevents iOS zoom */
+  .topbar { padding-left: 12px; padding-right: 12px; }
+  /* On phones the rails stack normally and scroll with the page. */
+  html.milan-v72 .leftRail,
+  html.milan-v72 .rightRail { position: static; max-height: none; overflow: visible; }
+}
+
+/* ── Motion safety ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}

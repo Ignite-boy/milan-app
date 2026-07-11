@@ -1,0 +1,181 @@
+/*  MILAN — Premium Skin
+ *  A refined, high-class default look: deep charcoal + champagne gold,
+ *  glassy surfaces, soft shadows. Calm and luxurious (no neon).
+ *  Scoped to html:not([data-mcm]) so it is the DEFAULT, but any
+ *  Creative Mode theme (which sets data-mcm) still fully overrides it.
+ */
+
+html:not([data-mcm]){
+  --bg:#0a0b12; --card:#13151d; --text:#edeef3; --muted:#99a1b4;
+  --line:rgba(255,255,255,.09); --brand:#d8b35a; --brand2:#caa14a;
+  --gold:#d8b35a; --gold2:#ecca7e;
+}
+
+/* Page */
+html:not([data-mcm]) body{
+  background:
+    radial-gradient(1100px 680px at 82% -12%, rgba(202,161,214,.08), transparent 58%),
+    radial-gradient(900px 600px at -5% 0%, rgba(216,179,90,.06), transparent 55%),
+    #08090e !important;
+  color:var(--text) !important;
+}
+
+/* Top bar */
+html:not([data-mcm]) .topbar{
+  background:rgba(13,15,21,.82) !important;
+  border-bottom:1px solid rgba(255,255,255,.07) !important;
+  backdrop-filter:blur(18px) !important; box-shadow:none !important;
+}
+html:not([data-mcm]) .brand h1{
+  background:linear-gradient(135deg,#f4f6fb,#cfd4e0) !important;
+  -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important;
+  letter-spacing:.14em !important;
+}
+html:not([data-mcm]) .brand .tag{ color:var(--muted) !important; }
+
+/* Surfaces — glass */
+html:not([data-mcm]) .card,
+html:not([data-mcm]) .post,
+html:not([data-mcm]) .person,
+html:not([data-mcm]) .composer,
+html:not([data-mcm]) .stat,
+html:not([data-mcm]) .modal,
+html:not([data-mcm]) .rightBox,
+html:not([data-mcm]) .bubble,
+html:not([data-mcm]) .heroCard{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.022)) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  box-shadow:0 14px 40px rgba(0,0,0,.38) !important;
+  color:var(--text) !important; backdrop-filter:blur(10px) !important;
+}
+html:not([data-mcm]) .card:hover,
+html:not([data-mcm]) .post:hover{ border-color:rgba(216,179,90,.28) !important; }
+
+/* Section titles / headings */
+html:not([data-mcm]) h2,
+html:not([data-mcm]) h3,
+html:not([data-mcm]) .sectionTitle h2{ color:#f1f3f8 !important; }
+html:not([data-mcm]) .mini,
+html:not([data-mcm]) .muted{ color:var(--muted) !important; }
+
+/* Buttons — refined dark glass by default */
+html:not([data-mcm]) button{
+  background:rgba(255,255,255,.055) !important;
+  color:#edeef3 !important;
+  border:1px solid rgba(255,255,255,.1) !important;
+  box-shadow:none !important; font-weight:600 !important;
+  transition:background .18s, border-color .18s, transform .12s !important;
+}
+html:not([data-mcm]) button:hover{
+  background:rgba(255,255,255,.1) !important;
+  border-color:rgba(216,179,90,.45) !important; transform:none !important; filter:none !important;
+}
+html:not([data-mcm]) button:active{ transform:scale(.985) !important; }
+
+/* Primary call-to-action buttons — champagne gold */
+html:not([data-mcm]) button.ok,
+html:not([data-mcm]) button.primary,
+html:not([data-mcm]) #loginBtn,
+html:not([data-mcm]) #registerBtn,
+html:not([data-mcm]) .login-button,
+html:not([data-mcm]) button.connect,
+html:not([data-mcm]) .connectBtn{
+  background:linear-gradient(135deg,var(--gold),var(--gold2)) !important;
+  color:#1b1306 !important; border:0 !important; font-weight:800 !important;
+  box-shadow:0 8px 22px rgba(216,179,90,.28) !important;
+}
+html:not([data-mcm]) button.ghost,
+html:not([data-mcm]) button.soft{
+  background:transparent !important; color:#e7d9b3 !important;
+  border:1px solid rgba(216,179,90,.32) !important;
+}
+html:not([data-mcm]) button.danger{
+  background:rgba(225,75,75,.14) !important; color:#ff8b8b !important;
+  border:1px solid rgba(225,75,75,.4) !important;
+}
+
+/* Left menu / nav */
+html:not([data-mcm]) .menu button,
+html:not([data-mcm]) .leftRail .menu button{
+  background:rgba(255,255,255,.035) !important;
+  color:#c7cdda !important; border:1px solid rgba(255,255,255,.06) !important;
+  font-weight:600 !important;
+}
+html:not([data-mcm]) .menu button:hover{ background:rgba(255,255,255,.07) !important; color:#fff !important; }
+html:not([data-mcm]) .menu button.active{
+  background:linear-gradient(135deg,rgba(216,179,90,.18),rgba(202,161,74,.1)) !important;
+  color:#f0dcaa !important; border-color:rgba(216,179,90,.4) !important;
+}
+
+/* Status / health badge (e.g. DWN:On) */
+html:not([data-mcm]) .health{
+  background:rgba(216,179,90,.14) !important; color:#ecca7e !important;
+  border:1px solid rgba(216,179,90,.3) !important; box-shadow:none !important;
+}
+
+/* Inputs */
+html:not([data-mcm]) input,
+html:not([data-mcm]) textarea,
+html:not([data-mcm]) select{
+  background:rgba(255,255,255,.04) !important;
+  border:1px solid rgba(255,255,255,.1) !important; color:#edeef3 !important;
+}
+html:not([data-mcm]) input:focus,
+html:not([data-mcm]) textarea:focus,
+html:not([data-mcm]) select:focus{
+  border-color:rgba(216,179,90,.55) !important;
+  box-shadow:0 0 0 3px rgba(216,179,90,.14) !important;
+}
+html:not([data-mcm]) input::placeholder,
+html:not([data-mcm]) textarea::placeholder{ color:rgba(153,161,180,.65) !important; }
+
+/* Links */
+html:not([data-mcm]) a{ color:#e0c98a !important; }
+html:not([data-mcm]) .navlinks a{ color:var(--muted) !important; }
+html:not([data-mcm]) .navlinks a:hover{ color:#ecca7e !important; }
+
+/* Tabs / pills / chips */
+html:not([data-mcm]) .tab.active,
+html:not([data-mcm]) .pill.on{
+  background:rgba(216,179,90,.16) !important; color:#ecca7e !important; box-shadow:none !important;
+}
+
+/* Avatar + accents — refined, not loud */
+html:not([data-mcm]) .avatar{
+  background:linear-gradient(135deg,#2a2d39,#3a2f1f) !important;
+  box-shadow:0 0 0 1px rgba(216,179,90,.35) !important; color:#ecca7e !important;
+}
+html:not([data-mcm]) .privacyMeter span,
+html:not([data-mcm]) .privacyMeter i{ background:linear-gradient(90deg,var(--gold),var(--gold2)) !important; }
+
+/* Reactions / toasts */
+html:not([data-mcm]) .reactionBar button.active{ background:rgba(216,179,90,.14) !important; color:#ecca7e !important; }
+html:not([data-mcm]) .toast{ background:#13151d !important; border:1px solid rgba(216,179,90,.3) !important; color:#edeef3 !important; }
+
+/* Soften any heavy glows globally */
+html:not([data-mcm]) .stat,
+html:not([data-mcm]) .person{ box-shadow:0 10px 30px rgba(0,0,0,.32) !important; }
+
+/* Scrollbar */
+html:not([data-mcm]) ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg,#caa14a,#7c6a3e) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+ * GLOBAL (applies in every theme): remove the spinning square /
+ * frame around the profile picture, and stop avatar rings from
+ * rotating. Calmer, more premium.
+ * ───────────────────────────────────────────────────────────── */
+.milan-story-ring::before,
+.milan-story-ring::after,
+.milan-avatar-frame-diamond::before,
+.milan-avatar-frame-gold::before,
+.profileCard .avatar::before,
+.profileCard .avatar::after,
+.profileRow .avatar::before,
+.profileRow .avatar::after,
+.heroLogo::after{
+  display:none !important; content:none !important; animation:none !important;
+  background:none !important; border:0 !important; padding:0 !important;
+}
+.milan-story-ring{ padding:0 !important; box-shadow:none !important; }
+/* clean subtle ring on the profile avatar instead */
+.profileCard .avatar.lg{ box-shadow:0 0 0 1px rgba(255,255,255,.14) !important; outline:0 !important; }

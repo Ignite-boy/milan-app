@@ -1,0 +1,87 @@
+========================================================
+ MILAN — GOOGLE SEARCH CONSOLE: URLs TO INSPECT & SUBMIT
+ Domain property: milanlife.in   |   Canonical host: https://milanlife.in (non-www)
+ Generated: 2026-07-04
+========================================================
+
+--------------------------------------------------------
+A) SITEMAPS  →  GSC left menu "Sitemaps" → enter path → Submit
+   (enter only the path; GSC prepends https://milanlife.in/)
+--------------------------------------------------------
+sitemap-index.xml          <- master (points to the other two) — submit this at minimum
+sitemap.xml                <- core pages
+sitemap-keywords.xml       <- long-tail keyword pages
+
+Full URLs (if it asks for the whole URL):
+https://milanlife.in/sitemap-index.xml
+https://milanlife.in/sitemap.xml
+https://milanlife.in/sitemap-keywords.xml
+
+
+--------------------------------------------------------
+B) PRIORITY PAGES  →  URL Inspection → Test Live URL → Request Indexing
+   Do these FIRST (highest value). Limit ~10-12 requests/property/day.
+--------------------------------------------------------
+1.  https://milanlife.in/                              (home / brand)
+2.  https://milanlife.in/music                          (traffic wedge)
+3.  https://milanlife.in/decentralized-social-media     (pillar)
+4.  https://milanlife.in/what-is-web5
+5.  https://milanlife.in/social-media-privacy
+6.  https://milanlife.in/best-social-media-apps
+7.  https://milanlife.in/private-social-network
+8.  https://milanlife.in/keywords                       (topic hub)
+
+
+--------------------------------------------------------
+C) ROUTE ALIASES  (extra keyword coverage — inspect after Section B)
+   These canonical back to their main page; inspect to confirm canonical is correct.
+--------------------------------------------------------
+https://milanlife.in/best-social-media
+https://milanlife.in/web5
+https://milanlife.in/privacy-guide
+https://milanlife.in/decentralized-social-network
+https://milanlife.in/whatsapp-alternative
+https://milanlife.in/instagram-alternative
+
+
+--------------------------------------------------------
+D) AI / GEO FILES  (not "pages", but good to confirm they return 200)
+   Inspect in browser, not for indexing.
+--------------------------------------------------------
+https://milanlife.in/llms.txt
+https://milanlife.in/robots.txt
+
+
+--------------------------------------------------------
+E) DO NOT REQUEST INDEXING  (intentionally noindex / disallowed)
+   If GSC lists these under "Excluded", that is CORRECT — leave them alone.
+   Don't waste your daily Request-Indexing quota here.
+--------------------------------------------------------
+noindex utility pages:
+  https://milanlife.in/404.html
+  https://milanlife.in/admin-users.html
+  https://milanlife.in/launch.html
+  https://milanlife.in/reset-password.html
+  https://milanlife.in/settings.html
+  https://milanlife.in/verify-email.html
+
+blocked in robots.txt (Disallow):
+  /api/ , /admin , /admin-users , /settings , /verify-email ,
+  /reset-password , /forgot-password
+
+
+--------------------------------------------------------
+F) NOTE ON www / http  (expected "Page with redirect" in GSC)
+   Server 301-redirects these to the non-www https version. This is correct —
+   do not try to index them:
+--------------------------------------------------------
+   http://milanlife.in/   ->  https://milanlife.in/
+   https://www.milanlife.in/  ->  https://milanlife.in/
+
+
+========================================================
+ WORKFLOW: submit 3 sitemaps (A) -> Request-Index section B (day 1)
+ -> section C next day -> rest gets picked up from the sitemap.
+ The SITEMAP is the source of truth for the full URL count — cross-check
+ "Discovered URLs" in GSC against it after a few days.
+========================================================

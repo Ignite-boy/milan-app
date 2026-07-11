@@ -1,0 +1,279 @@
+/* ============================================================
+   MILAN Premium — self-contained upgrade + Razorpay checkout UI
+   Static add-on for milan-app/frontend (loaded by app.html).
+   All classes are namespaced `mp-` to avoid collisions.
+   Gold palette mirrors the existing premium-sober skin tokens.
+   ============================================================ */
+
+:root {
+  --mp-gold: #d8b35a;
+  --mp-gold-2: #ecca7e;
+  --mp-gold-3: #b8923f;
+  --mp-ink: #0a0b12;
+  --mp-card: #13151d;
+  --mp-card-2: #1a1d27;
+  --mp-text: #edeef3;
+  --mp-muted: #99a1b4;
+  --mp-line: rgba(255, 255, 255, 0.09);
+  --mp-line-strong: rgba(236, 202, 126, 0.35);
+  --mp-grad: linear-gradient(135deg, #ecca7e 0%, #d8b35a 45%, #b8923f 100%);
+  --mp-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  --mp-glow: 0 10px 36px rgba(216, 179, 90, 0.32);
+}
+
+/* ── Sidebar upgrade button ──────────────────────────────── */
+.mp-side-btn {
+  position: relative;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--mp-grad);
+  background-size: 180% 180%;
+  color: #2a1d05;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--mp-glow);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-position 0.4s ease;
+}
+.mp-side-btn:hover { transform: translateY(-1px); background-position: 100% 50%; box-shadow: 0 14px 44px rgba(216, 179, 90, 0.45); }
+.mp-side-btn:active { transform: scale(0.98); }
+.mp-side-btn .mp-crown { font-size: 16px; line-height: 1; }
+.mp-side-btn small { display: block; font-weight: 700; font-size: 10.5px; opacity: 0.72; margin-top: 1px; }
+
+/* ── Topbar pill ─────────────────────────────────────────── */
+.mp-top-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-left: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mp-grad);
+  color: #2a1d05;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--mp-glow);
+  transition: transform 0.15s ease;
+}
+.mp-top-pill:hover { transform: translateY(-1px); }
+.mp-top-pill:active { transform: scale(0.97); }
+
+/* shimmer used on both buttons */
+.mp-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+}
+.mp-shimmer:hover::after { transform: translateX(120%); transition: transform 0.7s ease; }
+
+/* ── Gold verified badge ─────────────────────────────────── */
+.mp-badge {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 4px;
+  color: var(--mp-gold-2);
+  filter: drop-shadow(0 1px 4px rgba(216, 179, 90, 0.5));
+}
+
+/* ── Overlay / modal ─────────────────────────────────────── */
+.mp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(3, 4, 10, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.mp-overlay.mp-open { opacity: 1; }
+@media (max-width: 560px) { .mp-overlay { align-items: flex-end; padding: 0; } }
+
+.mp-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: radial-gradient(120% 60% at 50% 0%, rgba(216, 179, 90, 0.12), transparent 60%), var(--mp-card);
+  border: 1px solid var(--mp-line-strong);
+  border-radius: 22px;
+  box-shadow: var(--mp-shadow);
+  color: var(--mp-text);
+  transform: translateY(16px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+}
+.mp-overlay.mp-open .mp-modal { transform: translateY(0) scale(1); opacity: 1; }
+@media (max-width: 560px) {
+  .mp-modal { max-width: 100%; border-radius: 22px 22px 0 0; max-height: 94vh; }
+}
+
+.mp-modal-pad { padding: 26px 24px 28px; }
+
+.mp-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--mp-muted);
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 3;
+}
+.mp-close:hover { background: rgba(255, 255, 255, 0.06); color: var(--mp-text); }
+
+/* hero */
+.mp-hero { text-align: center; }
+.mp-hero-crown {
+  width: 56px; height: 56px;
+  margin: 4px auto 0;
+  display: grid; place-items: center;
+  border-radius: 18px;
+  background: var(--mp-grad);
+  font-size: 28px;
+  box-shadow: 0 10px 40px rgba(216, 179, 90, 0.45);
+}
+.mp-hero h2 { margin: 14px 0 2px; font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+.mp-hero p { margin: 0; color: var(--mp-muted); font-size: 13.5px; }
+.mp-gold-text {
+  background: var(--mp-grad);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* cycle toggle */
+.mp-toggle {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  margin: 20px 0 14px;
+  padding: 4px;
+  border: 1px solid var(--mp-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.mp-toggle button {
+  position: relative;
+  padding: 9px 8px;
+  border: 0; border-radius: 10px;
+  background: transparent;
+  color: var(--mp-muted);
+  font-weight: 800; font-size: 13px;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.mp-toggle button.mp-active { color: #2a1d05; background: var(--mp-grad); }
+.mp-save {
+  margin-left: 6px; padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 900;
+}
+.mp-toggle button:not(.mp-active) .mp-save { background: rgba(34, 197, 94, 0.16); color: #34d399; }
+.mp-toggle button.mp-active .mp-save { background: rgba(42, 29, 5, 0.18); color: #2a1d05; }
+
+/* price */
+.mp-price { text-align: center; margin: 6px 0 2px; }
+.mp-price b { font-size: 38px; font-weight: 900; letter-spacing: -0.03em; }
+.mp-price span { color: var(--mp-muted); font-size: 14px; }
+.mp-sub { text-align: center; color: var(--mp-muted); font-size: 12px; margin: 2px 0 0; }
+
+/* perks grid */
+.mp-perks {
+  list-style: none; padding: 0;
+  margin: 18px 0 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px;
+}
+.mp-perks li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(237, 238, 243, 0.9); }
+.mp-perks .mp-ic {
+  width: 22px; height: 22px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 7px;
+  background: rgba(216, 179, 90, 0.15);
+  color: var(--mp-gold-2);
+  font-size: 12px;
+}
+
+/* primary pay button */
+.mp-pay {
+  position: relative;
+  width: 100%;
+  margin-top: 22px;
+  padding: 15px;
+  border: 0; border-radius: 16px;
+  background: var(--mp-grad);
+  background-size: 170% 170%;
+  color: #2a1d05;
+  font-weight: 900; font-size: 15.5px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(216, 179, 90, 0.4);
+  transition: background-position 0.45s ease, transform 0.12s ease;
+}
+.mp-pay:hover { background-position: 100% 50%; }
+.mp-pay:active { transform: scale(0.99); }
+.mp-pay:disabled { opacity: 0.6; cursor: default; }
+
+.mp-secure { margin-top: 12px; text-align: center; font-size: 11px; color: var(--mp-muted); }
+.mp-secure b { color: #34d399; font-weight: 700; }
+
+/* processing + success + error states */
+.mp-state { min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.mp-spin {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 4px solid rgba(216, 179, 90, 0.18);
+  border-top-color: var(--mp-gold-2);
+  animation: mp-spin 0.9s linear infinite;
+}
+@keyframes mp-spin { to { transform: rotate(360deg); } }
+.mp-tick, .mp-cross {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 34px; font-weight: 900;
+}
+.mp-tick { background: var(--mp-grad); color: #2a1d05; box-shadow: 0 10px 50px rgba(216, 179, 90, 0.5); animation: mp-pop 0.4s cubic-bezier(0.22, 1.6, 0.4, 1) both; }
+.mp-cross { background: rgba(239, 68, 68, 0.16); color: #f87171; }
+@keyframes mp-pop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mp-state h2 { margin: 18px 0 4px; font-size: 20px; font-weight: 900; }
+.mp-state p { margin: 0; max-width: 19rem; color: var(--mp-muted); font-size: 13.5px; }
+.mp-state .mp-pay { max-width: 100%; }
+.mp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 22px; }
+.mp-ghost {
+  padding: 14px; border: 1px solid var(--mp-line); border-radius: 16px;
+  background: transparent; color: var(--mp-text); font-weight: 800; cursor: pointer;
+}
+.mp-ghost:hover { background: rgba(255, 255, 255, 0.05); }
+
+/* tiny pulse ring for processing */
+.mp-pulse { position: relative; }
+.mp-pulse::before {
+  content: ""; position: absolute; inset: -8px; border-radius: 50%;
+  background: rgba(216, 179, 90, 0.18); animation: mp-ping 1.4s ease-out infinite;
+}
+@keyframes mp-ping { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-overlay, .mp-modal, .mp-shimmer::after, .mp-spin, .mp-tick, .mp-pulse::before { transition: none !important; animation: none !important; }
+}

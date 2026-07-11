@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MILAN — Dashboard Skeleton</title>
+<style>
+  :root{
+    --bg:#070b16; --bg2:#0a1020;
+    --card:rgba(18,24,40,.72); --card2:rgba(15,20,34,.6);
+    --line:rgba(148,163,196,.12); --line2:rgba(148,163,196,.18);
+    --ink:#e9edfb; --muted:#8b95b3; --muted2:#6c7796;
+    --indigo:#6366f1; --violet:#8b5cf6; --blue:#3b82f6; --cyan:#06b6d4;
+    --green:#22c55e; --amber:#f59e0b; --pink:#ec4899; --red:#ef4444;
+    --grad:linear-gradient(135deg,#3b82f6,#6366f1 45%,#8b5cf6);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(900px 600px at 12% -8%,rgba(59,130,246,.14),transparent 60%),
+      radial-gradient(800px 600px at 95% 0%,rgba(139,92,246,.14),transparent 60%),
+      var(--bg);
+    color:var(--ink); font:14px/1.5 'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; min-height:100vh; overflow-x:hidden;
+  }
+  .glass{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:0 8px 32px rgba(0,0,0,.32); backdrop-filter:blur(18px);}
+  .muted{color:var(--muted)} .sm{font-size:12px} .xs{font-size:11px}
+  .row{display:flex;align-items:center;gap:10px}
+  .grad-text{background:linear-gradient(135deg,#93c5fd,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+  .pill:hover{border-color:var(--line2);background:rgba(255,255,255,.06)}
+  .btn{border:0;border-radius:12px;padding:9px 14px;font-weight:700;cursor:pointer;color:#fff;background:var(--grad);background-size:160% 160%}
+  .btn:hover{background-position:100% 50%}
+  .ic{width:18px;height:18px;display:inline-block;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .av{border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:inline-grid;place-items:center;color:#fff;font-weight:800;flex:none}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .badge{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--indigo);color:#fff;font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+
+  /* TOP BAR */
+  .top{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:clamp(8px,1.1vw,18px);align-items:center;
+    padding:10px clamp(10px,1.4vw,20px);background:rgba(8,12,22,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font-weight:900;font-size:20px;color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.4)}
+  .brand h1{margin:0;font-size:20px;letter-spacing:.02em}
+  .brand p{margin:0;font-size:11px;color:var(--muted)}
+  .search{display:flex;align-items:center;gap:10px;max-width:560px;width:100%;min-width:0;margin:0 auto;padding:0 14px;height:44px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted)}
+  .search input{flex:1;background:none;border:0;outline:0;color:var(--ink);font-size:14px}
+  .kbd{font-size:11px;border:1px solid var(--line2);border-radius:7px;padding:2px 7px;color:var(--muted)}
+  .topacts{display:flex;align-items:center;gap:clamp(5px,.55vw,8px);min-width:0}
+  .iconbtn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);display:grid;place-items:center;cursor:pointer;position:relative}
+  .iconbtn:hover{border-color:var(--line2)}
+  .nb{position:absolute;top:-4px;right:-4px}
+  .me{display:flex;align-items:center;gap:10px;padding:5px 8px 5px 5px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer}
+
+  /* SHELL */
+  .shell{display:grid;grid-template-columns:clamp(184px,15.5vw,248px) minmax(0,1fr) clamp(208px,18.5vw,300px);
+    gap:clamp(10px,1.3vw,18px);width:100%;max-width:1500px;margin:0 auto;padding:16px clamp(10px,1.6vw,20px) 40px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:14px;position:sticky;top:82px;min-width:0}
+
+  /* SIDEBAR */
+  .profcard{padding:16px}
+  .profcard .top-row{display:flex;gap:12px;align-items:center}
+  .ring{padding:3px;border-radius:50%;background:conic-gradient(from 180deg,#6366f1,#8b5cf6,#06b6d4,#6366f1)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center}
+  .stats b{display:block;font-size:17px}
+  .stats span{font-size:11px;color:var(--muted)}
+  .navlabel{font-size:11px;letter-spacing:.14em;color:var(--muted2);font-weight:800;margin:6px 4px 2px}
+  .nav{display:flex;flex-direction:column;gap:3px}
+  .nav a{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:var(--muted);text-decoration:none;font-weight:600}
+  .nav a:hover{background:rgba(255,255,255,.04);color:var(--ink)}
+  .nav a.active{color:#fff;background:var(--grad);box-shadow:0 8px 22px rgba(99,102,241,.32)}
+  .nav a .flex{flex:1}
+  .tag-new{font-size:10px;font-weight:800;color:#fff;background:var(--violet);padding:2px 7px;border-radius:999px}
+  .upgrade{padding:16px;background:linear-gradient(160deg,rgba(99,102,241,.18),rgba(139,92,246,.12));border:1px solid rgba(139,92,246,.3)}
+
+  /* MAIN */
+  .hero{position:relative;overflow:hidden;padding:26px;min-height:140px;display:flex;flex-direction:column;justify-content:center;
+    background:linear-gradient(120deg,#10183a,#1a1140 60%,#0c1430);border:1px solid var(--line2)}
+  .hero h2{margin:0 0 6px;font-size:26px}
+  .hero .planet{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#6d8bff,#3b1d8f 55%,transparent 70%);filter:blur(2px);opacity:.85}
+  .hero .live{position:absolute;right:26px;top:22px;text-align:right}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(106px,1fr));gap:clamp(8px,.9vw,14px)}
+  .stat{padding:16px;position:relative;overflow:hidden}
+  .stat .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:18px}
+  .stat h3{margin:8px 0 2px;font-size:24px}
+  .stat .lab{font-size:12px;color:var(--muted)}
+  .stat .sub{font-size:11px;margin-top:2px}
+  .composer{padding:16px}
+  .composer .field{display:flex;gap:12px;align-items:center}
+  .composer input{flex:1;height:46px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);padding:0 14px;outline:0}
+  .ctools{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .ctool{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--muted);font-weight:600;font-size:13px;cursor:pointer}
+  .ctool:hover{color:var(--ink);border-color:var(--line2)}
+  .spark{margin-left:auto;width:42px;height:42px;border-radius:12px;background:var(--grad);display:grid;place-items:center;color:#fff;border:0;cursor:pointer}
+  .tabs{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:6px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;border:1px solid transparent}
+  .tab.active{background:rgba(99,102,241,.16);color:#fff;border-color:rgba(99,102,241,.3)}
+  .post{padding:18px}
+  .posthead{display:flex;align-items:center;gap:10px}
+  .videothumb{margin-top:14px;border-radius:14px;overflow:hidden;position:relative;aspect-ratio:16/9;
+    background:linear-gradient(120deg,#3a1d6e,#1b1840 60%,#0e1330);display:grid;place-items:center}
+  .play{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;color:#111;font-size:22px}
+
+  /* RIGHT */
+  .rc{padding:16px}
+  .rc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .rc .hd h4{margin:0;font-size:15px}
+  .rc .hd a{color:var(--blue);text-decoration:none;font-size:12px;font-weight:700}
+  .person{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .person .meta{flex:1;min-width:0}
+  .person .meta b{font-size:13px}
+  .connect{padding:6px 14px;border-radius:10px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:#cdd6f5;font-weight:700;font-size:12px;cursor:pointer}
+  .activity{display:flex;gap:11px;padding:9px 0}
+  .activity .sq{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:none}
+  .community{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .join{padding:6px 16px;border-radius:10px;background:var(--grad);color:#fff;border:0;font-weight:800;font-size:12px;cursor:pointer}
+
+  /* FABs */
+  .fabs{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:12px;z-index:40}
+  .fab{width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;font-size:22px;color:#fff;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+  .fab.plus{background:var(--grad)} .fab.spark{background:rgba(18,24,40,.9);border:1px solid var(--line2)}
+
+  /* Hamburger + drawer overlay + mobile bottom nav (hidden on desktop) */
+  .burger{display:none;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);font-size:18px;cursor:pointer;flex:none}
+  .drawer-ov{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px)}
+  body.drawer-open .drawer-ov{opacity:1;pointer-events:auto}
+  .mbottom{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:120;grid-template-columns:repeat(5,1fr);
+    padding:8px;border-radius:22px;background:rgba(12,18,34,.9);border:1px solid var(--line2);box-shadow:0 16px 44px rgba(0,0,0,.45);backdrop-filter:blur(20px)}
+  .mbottom button{display:grid;place-items:center;gap:2px;background:none;border:0;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;padding:6px 2px;border-radius:14px}
+  .mbottom button .ic{width:22px;height:22px}
+  .mbottom button.active{color:#fff;background:linear-gradient(135deg,rgba(99,102,241,.22),rgba(139,92,246,.18))}
+  .mbottom button.mid{color:#fff}
+  .mbottom .mid .ic{width:30px;height:30px;background:var(--grad);border-radius:50%;padding:5px;box-sizing:border-box}
+
+  /* ===== RESPONSIVE — keep ALL components visible; nothing hidden on desktop ===== */
+  /* Mid widths: keep all 3 columns, just condense the top bar so it never overflows */
+  @media(max-width:1150px){
+    .topacts .pill .label{display:none}
+    .topacts .pill{padding:8px 10px}
+    .topacts .iconbtn{width:38px;height:38px}
+    .me .sm{display:none}
+    .brand h1{font-size:18px}.brand p{display:none}
+  }
+  @media(max-width:1000px){
+    .topacts .iconbtn{width:34px;height:34px;font-size:13px}
+    .logo{width:38px;height:38px;font-size:18px}
+  }
+  /* Phone (<=900): left sidebar -> off-canvas drawer, everything stacks, bottom nav */
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr;padding:12px 12px 94px;max-width:680px}
+    .col{position:static}
+    .burger{display:grid;place-items:center}
+    .top{grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding:10px 12px}
+    .search{max-width:none}
+    .topacts .pill,.topacts .iconbtn{display:none}
+    .topacts .me{padding:4px}.me .sm{display:block}
+    .col.left{position:fixed;top:0;left:0;height:100dvh;width:min(86vw,300px);z-index:200;overflow:auto;
+      transform:translateX(-100%);transition:transform .28s cubic-bezier(.22,1,.36,1);
+      padding:14px;background:linear-gradient(180deg,#0c1326,#0a0f1f);border-right:1px solid var(--line);gap:14px}
+    body.drawer-open .col.left{transform:none}
+    .col.right{display:flex;max-width:none}
+    .statgrid{grid-template-columns:repeat(2,1fr)}
+    .stat h3{font-size:21px}
+    .hero{padding:20px;min-height:120px}.hero h2{font-size:21px}
+    .hero .planet{opacity:.3;width:220px;height:220px}
+    .hero .live{position:static;text-align:left;margin-bottom:8px}
+    .fabs{display:none}
+    .mbottom{display:grid}
+  }
+  @media(max-width:400px){ .statgrid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="top">
+  <div class="brand">
+    <button class="burger" id="burger" aria-label="Open menu">☰</button>
+    <div class="logo">M</div>
+    <div><h1>MILAN</h1><p>Your Space. Your People</p></div>
+  </div>
+  <div class="search">
+    <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+    <input placeholder="Search posts, people, tags, DID…">
+    <span class="kbd">⌘K</span>
+  </div>
+  <div class="topacts">
+    <button class="pill"><span style="color:var(--violet)">✦</span> <span class="label">AI Assistant</span></button>
+    <button class="pill" style="border-color:rgba(34,197,94,.4)"><span class="dot" style="background:var(--green)"></span> <span class="label">DWN: On</span></button>
+    <button class="iconbtn" title="Theme">◐</button>
+    <button class="iconbtn" title="Analytics">📈</button>
+    <button class="iconbtn" title="Export">⤓</button>
+    <button class="iconbtn" title="Usage">▢</button>
+    <button class="iconbtn" title="Notifications">🔔<span class="badge nb">8</span></button>
+    <div class="me">
+      <span class="av" style="width:36px;height:36px">NP</span>
+      <div class="sm" style="line-height:1.2"><b>Nitesh Pandey</b><br><span style="color:var(--green);font-size:11px">● Online</span></div>
+      <span class="muted">▾</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- ============ LEFT SIDEBAR ============ -->
+  <aside class="col left">
+    <div class="glass profcard">
+      <div class="top-row">
+        <span class="ring"><span class="av" style="width:56px;height:56px;font-size:18px">NP</span></span>
+        <div>
+          <div class="row" style="gap:5px"><b>Nitesh Pandey</b><span style="color:var(--blue)">✔</span></div>
+          <div class="muted sm">@niteshpandey</div>
+          <div class="pill xs" style="margin-top:6px;padding:4px 9px"><span class="dot" style="background:var(--green)"></span> Cloud DWN: Online</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div><b>12.4K</b><span>Reputation</span></div>
+        <div><b>342</b><span>Connections</span></div>
+        <div><b>28</b><span>Communities</span></div>
+      </div>
+    </div>
+
+    <div class="glass" style="padding:10px">
+      <div class="navlabel">NAVIGATION</div>
+      <nav class="nav">
+        <a class="active" href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span class="flex">Home Feed</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="flex">My Posts</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="18" cy="9" r="2"/></svg><span class="flex">My People</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20a7 7 0 0114 0"/></svg><span class="flex">Communities</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="flex">Public Feed</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span class="flex">Saved</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1112 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/></svg><span class="flex">Notifications</span><span class="badge">8</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="flex">Messages</span><span class="badge">4</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span class="flex">Events</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 13h11"/></svg><span class="flex">Marketplace</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l3 6 6 .5-4.5 4 1.5 6-6-3.5-6 3.5 1.5-6L3 8.5 9 8z"/></svg><span class="flex">Creator Hub</span><span class="tag-new">✦ New</span></a>
+        <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V5M9 19v-8M14 19v-5M19 19V9"/></svg><span class="flex">Analytics</span></a>
+      </nav>
+    </div>
+
+    <div class="glass upgrade">
+      <div class="row"><span style="font-size:18px">👑</span><div><b>Upgrade to MILAN Pro</b><div class="muted sm">Unlock premium features</div></div></div>
+      <button class="btn" style="width:100%;margin-top:12px">Upgrade Now</button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="col" style="position:static;gap:16px">
+    <section class="glass hero">
+      <div class="planet"></div>
+      <div class="live">
+        <div class="row sm" style="justify-content:flex-end"><span class="dot" style="background:var(--green)"></span> Live Network</div>
+        <div style="font-size:18px;font-weight:800;margin-top:4px">12,847 <span class="muted sm">users online</span></div>
+      </div>
+      <h2>Good night, Nitesh! 🌙</h2>
+      <div class="muted">Ready to create something amazing today?</div>
+    </section>
+
+    <section class="statgrid">
+      <div class="glass stat"><div class="ico" style="background:rgba(34,197,94,.15);color:var(--green)">🛡️</div><h3>100%</h3><div class="lab">Cloud DWN</div><div class="sub" style="color:var(--green)">Privacy Protected</div></div>
+      <div class="glass stat"><div class="ico" style="background:rgba(99,102,241,.15);color:var(--indigo)">📈</div><h3>92</h3><div class="lab">Identity Score</div><div class="sub" style="color:var(--green)">Excellent</div></div>
+      <div class="glass stat"><div class="ico" style="background:rgba(139,92,246,.15);color:var(--violet)">👥</div><h3>24</h3><div class="lab">Communities</div><div class="sub muted">Active</div></div>
+      <div class="glass stat"><div class="ico" style="background:rgba(245,158,11,.15);color:var(--amber)">🔥</div><h3>17</h3><div class="lab">Streak</div><div class="sub muted">Days</div></div>
+      <div class="glass stat"><div class="ico" style="background:rgba(236,72,153,.15);color:var(--pink)">🏆</div><h3>#128</h3><div class="lab">Rank</div><div class="sub" style="color:var(--amber)">Top 1%</div></div>
+    </section>
+
+    <section class="glass composer">
+      <div class="field">
+        <span class="av" style="width:42px;height:42px">NP</span>
+        <input placeholder="What's happening in your MILAN space?">
+      </div>
+      <div class="ctools">
+        <button class="ctool" style="color:var(--blue)">🖼️ Photo</button>
+        <button class="ctool" style="color:var(--violet)">🎬 Video</button>
+        <button class="ctool" style="color:var(--pink)">🎵 Audio</button>
+        <button class="ctool" style="color:var(--green)">📄 File</button>
+        <button class="ctool" style="color:var(--cyan)">📊 Poll</button>
+        <button class="ctool" style="color:var(--amber)">😊 Feeling</button>
+        <button class="spark">✦</button>
+      </div>
+    </section>
+
+    <div class="glass tabs">
+      <div class="tab active">✦ For You</div>
+      <div class="tab">👥 Following</div>
+      <div class="tab">🌐 Global</div>
+      <div class="tab">🤝 Friends</div>
+      <div class="tab">💻 Tech</div>
+      <div class="tab">🎨 Art</div>
+      <div class="tab">🎵 Music</div>
+      <div class="tab">More ▾</div>
+      <button class="iconbtn" style="margin-left:auto;width:38px;height:38px">⚙</button>
+    </div>
+
+    <article class="glass post">
+      <div class="posthead">
+        <span class="av" style="width:44px;height:44px">NP</span>
+        <div class="flex" style="flex:1">
+          <div class="row" style="gap:6px"><b>Nitesh Pandey</b><span style="color:var(--blue)">✔</span><span class="muted sm">@niteshpandey · 2h · 🌐</span></div>
+        </div>
+        <span class="muted">⋯</span>
+      </div>
+      <p style="margin:12px 0 0">Just published my new video on the future of Web5 and Decentralized Identity. Would love your thoughts! 🚀</p>
+      <div class="videothumb">
+        <div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#cbb6ff;font-weight:900;font-size:34px;letter-spacing:.04em;opacity:.5">THE FUTURE OF WEB5</div>
+        <div class="play">▶</div>
+      </div>
+      <div class="row" style="margin-top:14px;gap:18px;color:var(--muted)">
+        <span>❤️ 1.2K</span><span>💬 98</span><span>🔁 342</span><span style="margin-left:auto">↗ Share</span>
+      </div>
+    </article>
+  </main>
+
+  <!-- ============ RIGHT SIDEBAR ============ -->
+  <aside class="col right">
+    <div class="glass rc">
+      <div class="hd"><h4>People You May Know</h4><a href="#">View all</a></div>
+      <div class="person"><span class="av" style="width:42px;height:42px">AS</span><div class="meta"><b>Ananya Sharma</b><div class="muted sm">@ananya · 12 mutual</div></div><button class="connect">Connect</button></div>
+      <div class="person"><span class="av" style="width:42px;height:42px;background:linear-gradient(135deg,#3b82f6,#06b6d4)">RV</span><div class="meta"><b>Rohan Verma</b><div class="muted sm">@rohanverma · 8 mutual</div></div><button class="connect">Connect</button></div>
+      <div class="person"><span class="av" style="width:42px;height:42px;background:linear-gradient(135deg,#ec4899,#8b5cf6)">KS</span><div class="meta"><b>Kavya Singh</b><div class="muted sm">@kavya.s · 15 mutual</div></div><button class="connect">Connect</button></div>
+    </div>
+
+    <div class="glass rc">
+      <div class="hd"><h4>Live Activity</h4><a href="#">View all</a></div>
+      <div class="activity"><span class="sq" style="background:rgba(99,102,241,.18);color:var(--indigo)">🌐</span><div class="flex" style="flex:1"><b class="sm">Tech Universe</b><div class="muted xs">New discussion started</div></div><span class="muted xs">5m · <span class="dot" style="background:var(--violet)"></span></span></div>
+      <div class="activity"><span class="sq" style="background:rgba(236,72,153,.18);color:var(--pink)">🎨</span><div class="flex" style="flex:1"><b class="sm">Design Community</b><div class="muted xs">Kavya shared a post</div></div><span class="muted xs">12m · <span class="dot" style="background:var(--blue)"></span></span></div>
+      <div class="activity"><span class="sq" style="background:rgba(34,197,94,.18);color:var(--green)">🤖</span><div class="flex" style="flex:1"><b class="sm">AI Builders</b><div class="muted xs">Rohan commented</div></div><span class="muted xs">18m · <span class="dot" style="background:var(--green)"></span></span></div>
+      <div class="activity"><span class="sq" style="background:rgba(245,158,11,.18);color:var(--amber)">🪙</span><div class="flex" style="flex:1"><b class="sm">Web3 Innovators</b><div class="muted xs">New member joined</div></div><span class="muted xs">25m · <span class="dot" style="background:var(--amber)"></span></span></div>
+    </div>
+
+    <div class="glass rc">
+      <div class="hd"><h4>Trending Communities</h4><a href="#">View all</a></div>
+      <div class="community"><span class="av" style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,.2);color:var(--indigo)">🤖</span><div class="flex" style="flex:1"><b class="sm">AI Builders</b><div class="muted xs">12.4K members</div></div><button class="join">Join</button></div>
+      <div class="community"><span class="av" style="width:40px;height:40px;border-radius:12px;background:rgba(6,182,212,.2);color:var(--cyan)">🪐</span><div class="flex" style="flex:1"><b class="sm">Web3 Innovators</b><div class="muted xs">9.8K members</div></div><button class="join">Join</button></div>
+      <div class="community"><span class="av" style="width:40px;height:40px;border-radius:12px;background:rgba(236,72,153,.2);color:var(--pink)">🎨</span><div class="flex" style="flex:1"><b class="sm">Design Community</b><div class="muted xs">8.2K members</div></div><button class="join">Join</button></div>
+    </div>
+  </aside>
+</div>
+
+<div class="fabs">
+  <button class="fab spark">✦</button>
+  <button class="fab plus">+</button>
+</div>
+
+<!-- mobile drawer overlay -->
+<div class="drawer-ov" id="drawerOv"></div>
+
+<!-- mobile bottom navigation -->
+<nav class="mbottom">
+  <button class="active"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
+  <button><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="18" cy="9" r="2"/></svg>People</button>
+  <button class="mid"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Create</button>
+  <button><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1112 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/></svg>Alerts</button>
+  <button><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>Profile</button>
+</nav>
+
+<script>
+  (function(){
+    var burger=document.getElementById('burger'), ov=document.getElementById('drawerOv');
+    function open(){document.body.classList.add('drawer-open');}
+    function close(){document.body.classList.remove('drawer-open');}
+    if(burger) burger.addEventListener('click',open);
+    if(ov) ov.addEventListener('click',close);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    // close drawer when a nav link inside it is tapped
+    document.querySelectorAll('.col.left .nav a').forEach(function(a){a.addEventListener('click',close);});
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+const express = require('express');
+const auth = require('../middleware/auth');
+const crypto = require('crypto');
+const uuidv4 = () => crypto.randomUUID();
+const { readJson, writeJson, addActivity } = require('../utils/store');
+const router = express.Router();
+router.get('/', auth, (req,res)=>res.json(readJson(global.protocolsFile, {})[req.userId] || []));
+router.post('/', auth, (req,res)=>{ const {name,uri,icon,description}=req.body; if(!name||!uri) return res.status(400).json({error:'Name and URI required'}); const all=readJson(global.protocolsFile,{}); if(!Array.isArray(all[req.userId])) all[req.userId]=[]; const protocol={id:uuidv4(), name:String(name).trim(), uri:String(uri).trim(), icon:icon||'📡', description:String(description||''), is_active:true, installed_at:new Date().toISOString()}; all[req.userId].unshift(protocol); writeJson(global.protocolsFile, all); addActivity(req.userId,'protocol.installed',{name}); res.status(201).json(protocol); });
+router.patch('/:id/toggle', auth, (req,res)=>{ const all=readJson(global.protocolsFile,{}); const list=all[req.userId]||[]; const p=list.find(x=>x.id===req.params.id); if(!p) return res.status(404).json({error:'Protocol not found'}); p.is_active=!p.is_active; writeJson(global.protocolsFile, all); res.json(p); });
+router.delete('/:id', auth, (req,res)=>{ const all=readJson(global.protocolsFile,{}); const list=all[req.userId]||[]; all[req.userId]=list.filter(x=>x.id!==req.params.id); writeJson(global.protocolsFile, all); res.json({deleted:true}); });
+module.exports = router;
