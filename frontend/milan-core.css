@@ -193,9 +193,9 @@ body.milan-drawer-open { overflow: hidden; }
   #milan-burger { display: flex; }
 }
 
-/* V95 bottom nav active (mobile/PWA /app): lift the hamburger above the nav
+/* Bottom nav active (mobile/PWA /app): lift the hamburger above the nav
    bar so it never covers the 🏠 Home tab — mirrors the right-side dock. */
-body.milan-v95 #milan-burger {
+body.milan-mobile-ui #milan-burger {
   left: 12px;
   bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 }

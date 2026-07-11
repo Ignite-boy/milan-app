@@ -1,4 +1,4 @@
-/* MILAN service worker - v95
+/* MILAN service worker
    Goal: stay FRESH on Android/WebView (no stale app shell) while still giving a
    real offline experience. We do NOT cache the HTML/JS app shell (prevents old
    login patches from returning). We DO precache a small offline fallback + icons
