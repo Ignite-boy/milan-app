@@ -257,7 +257,7 @@ img, svg, video, canvas, iframe, table, embed, object { max-width: 100%; }
 /* ============================================================
    MILAN V7.2 — FACEBOOK-STYLE FEED-FIRST MOBILE (real /app).
    Mobile par profile+nav-menu stack hatao → feed sabse upar.
-   Saari nav hamburger drawer (milan-v72-mobile.js) mein already hai.
+   Saari nav hamburger drawer (milan-mobile-nav.js) mein already hai.
    Android APK (body.native-apk) ko chhodo — uska apna layout hai.
    ============================================================ */
 @media (max-width: 820px) {

@@ -28,7 +28,7 @@
 
   /* ---- styles (scoped, additive) ---------------------------------------- */
   var css = document.createElement("style");
-  css.id = "milan-v95-mobile-parity-css";
+  css.id = "milan-mobile-parity-css";
   css.textContent = [
     /* Bottom nav — render on every small screen, not only premium-ui */
     "@media (max-width:760px){",
