@@ -1,68 +1,80 @@
 #!/usr/bin/env node
-/* ============================================================
+/* =============================================================================
    MILAN — clean production release packager
-   Cross-platform (Node 16+). No dependencies.
+   Cross-platform (Node 16+). Zero dependencies.
 
-   Builds a `milan-release/` staging folder containing ONLY the
-   files needed to run MILAN in production, then (best-effort)
-   compresses it to `milan-release.zip`.
+   Builds a `milan-release/` staging folder containing ONLY the files needed to
+   run MILAN in production, then (best-effort) compresses it to
+   `milan-release.zip` next to the project, ready to upload and deploy.
 
-   It DELETES NOTHING from your working copy — it only copies the
-   shippable subset into a fresh folder. Safe and reversible.
+   It DELETES NOTHING from your working copy — it only copies the shippable
+   subset into a fresh folder. Safe and reversible.
 
-   What it EXCLUDES (never shipped):
+   Excluded (never shipped):
      • node_modules/            (reinstalled on the server)
-     • .env  + any *.env        (secrets — ship .env.example only)
-     • *.log, backend/logs/     (runtime logs)
-     • backend/real-dwn-engine/ (REAL user DWN data)
-     • backend/RESOLVERCACHE/   (runtime cache)
-     • backend/dwn/             (live user database)
-     • *.bak, *.last-good.bak   (database backups = user data)
-     • *.zip, _deploy_tmp/, *.bak/ (build artifacts)
-     • .git/, OS/editor cruft
+     • backend/bin/             (yt-dlp binary — installed/preserved on server)
+     • .env and any .env.* / *.env / *.pem / *.key  (secrets)
+     • backend/dwn/, backend/real-dwn-engine/, RESOLVERCACHE/  (live user data)
+     • *.log, logs/, *.bak, *-snapshot*.json  (runtime / backups)
+     • *.zip / *.tar.gz, .git/, OS & editor cruft
 
    Usage:
-     node package-release.mjs
-     node package-release.mjs --include-docs   (keep the *.md docs)
-   ============================================================ */
+     node scripts/package-release.mjs
+     node scripts/package-release.mjs --include-docs   (keep the docs/ *.md)
+   ============================================================================= */
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = path.join(ROOT, "milan-release");
-const ZIP = path.join(ROOT, "milan-release.zip");
+// The script lives at <app>/scripts/ — resolve the real app root from there.
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const APP_ROOT   = path.resolve(SCRIPT_DIR, "..");        // e.g. ~/milan-app
+const APP_NAME   = path.basename(APP_ROOT);              // "milan-app"
+const PARENT     = path.resolve(APP_ROOT, "..");         // OUTSIDE the tree we copy
+
+// Output lives OUTSIDE the app folder so the staging copy can never include
+// itself. The zip lands next to the project, ready to upload.
+const OUT_DIR = path.join(PARENT, "milan-release");
+const STAGE   = path.join(OUT_DIR, APP_NAME);            // milan-release/milan-app
+const ZIP     = path.join(PARENT, "milan-release.zip");
+const TGZ     = path.join(PARENT, "milan-release.tar.gz");
+
 const KEEP_DOCS = process.argv.includes("--include-docs");
 
-/* Only this app is shipped (milan-web5 is a separate project). */
-const SHIP_ROOTS = ["milan-app"];
-
-/* Directory names skipped anywhere in the tree. */
+// Directory names skipped anywhere in the tree.
 const SKIP_DIRS = new Set([
-  "node_modules", ".git", "real-dwn-engine", "RESOLVERCACHE", "dwn",
-  "logs", "data", "_deploy_tmp", "milan-app.bak", ".cache", "dist",
+  "node_modules", ".git", "dwn", "real-dwn-engine", "RESOLVERCACHE",
+  "bin", "logs", "data", "uploads", "_deploy_tmp", ".cache", "dist",
+  "milan-release",
 ]);
 
-/* Dev/audit docs excluded unless --include-docs. */
+// Dev/audit docs excluded unless --include-docs.
 const DEV_DOCS = new Set([
   "AUDIT_REPORT.md", "AUTO_DEPLOY.md", "MAIL_SETUP.md", "MILAN_V7_UPDATE_NOTES.md",
   "PERFORMANCE.md", "PERF_SEO_ADVANCED.md", "REAL_DWN_IMPLEMENTATION.md",
   "SEO_IMPLEMENTATION.md", "SEO_STRATEGY.md", "SETTINGS_GUIDE.md", "FEED_UI_PROMPT.md",
 ]);
 
+// Single source of truth for "this file is a secret" — used by BOTH the copy
+// filter and the post-build leak scan, so the two can never disagree.
+function isSecretFile(name) {
+  if (name === ".env.example" || name === ".env.local.example") return false;
+  if (name === ".env" || name.startsWith(".env.")) return true;   // .env, .env.local, .env.prod…
+  if (name.endsWith(".env")) return true;                         // prod.env
+  if (/\.(pem|key|p12|pfx)$/i.test(name)) return true;            // certificates / private keys
+  return false;
+}
+
 function skipFile(name) {
-  if (name === ".env" || name.endsWith(".env")) {
-    return name !== ".env.example"; // keep the example, drop real envs
-  }
+  if (isSecretFile(name)) return true;
   if (/\.log$/i.test(name)) return true;
-  if (/\.(bak|seobak|orig|tmp)$/i.test(name)) return true;
-  if (/\.last-good\.bak$/i.test(name)) return true;
-  if (/~$/.test(name)) return true;
+  if (/\.(bak|orig|tmp|swp)$/i.test(name)) return true;
   if (/-snapshot.*\.json$/i.test(name)) return true;
-  if (/\.zip$/i.test(name)) return true;
-  if (name === ".DS_Store" || name === "Thumbs.db") return true;
+  if (/\.(zip|tar|gz|tgz)$/i.test(name)) return true;
+  if (/~$/.test(name)) return true;
+  if (name === ".DS_Store" || name === "Thumbs.db" || name === "desktop.ini") return true;
   if (!KEEP_DOCS && DEV_DOCS.has(name)) return true;
   return false;
 }
@@ -73,6 +85,8 @@ function walk(srcDir, destDir) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
     const src = path.join(srcDir, entry.name);
+    // Defensive: never descend into the output/zip even if it lands in-tree.
+    if (src === OUT_DIR || src === ZIP || src === TGZ) { skipped++; continue; }
     const dest = path.join(destDir, entry.name);
     if (entry.isDirectory()) {
       if (SKIP_DIRS.has(entry.name)) { skipped++; continue; }
@@ -83,6 +97,7 @@ function walk(srcDir, destDir) {
       copied++;
       bytes += fs.statSync(src).size;
     }
+    // symlinks and other types are intentionally ignored
   }
 }
 
@@ -93,55 +108,68 @@ function human(n) {
   return `${n.toFixed(1)} ${u[i]}`;
 }
 
-/* ── run ─────────────────────────────────────────────────── */
+/* ── run ──────────────────────────────────────────────────────────────────── */
 console.log("MILAN release packager\n----------------------");
-fs.rmSync(OUT_DIR, { recursive: true, force: true });
-fs.rmSync(ZIP, { force: true });
 
-for (const r of SHIP_ROOTS) {
-  const src = path.join(ROOT, r);
-  if (!fs.existsSync(src)) { console.warn(`!  ${r} not found, skipping`); continue; }
-  walk(src, path.join(OUT_DIR, r));
+if (!fs.existsSync(path.join(APP_ROOT, "backend", "server.js"))) {
+  console.error(`❌ ${APP_ROOT} does not look like the MILAN app (backend/server.js missing).`);
+  process.exit(1);
 }
 
-/* Guarantee an .env.example exists in the package. */
-const envExample = path.join(OUT_DIR, "milan-app", "backend", ".env.example");
+fs.rmSync(OUT_DIR, { recursive: true, force: true });
+fs.rmSync(ZIP, { force: true });
+fs.rmSync(TGZ, { force: true });
+
+walk(APP_ROOT, STAGE);
+
+// Guarantee a backend/.env.example exists in the package (template only).
+const envExample = path.join(STAGE, "backend", ".env.example");
 if (!fs.existsSync(envExample)) {
   fs.mkdirSync(path.dirname(envExample), { recursive: true });
   fs.writeFileSync(envExample,
     "# Copy to .env and fill in. NEVER commit the real .env.\n" +
-    "PORT=5000\nRESEND_API_KEY=\nMAIL_FROM=\nMAIL_FROM_ADDRESS=\n" +
-    "PUBLIC_BASE_URL=\nJWT_SECRET=\nMILAN_RAZORPAY_KEY_ID=\nRAZORPAY_KEY_SECRET=\n");
+    "PORT=5000\n" +
+    "NODE_ENV=production\n" +
+    "JWT_SECRET=\n" +
+    "ADMIN_TOKEN=\n" +
+    "YOUTUBE_API_KEY=\n" +
+    "RESEND_API_KEY=\n" +
+    "MAIL_FROM=\n" +
+    "MAIL_FROM_ADDRESS=\n" +
+    "PUBLIC_BASE_URL=https://www.milanlife.in\n");
   console.log("+  wrote a starter backend/.env.example");
 }
 
-/* Safety scan: make sure no real secrets leaked into the package. */
+// Safety scan: make sure no real secret leaked into the package.
 let leaks = 0;
 (function scan(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) scan(p);
-    else if (e.name === ".env" && e.name !== ".env.example") { leaks++; console.error("LEAK:", p); }
+    if (e.isDirectory()) { scan(p); continue; }
+    if (isSecretFile(e.name)) { leaks++; console.error("LEAK:", p); }
   }
 })(OUT_DIR);
 
 console.log(`\nCopied : ${copied} files (${human(bytes)})`);
-console.log(`Skipped: ${skipped} dirs/files (node_modules, secrets, logs, user data)`);
-console.log(`Staged : ${OUT_DIR}`);
-if (leaks) { console.error(`\n❌ ${leaks} .env file(s) leaked into the package — aborting zip.`); process.exit(1); }
+console.log(`Skipped: ${skipped} dirs/files (node_modules, bin, secrets, logs, user data)`);
+console.log(`Staged : ${STAGE}`);
 
-/* Best-effort compression: prefer `zip`, fall back to `tar` (zip format). */
-let zipped = false;
-const tryZip = spawnSync("zip", ["-rq", ZIP, "milan-release"], { cwd: ROOT });
-if (tryZip.status === 0) zipped = true;
-if (!zipped) {
-  const tryTar = spawnSync("tar", ["-a", "-c", "-f", ZIP, "milan-release"], { cwd: ROOT });
-  if (tryTar.status === 0) zipped = true;
+if (leaks) {
+  console.error(`\n❌ ${leaks} secret file(s) leaked into the package — aborting before archiving.`);
+  process.exit(1);
 }
 
-if (zipped && fs.existsSync(ZIP)) {
-  console.log(`\n✅ Wrote ${path.basename(ZIP)} (${human(fs.statSync(ZIP).size)})`);
+// Compress (best-effort): prefer real `zip`; else fall back to a real `.tar.gz`.
+let archive = null;
+if (spawnSync("zip", ["-rq", ZIP, APP_NAME], { cwd: OUT_DIR }).status === 0 && fs.existsSync(ZIP)) {
+  archive = ZIP;
+} else if (spawnSync("tar", ["-czf", TGZ, APP_NAME], { cwd: OUT_DIR }).status === 0 && fs.existsSync(TGZ)) {
+  archive = TGZ;
+}
+
+if (archive) {
+  console.log(`\n✅ Wrote ${path.basename(archive)} (${human(fs.statSync(archive).size)})`);
+  console.log(`\nNext: upload ${path.basename(archive)} to your server and run scripts/redeploy.sh`);
 } else {
-  console.log(`\nℹ️  Couldn't auto-zip (no zip/tar). Just zip the 'milan-release' folder manually.`);
+  console.log(`\nℹ️  No zip/tar available — compress the '${STAGE}' folder manually.`);
 }
-console.log("\nNext: upload the zip to your server and run redeploy.sh");
