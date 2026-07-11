@@ -7,31 +7,31 @@
 
 html.milan-shell,
 html.milan-shell body {
-  --v72-bg:        #0b1220;
-  --v72-bg-2:      #0d1526;
-  --v72-panel:     #131c2e;
-  --v72-panel-2:   #18233a;
-  --v72-elev:      #1c2941;
-  --v72-line:      rgba(148,163,184,.14);
-  --v72-line-2:    rgba(148,163,184,.22);
-  --v72-text:      #e8edf6;
-  --v72-muted:     #8a99b4;
-  --v72-faint:     #5f6f8c;
-  --v72-blue:      #3b82f6;
-  --v72-blue-2:    #2563eb;
-  --v72-green:     #22c55e;
-  --v72-radius:    16px;
-  --v72-radius-lg: 22px;
+  --shell-bg:        #0b1220;
+  --shell-bg-2:      #0d1526;
+  --shell-panel:     #131c2e;
+  --shell-panel-2:   #18233a;
+  --shell-elev:      #1c2941;
+  --shell-line:      rgba(148,163,184,.14);
+  --shell-line-2:    rgba(148,163,184,.22);
+  --shell-text:      #e8edf6;
+  --shell-muted:     #8a99b4;
+  --shell-faint:     #5f6f8c;
+  --shell-blue:      #3b82f6;
+  --shell-blue-2:    #2563eb;
+  --shell-green:     #22c55e;
+  --shell-radius:    16px;
+  --shell-radius-lg: 22px;
 }
 
 /* ---- base canvas ---- */
 html.milan-shell body {
-  background: var(--v72-bg) !important;
-  color: var(--v72-text) !important;
+  background: var(--shell-bg) !important;
+  color: var(--shell-text) !important;
   font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif !important;
   letter-spacing: -.005em;
 }
-html.milan-shell body.dark { background: var(--v72-bg) !important; }
+html.milan-shell body.dark { background: var(--shell-bg) !important; }
 html.milan-shell body::after,
 html.milan-shell body::before { display: none !important; content: none !important; }
 
@@ -42,8 +42,8 @@ html.milan-shell .milan-aurora-bar::before { display: none !important; }
 
 /* ---- TOP BAR ---- */
 html.milan-shell .topbar {
-  background: var(--v72-bg-2) !important;
-  border-bottom: 1px solid var(--v72-line) !important;
+  background: var(--shell-bg-2) !important;
+  border-bottom: 1px solid var(--shell-line) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   position: sticky; top: 0; z-index: 60;
@@ -77,7 +77,7 @@ html.milan-shell .brand h1 {
 }
 html.milan-shell .brand .tag {
   display: block !important;
-  color: var(--v72-muted) !important;
+  color: var(--shell-muted) !important;
   font-size: 12px !important; font-weight: 600 !important;
   letter-spacing: 0 !important;
 }
@@ -92,9 +92,9 @@ html.milan-shell .search select { display: none !important; } /* moved into Filt
 html.milan-shell #globalSearch {
   height: 46px !important;
   border-radius: 999px !important;
-  background: var(--v72-panel) !important;
-  border: 1px solid var(--v72-line) !important;
-  color: var(--v72-text) !important;
+  background: var(--shell-panel) !important;
+  border: 1px solid var(--shell-line) !important;
+  color: var(--shell-text) !important;
   padding: 0 18px 0 44px !important;
   font-size: 14px !important;
 }
@@ -104,7 +104,7 @@ html.milan-shell .search::before {
   transform: translateY(-50%);
   font-size: 14px; opacity: .5; pointer-events: none; z-index: 2;
 }
-html.milan-shell #globalSearch::placeholder { color: var(--v72-faint) !important; }
+html.milan-shell #globalSearch::placeholder { color: var(--shell-faint) !important; }
 
 /* top action cluster */
 html.milan-shell .topActions {
@@ -115,20 +115,20 @@ html.milan-shell .topActions {
 html.milan-shell .topActions button {
   height: 42px !important;
   border-radius: 12px !important;
-  background: var(--v72-panel) !important;
-  border: 1px solid var(--v72-line) !important;
-  color: var(--v72-text) !important;
+  background: var(--shell-panel) !important;
+  border: 1px solid var(--shell-line) !important;
+  color: var(--shell-text) !important;
   font-weight: 700 !important; font-size: 13px !important;
   box-shadow: none !important;
   padding: 0 16px !important;
   display: inline-flex; align-items: center; gap: 8px;
 }
 html.milan-shell .topActions button:hover {
-  background: var(--v72-panel-2) !important;
-  border-color: var(--v72-line-2) !important;
+  background: var(--shell-panel-2) !important;
+  border-color: var(--shell-line-2) !important;
   transform: none !important; filter: none !important;
 }
-html.milan-shell .topActions .danger { background: var(--v72-panel) !important; color: #f87171 !important; }
+html.milan-shell .topActions .danger { background: var(--shell-panel) !important; color: #f87171 !important; }
 
 /* the stacked status pills (Cloud DWN / AI / DWN) live in .navlinks slot */
 html.milan-shell .navlinks {
@@ -143,19 +143,19 @@ html.milan-shell #milan-shell-status {
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12.5px; font-weight: 700; white-space: nowrap;
 }
-html.milan-shell #milan-shell-status .st { display: flex; align-items: center; gap: 7px; color: var(--v72-muted); }
+html.milan-shell #milan-shell-status .st { display: flex; align-items: center; gap: 7px; color: var(--shell-muted); }
 html.milan-shell #milan-shell-status .dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--v72-green);
+  width: 8px; height: 8px; border-radius: 50%; background: var(--shell-green);
   box-shadow: 0 0 8px rgba(34,197,94,.5);
 }
-html.milan-shell #milan-shell-status .ok { color: var(--v72-green); }
+html.milan-shell #milan-shell-status .ok { color: var(--shell-green); }
 
 /* avatar + dropdown trigger */
 html.milan-shell #milan-shell-userbtn {
   display: inline-flex; align-items: center; gap: 6px;
   height: 42px; padding: 0 8px 0 4px;
-  border-radius: 12px; background: var(--v72-panel);
-  border: 1px solid var(--v72-line); cursor: pointer; color: var(--v72-text);
+  border-radius: 12px; background: var(--shell-panel);
+  border: 1px solid var(--shell-line); cursor: pointer; color: var(--shell-text);
 }
 html.milan-shell #milan-shell-userbtn .av {
   width: 32px; height: 32px; border-radius: 9px;
@@ -165,21 +165,21 @@ html.milan-shell #milan-shell-userbtn .av {
 html.milan-shell #milan-shell-menu {
   position: absolute; top: 70px; right: 26px; z-index: 200;
   min-width: 220px; padding: 8px;
-  background: var(--v72-panel) !important;
-  border: 1px solid var(--v72-line-2);
+  background: var(--shell-panel) !important;
+  border: 1px solid var(--shell-line-2);
   border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.5);
   display: none; flex-direction: column; gap: 2px;
 }
 html.milan-shell #milan-shell-menu.open { display: flex; }
 html.milan-shell #milan-shell-menu button {
   width: 100%; text-align: left; background: transparent !important;
-  border: 0 !important; color: var(--v72-text) !important;
+  border: 0 !important; color: var(--shell-text) !important;
   padding: 11px 12px !important; border-radius: 10px !important;
   font-weight: 600 !important; display: flex; align-items: center; gap: 10px;
   box-shadow: none !important; height: auto !important;
 }
-html.milan-shell #milan-shell-menu button:hover { background: var(--v72-panel-2) !important; }
-html.milan-shell #milan-shell-menu .sep { height: 1px; background: var(--v72-line); margin: 4px 6px; }
+html.milan-shell #milan-shell-menu button:hover { background: var(--shell-panel-2) !important; }
+html.milan-shell #milan-shell-menu .sep { height: 1px; background: var(--shell-line); margin: 4px 6px; }
 
 /* ---- 3-COLUMN LAYOUT ---- */
 html.milan-shell .layout {
@@ -194,9 +194,9 @@ html.milan-shell .post,
 html.milan-shell .rightBox,
 html.milan-shell .profileCard,
 html.milan-shell .quickCard {
-  background: var(--v72-panel) !important;
-  border: 1px solid var(--v72-line) !important;
-  border-radius: var(--v72-radius-lg) !important;
+  background: var(--shell-panel) !important;
+  border: 1px solid var(--shell-line) !important;
+  border-radius: var(--shell-radius-lg) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
 }
@@ -207,18 +207,18 @@ html.milan-shell .profileRow { flex-direction: column !important; align-items: c
 html.milan-shell .avatar.lg {
   width: 96px !important; height: 96px !important; border-radius: 999px !important;
   font-size: 34px !important;
-  background: var(--v72-elev) !important;
-  border: 3px solid var(--v72-blue) !important;
+  background: var(--shell-elev) !important;
+  border: 3px solid var(--shell-blue) !important;
   box-shadow: 0 0 0 4px rgba(59,130,246,.12) !important;
-  color: var(--v72-text) !important;
+  color: var(--shell-text) !important;
   position: relative;
 }
 html.milan-shell .profileCard b, html.milan-shell #myName { font-size: 19px !important; font-weight: 800 !important; }
-html.milan-shell #myEmail { color: var(--v72-muted) !important; font-size: 13px !important; }
+html.milan-shell #myEmail { color: var(--shell-muted) !important; font-size: 13px !important; }
 html.milan-shell .did { display: none !important; } /* DID hidden in this clean look */
 html.milan-shell .profileCard .mini a,
 html.milan-shell #milan-shell-viewprofile {
-  color: var(--v72-blue) !important; font-weight: 700; font-size: 13px; text-decoration: none;
+  color: var(--shell-blue) !important; font-weight: 700; font-size: 13px; text-decoration: none;
 }
 
 /* nav menu list */
@@ -229,32 +229,32 @@ html.milan-shell .menu {
 }
 html.milan-shell .menu button {
   width: 100% !important; justify-content: flex-start !important; text-align: left !important;
-  background: transparent !important; color: var(--v72-muted) !important;
+  background: transparent !important; color: var(--shell-muted) !important;
   border-radius: 12px !important; padding: 13px 16px !important;
   font-weight: 700 !important; font-size: 15px !important;
   margin: 0 !important; box-shadow: none !important; min-height: 0 !important;
   display: flex; align-items: center; gap: 14px;
 }
-html.milan-shell .menu button:hover { background: var(--v72-panel-2) !important; color: var(--v72-text) !important; }
+html.milan-shell .menu button:hover { background: var(--shell-panel-2) !important; color: var(--shell-text) !important; }
 html.milan-shell .menu button.active {
-  background: var(--v72-panel-2) !important; color: var(--v72-text) !important;
-  border-left: 3px solid var(--v72-blue) !important;
+  background: var(--shell-panel-2) !important; color: var(--shell-text) !important;
+  border-left: 3px solid var(--shell-blue) !important;
 }
 
 /* System Status card (built from .stats) */
 html.milan-shell #milan-shell-sysstatus {
   margin-top: 14px; padding: 18px;
-  background: var(--v72-panel) !important; border: 1px solid var(--v72-line);
-  border-radius: var(--v72-radius-lg);
+  background: var(--shell-panel) !important; border: 1px solid var(--shell-line);
+  border-radius: var(--shell-radius-lg);
 }
 html.milan-shell #milan-shell-sysstatus h4 {
-  margin: 0 0 12px; font-size: 16px; font-weight: 800; color: var(--v72-text);
+  margin: 0 0 12px; font-size: 16px; font-weight: 800; color: var(--shell-text);
 }
 html.milan-shell #milan-shell-sysstatus .row {
   display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px;
 }
-html.milan-shell #milan-shell-sysstatus .row span { color: var(--v72-muted); }
-html.milan-shell #milan-shell-sysstatus .row b { color: var(--v72-text); font-weight: 800; }
+html.milan-shell #milan-shell-sysstatus .row span { color: var(--shell-muted); }
+html.milan-shell #milan-shell-sysstatus .row b { color: var(--shell-text); font-weight: 800; }
 html.milan-shell .stats { display: none !important; } /* original 2x2 stat grid hidden, replaced */
 
 /* ---- COMPOSER (Create Post) ---- */
@@ -263,59 +263,59 @@ html.milan-shell .composerHead { display: block !important; }
 html.milan-shell #composerAvatar { display: none !important; }
 html.milan-shell .composer::before {
   content: "Create Post"; display: block;
-  font-size: 22px; font-weight: 800; margin-bottom: 16px; color: var(--v72-text);
+  font-size: 22px; font-weight: 800; margin-bottom: 16px; color: var(--shell-text);
 }
 html.milan-shell #postTitle, html.milan-shell #postText {
-  background: var(--v72-bg-2) !important;
-  border: 1px solid var(--v72-line) !important;
-  border-radius: 14px !important; color: var(--v72-text) !important;
+  background: var(--shell-bg-2) !important;
+  border: 1px solid var(--shell-line) !important;
+  border-radius: 14px !important; color: var(--shell-text) !important;
 }
 html.milan-shell #postTitle { height: 52px !important; font-size: 16px !important; margin-bottom: 12px; }
 html.milan-shell #postText { min-height: 150px !important; font-size: 15px !important; }
-html.milan-shell #postTitle::placeholder, html.milan-shell #postText::placeholder { color: var(--v72-faint) !important; }
+html.milan-shell #postTitle::placeholder, html.milan-shell #postText::placeholder { color: var(--shell-faint) !important; }
 
 html.milan-shell #publishBtn {
   width: 100% !important; height: 52px !important; margin-top: 6px !important;
   border-radius: 14px !important;
-  background: var(--v72-panel-2) !important; color: var(--v72-muted) !important;
-  border: 1px solid var(--v72-line) !important; font-size: 16px !important; font-weight: 800 !important;
+  background: var(--shell-panel-2) !important; color: var(--shell-muted) !important;
+  border: 1px solid var(--shell-line) !important; font-size: 16px !important; font-weight: 800 !important;
   box-shadow: none !important;
 }
-html.milan-shell #publishBtn:hover { background: var(--v72-elev) !important; color: var(--v72-text) !important; }
+html.milan-shell #publishBtn:hover { background: var(--shell-elev) !important; color: var(--shell-text) !important; }
 
 /* Photo/Video button (the modern-upload dropzone trigger / file row) */
 html.milan-shell .milan-mu-trigger, html.milan-shell label[for="mediaFile"] {
-  background: var(--v72-blue) !important; color: #fff !important;
+  background: var(--shell-blue) !important; color: #fff !important;
   border-radius: 12px !important; font-weight: 800 !important;
 }
 html.milan-shell #privacy {
-  background: var(--v72-bg-2) !important; border: 1px solid var(--v72-line) !important;
-  color: var(--v72-text) !important; border-radius: 12px !important; height: 46px !important;
+  background: var(--shell-bg-2) !important; border: 1px solid var(--shell-line) !important;
+  color: var(--shell-text) !important; border-radius: 12px !important; height: 46px !important;
 }
 
 /* ---- AI ASSISTANT inline panel ---- */
 html.milan-shell #milan-ai-assist, html.milan-shell .milan-ai-panel {
-  background: var(--v72-bg-2) !important;
-  border: 1px solid var(--v72-line) !important;
+  background: var(--shell-bg-2) !important;
+  border: 1px solid var(--shell-line) !important;
   border-radius: 16px !important;
 }
 html.milan-shell .milan-ai-chip,
 html.milan-shell .milan-ai-btn {
-  background: var(--v72-panel-2) !important;
-  border: 1px solid var(--v72-line) !important;
-  color: var(--v72-text) !important; border-radius: 12px !important;
+  background: var(--shell-panel-2) !important;
+  border: 1px solid var(--shell-line) !important;
+  color: var(--shell-text) !important; border-radius: 12px !important;
 }
 
 /* ---- RIGHT RAIL ---- */
 html.milan-shell .rightBox { padding: 20px !important; }
 html.milan-shell .sectionTitle { font-size: 18px !important; font-weight: 800 !important; margin-bottom: 14px !important; }
 html.milan-shell #peopleSearch {
-  background: var(--v72-bg-2) !important; border: 1px solid var(--v72-line) !important;
-  border-radius: 999px !important; height: 44px !important; color: var(--v72-text) !important;
+  background: var(--shell-bg-2) !important; border: 1px solid var(--shell-line) !important;
+  border-radius: 999px !important; height: 44px !important; color: var(--shell-text) !important;
 }
 html.milan-shell .person {
   background: transparent !important; border: 0 !important;
-  border-bottom: 1px solid var(--v72-line) !important; border-radius: 0 !important;
+  border-bottom: 1px solid var(--shell-line) !important; border-radius: 0 !important;
   padding: 12px 2px !important;
 }
 html.milan-shell .person:last-child { border-bottom: 0 !important; }
@@ -326,13 +326,13 @@ html.milan-shell .avatar {
 }
 html.milan-shell .notifList .bubble, html.milan-shell .bubble {
   background: transparent !important; border: 0 !important;
-  border-bottom: 1px solid var(--v72-line) !important; border-radius: 0 !important;
+  border-bottom: 1px solid var(--shell-line) !important; border-radius: 0 !important;
   padding: 12px 2px !important;
 }
 html.milan-shell #markReadBtn {
   width: 100% !important; margin-top: 10px !important;
-  background: var(--v72-panel-2) !important; border: 1px solid var(--v72-line) !important;
-  color: var(--v72-text) !important; border-radius: 12px !important; font-weight: 800 !important;
+  background: var(--shell-panel-2) !important; border: 1px solid var(--shell-line) !important;
+  color: var(--shell-text) !important; border-radius: 12px !important; font-weight: 800 !important;
 }
 
 /* ---- FEED POSTS ---- */
@@ -341,20 +341,20 @@ html.milan-shell .postHead { padding: 18px 18px 8px !important; }
 html.milan-shell .postTitle { font-size: 17px !important; font-weight: 800 !important; }
 html.milan-shell .reactionBar {
   display: flex !important; gap: 4px !important; padding: 6px 12px 12px !important;
-  border-top: 1px solid var(--v72-line) !important;
+  border-top: 1px solid var(--shell-line) !important;
 }
 html.milan-shell .reactionBar button {
-  flex: 1; background: transparent !important; color: var(--v72-muted) !important;
+  flex: 1; background: transparent !important; color: var(--shell-muted) !important;
   border-radius: 12px !important; font-weight: 700 !important;
 }
 html.milan-shell .reactionBar button:hover,
 html.milan-shell .reactionBar button.active {
-  background: var(--v72-panel-2) !important; color: var(--v72-text) !important;
+  background: var(--shell-panel-2) !important; color: var(--shell-text) !important;
 }
 html.milan-shell .media { border-radius: 14px !important; margin: 0 16px 12px !important; background:#05070d !important; }
 html.milan-shell .badge {
-  background: var(--v72-panel-2) !important; border: 1px solid var(--v72-line) !important;
-  color: var(--v72-muted) !important;
+  background: var(--shell-panel-2) !important; border: 1px solid var(--shell-line) !important;
+  color: var(--shell-muted) !important;
 }
 
 /* health pill in topbar */
@@ -362,7 +362,7 @@ html.milan-shell .health { display: none !important; } /* replaced by status sta
 
 /* scrollbar */
 html.milan-shell ::-webkit-scrollbar { width: 8px; height: 8px; }
-html.milan-shell ::-webkit-scrollbar-thumb { background: var(--v72-line-2); border-radius: 99px; }
+html.milan-shell ::-webkit-scrollbar-thumb { background: var(--shell-line-2); border-radius: 99px; }
 html.milan-shell ::-webkit-scrollbar-track { background: transparent; }
 
 /* ---- responsive ---- */
