@@ -82,7 +82,8 @@ router.post('/order', auth, async (req, res) => {
       body: JSON.stringify({
         amount,
         currency: 'INR',
-        receipt: 'milan_' + String(req.userId).slice(0, 24) + '_' + Date.now(),
+        // Razorpay allows max 40 chars: "m_" + 20 + "_" + base36 time (~9) = ~32.
+        receipt: ('m_' + String(req.userId).slice(0, 20) + '_' + Date.now().toString(36)).slice(0, 40),
         notes: { userId: req.userId, email: req.userEmail, plan, cycle }
       })
     });
