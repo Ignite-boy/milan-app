@@ -3,10 +3,12 @@
 # npm install → pm2 restart.
 #
 # Required repo secrets (Settings → Secrets and variables → Actions):
-#   VM_HOST     — VM external IP or hostname
-#   VM_USER     — SSH username on the VM (np7218468_gmail_com)
-#   VM_SSH_KEY  — private SSH key whose public half is in the VM's
-#                 ~/.ssh/authorized_keys
+#   VM_HOST         — VM external IP or hostname
+#   VM_USER         — SSH username on the VM (np7218468_gmail_com)
+#   VM_SSH_KEY_B64  — private SSH key, base64-encoded to a SINGLE line so
+#                     copy-paste can never mangle it. Generate on the VM with:
+#                         base64 -w0 ~/.ssh/github-deploy
+#                     (falls back to VM_SSH_KEY as a raw multi-line key)
 #
 # SAFETY: the deploy only touches git-tracked files. Live data + secrets
 # (backend/.env, backend/dwn, backend/real-dwn-engine, backend/bin, …) are
@@ -30,50 +32,71 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Prepare SSH key
+        env:
+          VM_SSH_KEY_B64: ${{ secrets.VM_SSH_KEY_B64 }}
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          if [ -n "$VM_SSH_KEY_B64" ]; then
+            printf '%s' "$VM_SSH_KEY_B64" | tr -d ' \n\r' | base64 -d > ~/.ssh/deploy_key
+          elif [ -n "$VM_SSH_KEY" ]; then
+            printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/deploy_key
+          else
+            echo "::error::Neither VM_SSH_KEY_B64 nor VM_SSH_KEY secret is set"
+            exit 1
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          if ! ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null 2>&1; then
+            echo "::error::The SSH key secret is not a valid private key. On the VM run: base64 -w0 ~/.ssh/github-deploy  and paste that single line into the VM_SSH_KEY_B64 secret."
+            exit 1
+          fi
+          echo "SSH key OK ✔"
+
       - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
         env:
           # Ephemeral token so the VM can fetch this repo even if it's private.
-          # Passed only for this one fetch — never written to .git/config.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          command_timeout: 20m
-          envs: GH_TOKEN
-          script: |
-            set -e
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=accept-new \
+              -o ConnectTimeout=30 \
+              "$VM_USER@$VM_HOST" \
+              "GH_TOKEN=$GH_TOKEN REPO_SLUG=${{ github.repository }} bash -s" << 'DEPLOY'
+          set -e
 
-            # Non-interactive SSH sessions often miss node/npm/pm2 from PATH
-            # (nvm installs). Load login-shell environment first.
-            [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
-            [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
-            [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
+          # Non-interactive SSH sessions often miss node/npm/pm2 from PATH
+          # (nvm installs). Load login-shell environment first.
+          [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
+          [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
+          [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
 
-            APP="$HOME/milan-app"
-            REPO="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          APP="$HOME/milan-app"
+          REPO="https://x-access-token:${GH_TOKEN}@github.com/${REPO_SLUG}.git"
 
-            mkdir -p "$APP"
-            cd "$APP"
+          mkdir -p "$APP"
+          cd "$APP"
 
-            # First run on a zip-deployed install: turn the folder into a git
-            # repo in place. Git-ignored live data stays untouched.
-            if [ ! -d .git ]; then
-              echo "No .git found — initializing repo in place…"
-              git init -b main
-            fi
+          # First run on a zip-deployed install: turn the folder into a git
+          # repo in place. Git-ignored live data stays untouched.
+          if [ ! -d .git ]; then
+            echo "No .git found — initializing repo in place…"
+            git init -b main
+          fi
 
-            echo "Fetching latest main…"
-            git fetch "$REPO" main
-            git checkout -f -B main FETCH_HEAD
+          echo "Fetching latest main…"
+          git fetch "$REPO" main
+          git checkout -f -B main FETCH_HEAD
 
-            echo "Installing backend dependencies…"
-            cd backend
-            npm install --no-fund --no-audit --loglevel=error
+          echo "Installing backend dependencies…"
+          cd backend
+          npm install --no-fund --no-audit --loglevel=error
 
-            echo "Restarting pm2 process 'milan'…"
-            pm2 restart milan --update-env || NODE_ENV=production pm2 start ecosystem.config.js
-            pm2 save
+          echo "Restarting pm2 process 'milan'…"
+          pm2 restart milan --update-env || NODE_ENV=production pm2 start ecosystem.config.js
+          pm2 save
 
-            echo "✅ Deploy complete: $(git -C "$APP" rev-parse --short HEAD)"
+          echo "✅ Deploy complete: $(git -C "$APP" rev-parse --short HEAD)"
+          DEPLOY
