@@ -86,7 +86,7 @@ app.use(compression({
 app.use(express.json({ limit: process.env.JSON_LIMIT || '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: process.env.URLENCODED_LIMIT || '10mb' }));
 
-// V26 storage rule: all Milan runtime data is saved under the REAL CLOUD DWN root.
+// storage rule: all Milan runtime data is saved under the REAL CLOUD DWN root.
 // On Render, this points to a configured writable cloud DWN root. If /var/data is not writable, V26 falls back safely so the app does not crash. Attach a Render Disk for permanent cloud DWN storage, or configure REAL_DWN_CLOUD_ENDPOINT.
 const DWN_ROOT = dwnRoot();
 const DATA_DIR = databaseRoot();
@@ -122,9 +122,9 @@ global.notificationsFile = migrateLegacyJson('notifications.json', {});
 global.socialSavesFile = migrateLegacyJson('socialSaves.json', {});
 global.feedbackFile = migrateLegacyJson('feedback.json', []);
 global.securityReportsFile = migrateLegacyJson('securityReports.json', []);
-ensureFile(path.join(DATA_DIR, 'DATABASE_MANIFEST.json'), { app: 'MILAN', version: '68.0.0', storage: 'real-cloud-dwn/database', cloud: persistenceInfo(), createdAt: new Date().toISOString() });
+ensureFile(path.join(DATA_DIR, 'DATABASE_MANIFEST.json'), { app: 'MILAN', version: '1.0.0', storage: 'real-cloud-dwn/database', cloud: persistenceInfo(), createdAt: new Date().toISOString() });
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'MILAN V68 Production DWN', version: '68.0.0', storage: { dwnRoot: DWN_ROOT, databaseDir: DATA_DIR, cloud: persistenceInfo() }, time: new Date().toISOString() }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'MILAN Production DWN', version: '1.0.0', storage: { dwnRoot: DWN_ROOT, databaseDir: DATA_DIR, cloud: persistenceInfo() }, time: new Date().toISOString() }));
 
 app.get('/api/health', (_req, res) => res.json({
   ok: true,
@@ -136,87 +136,6 @@ app.get('/api/health', (_req, res) => res.json({
   features: ['Integrated universal video player', 'automatic browser-safe MP4 stream healing', 'MILAN branding', 'DID auth', 'Real remote DWN node per user', 'DWN-backed posts', 'privacy modes', 'DID sharing', 'access requests', 'backup', 'activity', 'crypto helper', 'reel viewer', 'bulk actions', 'analytics dashboard', 'PWA shell', 'streaming uploads', 'video range streaming', 'rate limiting', 'security headers', 'social home feed', 'people discovery', 'friend requests', 'reactions', 'comments', 'notifications', 'Milan-style private social UI with real cloud DWN privacy', 'V3 Avatar Jaadu', 'V3 Gamification Engine', 'V3 XP & Levels', 'V3 Mystery Rewards', 'V3 Badge Wall', 'V3 AI Chips', 'V3 500-Technique Engagement System']
 }));
 
-// ── MILAN V3 ENGAGEMENT BACKEND ───────────────────────────────
-// XP / Level endpoint
-app.get('/api/v3/xp/:userId', (req, res) => {
-  try {
-    const users = JSON.parse(fs.readFileSync(global.usersFile, 'utf8'));
-    const user = Object.values(users).find(u => u.id === req.params.userId || u.email === req.params.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const xp = user.xp || 0;
-    const level = Math.floor(xp / 200) + 1;
-    res.json({ ok: true, xp, level, nextLevelXP: level * 200, pct: Math.round(((xp - (level-1)*200) / 200) * 100) });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Streak endpoint
-app.post('/api/v3/streak/:userId', (req, res) => {
-  try {
-    const users = JSON.parse(fs.readFileSync(global.usersFile, 'utf8'));
-    const userKey = Object.keys(users).find(k => users[k].id === req.params.userId || users[k].email === req.params.userId);
-    if (!userKey) return res.status(404).json({ error: 'User not found' });
-    const user = users[userKey];
-    const today = new Date().toDateString();
-    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-    let streak = user.streak || { count: 0, lastDay: '', max: 0 };
-    if (streak.lastDay !== today) {
-      if (streak.lastDay === yesterday.toDateString()) {
-        streak.count = (streak.count || 0) + 1;
-      } else if (streak.lastDay !== today) {
-        streak.count = 1;
-      }
-      streak.max = Math.max(streak.max || 0, streak.count);
-      streak.lastDay = today;
-      users[userKey].streak = streak;
-      fs.writeFileSync(global.usersFile, JSON.stringify(users, null, 2));
-    }
-    const milestones = [3, 7, 14, 30, 60, 100, 365];
-    const newMilestone = milestones.includes(streak.count);
-    res.json({ ok: true, streak: streak.count, max: streak.max, newMilestone, today });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Award XP endpoint
-app.post('/api/v3/xp/:userId/award', (req, res) => {
-  try {
-    const { amount, reason } = req.body;
-    if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid XP amount' });
-    const users = JSON.parse(fs.readFileSync(global.usersFile, 'utf8'));
-    const userKey = Object.keys(users).find(k => users[k].id === req.params.userId || users[k].email === req.params.userId);
-    if (!userKey) return res.status(404).json({ error: 'User not found' });
-    const prevXP = users[userKey].xp || 0;
-    const prevLevel = Math.floor(prevXP / 200) + 1;
-    users[userKey].xp = prevXP + Number(amount);
-    const newLevel = Math.floor(users[userKey].xp / 200) + 1;
-    const levelUp = newLevel > prevLevel;
-    fs.writeFileSync(global.usersFile, JSON.stringify(users, null, 2));
-    res.json({ ok: true, xp: users[userKey].xp, level: newLevel, levelUp, reason: reason || 'action', awarded: Number(amount) });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Badges endpoint
-app.get('/api/v3/badges/:userId', (req, res) => {
-  try {
-    const users = JSON.parse(fs.readFileSync(global.usersFile, 'utf8'));
-    const user = Object.values(users).find(u => u.id === req.params.userId || u.email === req.params.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const badges = user.badges || [];
-    res.json({ ok: true, badges });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Leaderboard endpoint
-app.get('/api/v3/leaderboard', (req, res) => {
-  try {
-    const users = JSON.parse(fs.readFileSync(global.usersFile, 'utf8'));
-    const board = Object.values(users)
-      .map(u => ({ name: u.name || u.display_name || u.email || 'User', xp: u.xp || 0, level: Math.floor((u.xp||0)/200)+1, streak: (u.streak || {}).count || 0 }))
-      .sort((a, b) => b.xp - a.xp)
-      .slice(0, 10);
-    res.json({ ok: true, leaderboard: board });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 // Public status endpoint so you can verify DWN storage without login token.
 app.get('/api/dwn/status', (_req, res) => res.json(dwnStore.getStatus()));
 
@@ -226,7 +145,7 @@ app.get('/api/media/doctor', (_req, res) => {
     const mediaCompat = require('./utils/mediaCompat');
     res.json({
       ok: true,
-      version: '68.0.0',
+      version: '1.0.0',
       ffmpeg: mediaCompat.findFfmpeg() || '',
       ffprobe: mediaCompat.findFfprobe() || '',
       transcodeVideo: String(process.env.MILAN_TRANSCODE_VIDEO || 'true'),
@@ -319,11 +238,8 @@ app.use('/api/backup', require('./routes/backup'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/launch', require('./routes/launch'));
 app.use('/api/admin', require('./routes/admin'));
-// ── MILAN V2 ADVANCED routes ──
-app.use('/api/v2/collab', require('./routes/v2/collab'));
-app.use('/api/v2/streaks', require('./routes/v2/streaks'));
-app.use('/api/v2/milestones', require('./routes/v2/milestones'));
-// ── MILAN V6 AI routes ──
+// ── MILAN ADVANCED routes ──
+// ── MILAN AI routes ──
 app.use('/api/ai', require('./routes/ai'));
 
 // ── ADVANCED FEATURES V2 ────────────────────────────────────

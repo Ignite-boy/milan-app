@@ -4,7 +4,7 @@ const path = require('path');
 const realDwn = require('./realDwnNodeClient');
 const realDwnEngine = require('./realDwnEngine');
 
-// MILAN V49 PRODUCTION DWN RULE:
+// MILAN PRODUCTION DWN RULE:
 // 1 user = 1 DID = 1 isolated production DWN space.
 // Render milan-app stores only app files and temporary cache.
 // Authoritative user profile/database snapshots/records/media are pushed to REAL_DWN_NODE_ENDPOINT.
@@ -306,7 +306,7 @@ function provisionIsolatedDwn({ userId = '', did = '', email = '', spaceId: prea
   const p = persistenceInfo();
   const manifest = {
     app: 'MILAN',
-    version: '49.0.0',
+    version: '1.0.0',
     realDwnProtocol: !!p.remoteEndpoint,
     sdkReady: !!p.remoteEndpoint,
     appStoresUserData: false,
@@ -490,7 +490,7 @@ async function pushRecordToCloudDwn(record, user) {
   try {
     const response = await realDwn.postJson('/api/dwn/records/write', {
       app: 'MILAN',
-      version: '49.0.0',
+      version: '1.0.0',
       realDwnProtocol: !!p.remoteEndpoint,
       sdkReady: !!p.remoteEndpoint,
       appStoresUserData: false,

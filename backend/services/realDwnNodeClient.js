@@ -22,7 +22,7 @@ function internalEndpointFromRenderService() {
   return `http://${host}${port ? `:${port}` : ''}`;
 }
 function defaultPublicDwnEndpoint() {
-  // V49: one-command mode. Use the same Render service as an embedded production DWN endpoint.
+  // one-command mode. Use the same Render service as an embedded production DWN endpoint.
   // This removes the need to create a second Render service manually.
   const custom = String(process.env.DEFAULT_REAL_DWN_NODE_ENDPOINT || '').trim();
   if (custom) return custom;

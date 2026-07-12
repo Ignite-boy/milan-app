@@ -456,7 +456,7 @@ async function streamMedia(req, res) {
   try {
     const u = current(req);
     if (!u) return res.status(404).json({ error: 'User not found' });
-    // V83 urgent video rule: when the player asks for the dedicated play.mp4/universal
+    // urgent video rule: when the player asks for the dedicated play.mp4/universal
     // route, make one best-effort browser-safe MP4 pass before streaming. This fixes the
     // "audio plays but video is black/not visible" case caused by unsupported video codecs
     // or non-faststart mobile files, while still falling back to the original if repair fails.
@@ -482,7 +482,7 @@ async function streamMedia(req, res) {
       if (key) headers.Authorization = `Bearer ${key}`;
       if (req.headers.range) headers.Range = req.headers.range;
       try {
-        // V80 hard fix: do NOT keep a 15s AbortSignal attached to the response body.
+        // hard fix: do NOT keep a 15s AbortSignal attached to the response body.
         // In Node fetch the same signal aborts the streaming body too, which made remote
         // DWN videos play for a few seconds and then suddenly stop in desktop/mobile/APK.
         // We only use the timer while opening the upstream connection, then clear it so

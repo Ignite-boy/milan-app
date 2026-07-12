@@ -114,7 +114,7 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters for production use' });
   const remoteState = await loadUsersFromDwnDetailed();
   const users = remoteState.users || {};
-  // V33 repair: if a previous register wrote only to Render cache but DWN sync failed,
+  // repair: if a previous register wrote only to Render cache but DWN sync failed,
   // allow the user to re-register the same email and overwrite the ghost cache entry.
   if (users[email] && remoteState.fromRemote && !remoteState.missing) return res.status(400).json({ error: 'Email already exists' });
   if (users[email] && !remoteState.fromRemote) delete users[email];
