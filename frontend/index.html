@@ -54,14 +54,14 @@
 
   <!-- Favicons — Google Search prefers an SVG or a square ICO that is a multiple of 48px.
        SVG is listed first (resolution-independent), then the 96x96 PNG, then the multi-size ICO. -->
-  <link rel="icon" type="image/svg+xml" href="https://milanlife.in/favicon.svg?v=20260627" />
-  <link rel="icon" type="image/png" sizes="96x96" href="https://milanlife.in/assets/favicon-96x96.png?v=20260627" />
-  <link rel="icon" type="image/png" sizes="48x48" href="https://milanlife.in/assets/favicon-48x48.png?v=20260627" />
-  <link rel="icon" type="image/png" sizes="192x192" href="https://milanlife.in/assets/favicon-192x192.png?v=20260627" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=20260627" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=20260627" />
-  <link rel="icon" href="/favicon.ico?v=20260627" sizes="any" />
-  <link rel="shortcut icon" href="/favicon.ico?v=20260627" />
+  <link rel="icon" type="image/svg+xml" href="https://milanlife.in/favicon.svg?v=20260712" />
+  <link rel="icon" type="image/png" sizes="96x96" href="https://milanlife.in/assets/favicon-96x96.png?v=20260712" />
+  <link rel="icon" type="image/png" sizes="48x48" href="https://milanlife.in/assets/favicon-48x48.png?v=20260712" />
+  <link rel="icon" type="image/png" sizes="192x192" href="https://milanlife.in/assets/favicon-192x192.png?v=20260712" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=20260712" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=20260712" />
+  <link rel="icon" href="/favicon.ico?v=20260712" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=20260712" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
 
@@ -105,10 +105,10 @@
 </style>
 <!-- MILAN sober premium theme — authoritative, loaded last -->
 <link rel="stylesheet" href="/milan-premium-sober.css">
-<link rel="stylesheet" href="/milan-core.css?v=20260627">
+<link rel="stylesheet" href="/milan-core.css?v=20260712">
 <link rel="prefetch" href="/app">
 <link rel="prefetch" href="/milan-core.css?v=20260709" as="style">
-<link rel="prefetch" href="/milan-core.js?v=20260627" as="script">
+<link rel="prefetch" href="/milan-core.js?v=20260712" as="script">
 <link rel="prefetch" href="/milan-premium.js?v=20260630" as="script">
 </head>
 <body>
@@ -248,8 +248,8 @@
 <script>!function(){var hero=document.querySelector(".authHero");hero&&hero.classList.add("milan-login-aurora");var didGenEl=document.createElement("div");didGenEl.id="milan-did-gen";var regBtn=document.querySelector("#registerBtn")||document.querySelector('button[id*="register"]');regBtn&&regBtn.parentNode.insertBefore(didGenEl,regBtn);var didT=null;if(window.milanShowDIDGen=function(){didGenEl.style.display="block",didGenEl.textContent="";var txt="did:dht:generating...",i=0;didT=setInterval(function(){for(var seg="",k=0;k<32;k++)seg+="0123456789abcdef"[Math.floor(16*Math.random())];txt="did:dht:"+seg,didGenEl.textContent=txt,++i>18&&(clearInterval(didT),didGenEl.textContent="✓ DID generated successfully",didGenEl.style.color="#4ade80")},120)},regBtn){regBtn.onclick;regBtn.addEventListener("click",function(){document.querySelector("#registerEmail")&&document.querySelector("#registerEmail").value&&milanShowDIDGen()})}var loginBtn=document.querySelector("#loginBtn");if(loginBtn){var prog=document.createElement("div");prog.id="milan-login-progress",loginBtn.parentNode.insertBefore(prog,loginBtn.nextSibling),loginBtn.addEventListener("click",function(){prog.style.display="block",prog.style.width="0%",setTimeout(function(){prog.style.width="60%"},100),setTimeout(function(){prog.style.width="85%"},400),setTimeout(function(){prog.style.width="100%"},1200),setTimeout(function(){prog.style.display="none",prog.style.width="0%"},2e3)})}console.log("%c[MILAN Advanced] Login page enhanced ✦","color:#245dff;font-weight:900;")}();</script>
 <script>!function(){try{var t=localStorage.getItem("milan_theme")||"dark",a=localStorage.getItem("milan_accent");"dark"!==t&&"amoled"!==t||document.body.classList.add("dark"),"amoled"===t&&(document.body.style.cssText+=";--bg:#000;--card:#0a0a0a;");var accentMap={ocean:"#2563eb",emerald:"#10b981",crimson:"#ef4444",violet:"#7c3aed"};a&&accentMap[a]&&document.documentElement.style.setProperty("--brand",accentMap[a])}catch(_){}document.addEventListener("keydown",function(e){(e.ctrlKey||e.metaKey)&&"k"===e.key&&(e.preventDefault(),alert("Command Palette is available in the main app after login."))})}();</script>
 <script src="/milan-creative-mode.js" defer></script>
-<script src="/milan-core.js?v=20260627" defer></script>
-<script src="/milan-polish.js?v=20260627" defer></script>
+<script src="/milan-core.js?v=20260712" defer></script>
+<script src="/milan-polish.js?v=20260712" defer></script>
 <style id="milan-login-compact">
 /* Compact the login so the WHOLE form (incl. OR + everything below) fits and
    is reachable on any screen size. Targets index.html's real classes. */
