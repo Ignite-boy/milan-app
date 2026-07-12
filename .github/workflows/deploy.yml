@@ -1,0 +1,79 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# MILAN auto-deploy: push to main → SSH into the GCP VM → pull latest code →
+# npm install → pm2 restart.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   VM_HOST     — VM external IP or hostname
+#   VM_USER     — SSH username on the VM (np7218468_gmail_com)
+#   VM_SSH_KEY  — private SSH key whose public half is in the VM's
+#                 ~/.ssh/authorized_keys
+#
+# SAFETY: the deploy only touches git-tracked files. Live data + secrets
+# (backend/.env, backend/dwn, backend/real-dwn-engine, backend/bin, …) are
+# git-ignored, so `git checkout -f` never overwrites or deletes them.
+# ─────────────────────────────────────────────────────────────────────────────
+name: Deploy to VM
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vm
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          # Ephemeral token so the VM can fetch this repo even if it's private.
+          # Passed only for this one fetch — never written to .git/config.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          command_timeout: 20m
+          envs: GH_TOKEN
+          script: |
+            set -e
+
+            # Non-interactive SSH sessions often miss node/npm/pm2 from PATH
+            # (nvm installs). Load login-shell environment first.
+            [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
+            [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
+            [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
+
+            APP="$HOME/milan-app"
+            REPO="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
+            mkdir -p "$APP"
+            cd "$APP"
+
+            # First run on a zip-deployed install: turn the folder into a git
+            # repo in place. Git-ignored live data stays untouched.
+            if [ ! -d .git ]; then
+              echo "No .git found — initializing repo in place…"
+              git init -b main
+            fi
+
+            echo "Fetching latest main…"
+            git fetch "$REPO" main
+            git checkout -f -B main FETCH_HEAD
+
+            echo "Installing backend dependencies…"
+            cd backend
+            npm install --no-fund --no-audit --loglevel=error
+
+            echo "Restarting pm2 process 'milan'…"
+            pm2 restart milan --update-env || NODE_ENV=production pm2 start ecosystem.config.js
+            pm2 save
+
+            echo "✅ Deploy complete: $(git -C "$APP" rev-parse --short HEAD)"
