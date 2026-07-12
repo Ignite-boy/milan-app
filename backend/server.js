@@ -406,6 +406,25 @@ app.get('/favicon.svg', (_req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
   res.sendFile(path.join(__dirname, '../frontend/favicon.svg'));
 });
+// Well-known root icon paths: search-engine favicon fetchers (DuckDuckGo, Yahoo/Bing,
+// Brave, various scrapers) probe these exact root URLs without reading the HTML.
+// The real files live under /assets — alias them at the root so every probe hits.
+[
+  ['/apple-touch-icon.png',             'apple-touch-icon.png'],
+  ['/apple-touch-icon-precomposed.png', 'apple-touch-icon.png'],
+  ['/favicon-16x16.png',                'favicon-16x16.png'],
+  ['/favicon-32x32.png',                'favicon-32x32.png'],
+  ['/favicon-48x48.png',                'favicon-48x48.png'],
+  ['/favicon-96x96.png',                'favicon-96x96.png'],
+  ['/favicon-192x192.png',              'favicon-192x192.png'],
+  ['/favicon-192.png',                  'favicon-192.png'],
+].forEach(([route, file]) => {
+  app.get(route, (_req, res) => {
+    res.type('image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+    res.sendFile(path.join(__dirname, '../frontend/assets/' + file));
+  });
+});
 app.get('/sitemap.xml', (_req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600');
   res.setHeader('X-Robots-Tag', 'all');
