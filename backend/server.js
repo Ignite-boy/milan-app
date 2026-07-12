@@ -241,6 +241,8 @@ app.use('/api/admin', require('./routes/admin'));
 // ── MILAN ADVANCED routes ──
 // ── MILAN AI routes ──
 app.use('/api/ai', require('./routes/ai'));
+// ── Billing (Razorpay) ──
+app.use('/api/billing', require('./routes/billing'));
 
 // ── ADVANCED FEATURES V2 ────────────────────────────────────
 // Feature 1: Markov Predictive Streaming
