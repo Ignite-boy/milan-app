@@ -1,0 +1,53 @@
+/* ============================================================================
+   MILAN — desktop home layout (Facebook-style)
+   ----------------------------------------------------------------------------
+   Left rail + right rail stay pinned in place; only the centre feed column
+   scrolls. Desktop / browser only — the mobile PWA layout is untouched.
+   ============================================================================ */
+
+@media (min-width: 992px) {
+
+  /* Smooth scrolling for the whole page (the feed column) */
+  html.milan-shell { scroll-behavior: smooth; }
+
+  /* Top-align the three columns so the rails pin cleanly under the header */
+  html.milan-shell .layout { align-items: start; }
+
+  /* ---- Pinned side rails (do not move while the feed scrolls) ------------ */
+  html.milan-shell .leftRail.side,
+  html.milan-shell .rightRail.side {
+    position: sticky;
+    top: 94px;                              /* sits just below the sticky header */
+    height: calc(100vh - 106px);
+    max-height: calc(100vh - 106px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;           /* rail scroll never spills to the page */
+    padding-right: 6px;
+  }
+
+  /* Subtle, modern rail scrollbars — invisible until you hover the rail */
+  html.milan-shell .side { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+  html.milan-shell .side:hover { scrollbar-color: rgba(148, 163, 184, .45) transparent; }
+  html.milan-shell .side::-webkit-scrollbar { width: 8px; }
+  html.milan-shell .side::-webkit-scrollbar-track { background: transparent; }
+  html.milan-shell .side::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
+  html.milan-shell .side:hover::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, .45); }
+
+  /* ---- Centre feed column (the main scroll area) ------------------------- */
+  html.milan-shell .main { min-width: 0; }
+
+  /* Comfortable reading width + centred feed, like Facebook's middle column */
+  html.milan-shell .layout {
+    grid-template-columns: 300px minmax(0, 1fr) 340px;
+    gap: 20px;
+  }
+}
+
+/* Wider screens: give the feed a touch more room but keep it readable */
+@media (min-width: 1400px) {
+  html.milan-shell .layout {
+    grid-template-columns: 320px minmax(0, 680px) 360px;
+    justify-content: center;
+  }
+}
