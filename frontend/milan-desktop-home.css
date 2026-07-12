@@ -1,53 +1,90 @@
 /* ============================================================================
-   MILAN — desktop home layout (Facebook-style)
+   MILAN — desktop home layout (Facebook-style, app-shell scroll)
    ----------------------------------------------------------------------------
-   Left rail + right rail stay pinned in place; only the centre feed column
-   scrolls. Desktop / browser only — the mobile PWA layout is untouched.
+   The page itself never scrolls. The header + side rails stay completely
+   fixed; ONLY the centre feed column scrolls. Left rail (profile) and right
+   rail (people) are pinned. Desktop / browser only — mobile PWA untouched.
+
+   Implemented as a locked "app shell" (not sticky), so the rails never move at
+   all — not even the small drift a sticky element has before it pins. Forced
+   with !important so it holds regardless of theme/cache state.
    ============================================================================ */
 
-@media (min-width: 992px) {
+@media (min-width: 900px) {
 
-  /* Smooth scrolling for the whole page (the feed column) */
-  html.milan-shell { scroll-behavior: smooth; }
+  /* Lock the page: the viewport is the shell; internal columns do the scrolling */
+  html.milan-shell,
+  html.milan-shell body {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
 
-  /* Top-align the three columns so the rails pin cleanly under the header */
-  html.milan-shell .layout { align-items: start; }
+  /* Body stacks its children vertically so an injected top banner still fits */
+  html.milan-shell body {
+    display: flex !important;
+    flex-direction: column !important;
+  }
 
-  /* ---- Pinned side rails (do not move while the feed scrolls) ------------ */
+  /* The app view fills whatever height is left and becomes the column host */
+  html.milan-shell #appView {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* Header keeps its natural height and stays put */
+  html.milan-shell #appView > .topbar { flex: 0 0 auto !important; }
+
+  /* The three-column row fills the remaining height; it does not scroll itself */
+  html.milan-shell #appView > .layout {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    grid-template-columns: 300px minmax(0, 1fr) 340px !important;
+    gap: 20px !important;
+  }
+
+  /* Each column manages its own vertical scroll; the rails are effectively fixed */
   html.milan-shell .leftRail.side,
-  html.milan-shell .rightRail.side {
-    position: sticky;
-    top: 94px;                              /* sits just below the sticky header */
-    height: calc(100vh - 106px);
-    max-height: calc(100vh - 106px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;           /* rail scroll never spills to the page */
-    padding-right: 6px;
+  html.milan-shell .rightRail.side,
+  html.milan-shell .main {
+    position: static !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
   }
+  html.milan-shell .main { min-width: 0 !important; padding-right: 4px; }
+  html.milan-shell .leftRail.side  { padding-right: 6px; }
+  html.milan-shell .rightRail.side { padding-right: 6px; }
 
-  /* Subtle, modern rail scrollbars — invisible until you hover the rail */
-  html.milan-shell .side { scrollbar-width: thin; scrollbar-color: transparent transparent; }
-  html.milan-shell .side:hover { scrollbar-color: rgba(148, 163, 184, .45) transparent; }
-  html.milan-shell .side::-webkit-scrollbar { width: 8px; }
-  html.milan-shell .side::-webkit-scrollbar-track { background: transparent; }
-  html.milan-shell .side::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
-  html.milan-shell .side:hover::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, .45); }
-
-  /* ---- Centre feed column (the main scroll area) ------------------------- */
-  html.milan-shell .main { min-width: 0; }
-
-  /* Comfortable reading width + centred feed, like Facebook's middle column */
-  html.milan-shell .layout {
-    grid-template-columns: 300px minmax(0, 1fr) 340px;
-    gap: 20px;
-  }
+  /* Smooth, subtle scrollbars — visible on hover */
+  html.milan-shell .side,
+  html.milan-shell .main { scrollbar-width: thin; scrollbar-color: transparent transparent; scroll-behavior: smooth; }
+  html.milan-shell .side:hover,
+  html.milan-shell .main:hover { scrollbar-color: rgba(148, 163, 184, .45) transparent; }
+  html.milan-shell .side::-webkit-scrollbar,
+  html.milan-shell .main::-webkit-scrollbar { width: 9px; }
+  html.milan-shell .side::-webkit-scrollbar-track,
+  html.milan-shell .main::-webkit-scrollbar-track { background: transparent; }
+  html.milan-shell .side::-webkit-scrollbar-thumb,
+  html.milan-shell .main::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
+  html.milan-shell .side:hover::-webkit-scrollbar-thumb,
+  html.milan-shell .main:hover::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, .45); }
 }
 
-/* Wider screens: give the feed a touch more room but keep it readable */
 @media (min-width: 1400px) {
-  html.milan-shell .layout {
-    grid-template-columns: 320px minmax(0, 680px) 360px;
-    justify-content: center;
+  html.milan-shell #appView > .layout {
+    grid-template-columns: 320px minmax(0, 680px) 360px !important;
+    justify-content: center !important;
   }
 }
