@@ -54,6 +54,8 @@ tr:last-child td{border-bottom:0}
 .mini{font-size:12px;color:var(--muted)}
 .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
 .copy{background:transparent;border:1px solid var(--line);color:var(--muted);padding:4px 9px;font-size:11px;border-radius:8px;margin-top:6px}
+.del{background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.4);color:#fda4af;padding:5px 12px;font-size:12px;border-radius:8px;cursor:pointer;font-weight:600}
+.del:hover{background:rgba(244,63,94,.22);color:#fecdd3}
 pre{background:#0d1322;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:12px;overflow:auto;color:#c2cbe0;font-family:ui-monospace,Consolas,monospace}
 .msg{font-size:13px;margin:6px 0}
 </style>
@@ -215,18 +217,33 @@ function renderUsers(){
   var q=($("q").value||"").toLowerCase();
   var rows=users.filter(function(u){ return JSON.stringify(u).toLowerCase().indexOf(q)>=0; });
   if(!rows.length){ $("panel").innerHTML='<div class="mini">No users found.</div>'; return; }
-  $("panel").innerHTML='<table><thead><tr><th>#</th><th>Name / Email</th><th>DID</th><th>DWN space</th><th>Created</th><th>Last login</th><th>Logins</th></tr></thead><tbody>'+
+  $("panel").innerHTML='<table><thead><tr><th>#</th><th>Name / Email</th><th>DID</th><th>DWN space</th><th>Created</th><th>Last login</th><th>Logins</th><th>Action</th></tr></thead><tbody>'+
     rows.map(function(u,i){
+      var ident=esc(u.email||u.id||"");
+      var label=esc(u.displayName||u.email||"this user");
       return '<tr><td>'+(i+1)+'</td>'+
         '<td><b>'+esc(u.displayName||"-")+'</b><br><span class="mini">'+esc(u.email||"")+'</span></td>'+
         '<td><div class="did">'+esc(u.did||"")+'</div><button class="copy" onclick="__copy(\''+esc(u.did||"")+'\')">Copy DID</button></td>'+
         '<td class="mini">'+esc(u.dwnSpaceId||u.dwnEndpoint||"-")+'</td>'+
         '<td class="mini">'+when(u.createdAt)+'</td>'+
         '<td class="mini">'+when(u.lastLoginAt)+'</td>'+
-        '<td>'+(u.loginCount||0)+'</td></tr>';
+        '<td>'+(u.loginCount||0)+'</td>'+
+        '<td><button class="del" onclick="__delUser(\''+ident+'\',\''+label+'\')">Delete</button></td></tr>';
     }).join("")+'</tbody></table>';
   $("msg").innerHTML='<span class="ok">'+rows.length+' users</span>';
 }
+
+function __delUser(ident, label){
+  if(!ident){ $("msg").textContent="No identifier for this user"; return; }
+  if(!confirm('Delete "'+label+'"?\n\nThis permanently removes the account and its index data. This cannot be undone.')) return;
+  $("msg").textContent="Deleting "+label+"...";
+  apiPost("/api/admin/users/delete", { email: ident }).then(function(d){
+    $("msg").innerHTML='<span class="ok">Deleted '+esc((d.deleted&&(d.deleted.displayName||d.deleted.email))||label)+'</span>';
+    return api("/api/admin/users");
+  }).then(function(d){ users=(d&&d.users)||[]; renderUsers(); })
+    .catch(function(e){ $("msg").innerHTML='<span style="color:#f87171">'+esc(e.message)+'</span>'; });
+}
+window.__delUser=__delUser;
 
 function renderJsonList(title, data){
   var arr=Array.isArray(data)?data:(data&&typeof data==="object"?Object.values(data):[]);

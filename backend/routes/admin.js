@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { readJson, writeJson, cleanUsersDb, repairUsersFile } = require('../utils/store');
+const { readJson, writeJson, writeJsonAndSync, cleanUsersDb, repairUsersFile } = require('../utils/store');
 const dwnStore = require('../services/dwnService');
 const { mailStatus, sendTestEmail } = require('../services/mailService');
 
@@ -65,6 +65,39 @@ router.get('/overview', adminRequired, (_req, res) => {
 });
 
 router.get('/users', adminRequired, (_req, res) => res.json({ ok: true, totalUsers: userRows().length, users: userRows() }));
+
+// Delete a user account by email or id (admin only). Purges the central index
+// files too, mirroring the user's own self-delete cleanup. Isolated DWN records
+// are owner-controlled and removed with the node.
+router.post('/users/delete', adminRequired, async (req, res) => {
+  try {
+    repairUsersFile(global.usersFile);
+    const users = cleanUsersDb(readJson(global.usersFile, {}));
+    const target = String((req.body && (req.body.email || req.body.id)) || '').trim();
+    if (!target) return res.status(400).json({ error: 'email or id is required' });
+
+    // Users are keyed by email — match on the key, the id, or the email field.
+    let key = null;
+    for (const [email, u] of Object.entries(users)) {
+      if (email === target || (u && (u.id === target || u.email === target))) { key = email; break; }
+    }
+    if (!key) return res.status(404).json({ error: 'User not found: ' + target });
+
+    const removed = users[key];
+    const uid = removed && removed.id;
+    delete users[key];
+    await writeJsonAndSync(global.usersFile, users).catch(() => writeJson(global.usersFile, users));
+
+    if (uid) {
+      for (const f of [global.activityFile, global.requestsFile, global.connectionsFile, global.notificationsFile, global.socialReactionsFile, global.socialCommentsFile, global.socialSavesFile]) {
+        try { const data = readJson(f, {}); if (data && typeof data === 'object' && data[uid]) { delete data[uid]; writeJson(f, data); } } catch (_) {}
+      }
+    }
+    res.json({ ok: true, deleted: { email: key, id: uid || '', displayName: (removed && (removed.profile?.display_name || removed.name)) || '' } });
+  } catch (e) {
+    res.status(500).json({ error: 'Delete failed: ' + e.message });
+  }
+});
 router.get('/activity', adminRequired, (_req, res) => res.json(readJson(global.activityFile, {})));
 router.get('/feedback', adminRequired, (_req, res) => res.json(readJson(global.feedbackFile, [])));
 router.get('/security-reports', adminRequired, (_req, res) => res.json(readJson(global.securityReportsFile, [])));
