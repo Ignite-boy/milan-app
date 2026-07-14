@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { readJson, writeJson, writeJsonAndSync, cleanUsersDb, repairUsersFile } = require('../utils/store');
 const dwnStore = require('../services/dwnService');
-const { mailStatus, sendTestEmail } = require('../services/mailService');
+const { mailStatus, mailAudit, sendTestEmail } = require('../services/mailService');
 
 const router = express.Router();
 
@@ -111,7 +111,7 @@ router.get('/mail/status', adminRequired, (_req, res) => {
   const users = cleanUsersDb(readJson(global.usersFile, {}));
   const list = Object.values(users).filter(u => u && (u.email || u.id));
   const verified = list.filter(u => u.emailVerified === true).length;
-  res.json({ ok: true, mail: mailStatus(), accounts: { total: list.length, verified, unverified: list.length - verified }, at: new Date().toISOString() });
+  res.json({ ok: true, mail: mailStatus(), recentMail: mailAudit(), accounts: { total: list.length, verified, unverified: list.length - verified }, at: new Date().toISOString() });
 });
 
 // Send a real test email to confirm delivery from support@milanlife.in.

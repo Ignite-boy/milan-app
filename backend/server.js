@@ -243,6 +243,8 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/ai', require('./routes/ai'));
 // ── Billing (Razorpay) ──
 app.use('/api/billing', require('./routes/billing'));
+// ── Mail (public: one-click unsubscribe, mail health) ──
+app.use('/api/mail', require('./routes/mail'));
 
 // ── ADVANCED FEATURES V2 ────────────────────────────────────
 // Feature 1: Markov Predictive Streaming

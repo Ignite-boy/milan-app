@@ -10,6 +10,7 @@ const { readJson, writeJson, writeJsonAndSync, addActivity, normalizePulledSnaps
 const { assignDwnEndpoint, ensureUserDwn, getDwnInfo, provisionRemoteUserDwn, pullDatabaseSnapshot } = require('../services/cloudDwnRegistry');
 const auth = require('../middleware/auth');
 const { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail, sendLoginAlertEmail } = require('../services/mailService');
+const notify = require('../services/notifyService');
 const router = express.Router();
 
 // ── JWT secret — never sign with a public constant ──────────────────
@@ -193,10 +194,30 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
   res.json({ token, did: user.did, dwn: getDwnInfo(user), profile: user.profile, settings: user.settings, emailVerified: user.emailVerified !== false, twoFactorEnabled: !!(user.security && user.security.twoFactorEnabled) });
   // ── background: activity log, new-sign-in alert email, and authoritative DWN sync ──
   addActivity(user.id, 'auth.login', { email, ip, userAgent });
-  // New sign-in security alert (fire-and-forget). Respects per-user preference, then env kill-switch.
+  // ── Smart sign-in alerts: only email on a NEW device, so users aren't spammed
+  //    on every routine login (repeated alerts train people to mark us as spam,
+  //    which wrecks deliverability). We fingerprint the device by user-agent and
+  //    remember the last 20 per account.
+  const nowIso = new Date().toISOString();
+  const fp = sha256(userAgent);
+  user.knownDevices = Array.isArray(user.knownDevices) ? user.knownDevices : [];
+  const known = user.knownDevices.find(d => d.fp === fp);
+  const firstEver = user.knownDevices.length === 0;
+  let isNewDevice = false;
+  if (known) { known.lastSeen = nowIso; known.ip = ip; }
+  else {
+    // "New device" only counts once we already know at least one device — this
+    // avoids an alert firing right after registration/first login.
+    isNewDevice = !firstEver;
+    user.knownDevices.unshift({ fp, ip, ua: String(userAgent).slice(0, 180), firstSeen: nowIso, lastSeen: nowIso });
+    user.knownDevices = user.knownDevices.slice(0, 20);
+  }
+  users[email] = user;
   const wantsLoginAlerts = user.settings?.notifications?.emailLoginAlerts !== false;
-  if (wantsLoginAlerts && String(process.env.MAIL_LOGIN_ALERTS || 'true') !== 'false') {
-    sendLoginAlertEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], ip, userAgent })
+  const envOn = String(process.env.MAIL_LOGIN_ALERTS || 'true') !== 'false';
+  const newDeviceOnly = String(process.env.MAIL_LOGIN_ALERTS_NEW_DEVICE_ONLY || 'true') !== 'false';
+  if (wantsLoginAlerts && envOn && (newDeviceOnly ? isNewDevice : true)) {
+    sendLoginAlertEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], ip, userAgent, newDevice: isNewDevice })
       .catch(err => console.warn('[MILAN mail] login alert error:', err.message));
   }
   // Persists login_count / last_login_at (and any burned 2FA recovery code) to the DWN.
@@ -315,6 +336,13 @@ router.post('/reset-password', authThrottle(15, 60_000), asyncRoute(async (req, 
   users[email] = user;
   await persistUsersAuthoritatively(users);
   addActivity(user.id, 'auth.password_reset', { email });
+  // Security notification — Google-style "your password was changed" confirmation.
+  notify.emailSecurity(user, {
+    subject: 'Your MILAN password was reset',
+    heading: 'Password reset',
+    intro: 'Your MILAN account password was just reset successfully. You can now sign in with your new password.',
+    bullets: [`When: ${new Date().toUTCString()}`, "If this wasn't you, secure your account and reset your password again immediately."]
+  });
   res.json({ ok: true, message: 'Password updated. You can now sign in with your new password.' });
 }));
 
