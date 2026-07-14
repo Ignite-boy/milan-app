@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const uuidv4 = () => crypto.randomUUID();
 const { generateDIDAndRawSeed, mintRealUserIdentity } = require('../utils/did');
+const { isAdminEmail } = require('../utils/isAdmin');
 const totp = require('../utils/totp');
 const { readJson, writeJson, writeJsonAndSync, addActivity, normalizePulledSnapshot, cleanUsersDb, repairUsersFile } = require('../utils/store');
 const { assignDwnEndpoint, ensureUserDwn, getDwnInfo, provisionRemoteUserDwn, pullDatabaseSnapshot } = require('../services/cloudDwnRegistry');
@@ -220,7 +221,7 @@ router.get('/me', auth, asyncRoute(async (req, res) => {
   // Persist the (idempotent) result in the background — never block the response.
   ensureUserDwn(user, email); users[email] = user;
   persistUsersAuthoritatively(users).catch(err => console.warn('[me] bg DWN sync failed:', err.message));
-  res.json({ email, did: user.did, dwn: getDwnInfo(user), profile: user.profile || {}, settings: user.settings || {}, login_count: user.login_count || 0, created_at: user.created_at, last_login_at: user.last_login_at });
+  res.json({ email, did: user.did, dwn: getDwnInfo(user), profile: user.profile || {}, settings: user.settings || {}, login_count: user.login_count || 0, created_at: user.created_at, last_login_at: user.last_login_at, isAdmin: isAdminEmail(email) });
 }));
 
 /* ── Email verification ────────────────────────────────────────── */

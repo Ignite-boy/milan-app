@@ -1185,6 +1185,17 @@ async function findRecordById(id) {
   return findRecordRaw(id);
 }
 
+// Admin moderation helpers — resolve/delete a record regardless of owner.
+function ownerOfRecord(id) {
+  const found = findRecordRaw(id);
+  return found ? { userId: found.userId, did: found.record.owner } : null;
+}
+async function adminDeleteRecord(id) {
+  const found = findRecordRaw(id);
+  if (!found) return false;
+  return deleteRecord(found.userId, id);
+}
+
 async function approveAccessForRecord(recordId, ownerDid, readerDid, requestId = '') {
   const found = findRecordRaw(recordId);
   if (!found || found.record.owner !== ownerDid) return null;
@@ -1285,6 +1296,8 @@ module.exports = {
   cleanDids,
   listVisibleRecords,
   listPublicRecords,
+  ownerOfRecord,
+  adminDeleteRecord,
   listSharedWithMe,
   getRecord,
   getMediaStream,
