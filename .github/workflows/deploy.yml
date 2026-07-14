@@ -25,7 +25,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-vm
+  # Shared with the DWN-node deploy so the two never run git ops on the same
+  # ~/milan-app checkout at once (that collided on .git/index.lock).
+  group: milan-vm-deploy
   cancel-in-progress: false
 
 jobs:
@@ -86,6 +88,8 @@ jobs:
             git init -b main
           fi
 
+          # Clear any stale lock left by a previous interrupted run.
+          rm -f .git/index.lock
           echo "Fetching latest main…"
           git fetch "$REPO" main
           git checkout -f -B main FETCH_HEAD

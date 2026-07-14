@@ -27,7 +27,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-dwn-node
+  # Shared with the app deploy so the two never touch the same git checkout at once.
+  group: milan-vm-deploy
   cancel-in-progress: false
 
 jobs:
@@ -68,6 +69,7 @@ jobs:
           # Make sure the repo (and dwn-node/) is present & current on the VM.
           mkdir -p "$APP"; cd "$APP"
           if [ ! -d .git ]; then git init -b main; fi
+          rm -f .git/index.lock
           git fetch "$REPO" main
           git checkout -f -B main FETCH_HEAD
 
