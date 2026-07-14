@@ -20,6 +20,12 @@
 node_modules/
 
 # -----------------------------------------------------------------------------
+#  Standalone DWN node — deps + persistent user data are never committed
+# -----------------------------------------------------------------------------
+dwn-node/node_modules/
+dwn-node/data/
+
+# -----------------------------------------------------------------------------
 #  Large / regenerable binaries (reinstalled on the server, not tracked)
 # -----------------------------------------------------------------------------
 backend/bin/

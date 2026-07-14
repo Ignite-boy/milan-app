@@ -1,0 +1,20 @@
+{
+  "name": "milan-dwn-node",
+  "version": "1.0.0",
+  "description": "MILAN standalone Decentralized Web Node (DWN) — a persistent, authenticated DWN storage service (records, media, database snapshots) speaking the MILAN DWN HTTP API, backed by the DIF/TBD dwn-sdk-js reference engine. Deploys independently (GCP) so user data lives in a real DWN node decoupled from the app server.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@tbd54566975/dwn-sdk-js": "^0.5.2",
+    "@web5/dids": "^1.2.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "express": "^4.22.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
