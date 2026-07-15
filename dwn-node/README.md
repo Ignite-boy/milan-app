@@ -25,6 +25,13 @@ the app pushes to and reads back from.
 | GET  | `/api/dwn/records/read/:spaceId/:recordId` | Read a record |
 | PUT  | `/api/dwn/media/write/:spaceId/:recordId` | Upload media bytes |
 | GET  | `/api/dwn/media/read/:spaceId/:recordId` | Stream media bytes |
+| GET  | `/api/dwn/space/:spaceId` | Space info — **DID-gated** (only the owner DID) |
+
+**DID-based isolation:** every user's space is bound to their **DID** on provision.
+Records write/read/list and space info require the caller to present that DID
+(`X-MILAN-DID` header, or `ownerDid`/`did` in body/query); a mismatch is refused
+with **403**. The DID is the key to the space — one user cannot touch another's
+data. (The global app database snapshot is app-level and stays API-key gated.)
 
 Data is stored under `DWN_DATA_DIR` (default `/data`), which **must be a
 persistent volume**.

@@ -56,6 +56,40 @@ function dbFile(name) { return path.join(DATA_DIR, 'db', safeId(name, 'default')
 function spaceDir(spaceId) { return path.join(DATA_DIR, 'spaces', safeId(spaceId, 'shared')); }
 function recordFile(spaceId, recordId) { return path.join(spaceDir(spaceId), 'records', safeId(recordId, 'record') + '.json'); }
 function mediaFile(spaceId, recordId) { return path.join(spaceDir(spaceId), 'media', safeId(recordId, 'media')); }
+function spaceMetaFile(spaceId) { return path.join(spaceDir(spaceId), 'space.json'); }
+
+// ── DID ownership: each space is bound to exactly one owner DID ───────────────
+// The DID is the KEY to the space. Once a space is bound, only requests bearing
+// that same DID may write to or read from it — cross-user access is refused.
+function spaceOwnerDid(spaceId) {
+  const meta = readJson(spaceMetaFile(spaceId));
+  return meta && (meta.ownerDid || meta.did) ? String(meta.ownerDid || meta.did) : '';
+}
+// Bind a space to a DID if not already bound; returns the effective owner DID.
+function bindSpaceDid(spaceId, did, extra = {}) {
+  ensureDir(spaceDir(spaceId));
+  let meta = readJson(spaceMetaFile(spaceId)) || {};
+  if (!meta.ownerDid && !meta.did && did) {
+    meta = { spaceId, ownerDid: did, createdAt: new Date().toISOString(), ...extra, ...meta, ownerDid: did };
+    writeJson(spaceMetaFile(spaceId), meta);
+  } else if (meta.did && !meta.ownerDid) {
+    meta.ownerDid = meta.did; writeJson(spaceMetaFile(spaceId), meta); // upgrade legacy field
+  }
+  return meta.ownerDid || meta.did || did || '';
+}
+// The caller's asserted DID: header (preferred) or body/query. The node is
+// private (VM-internal, API-key gated), so the trusted app asserts each user's
+// DID; the node enforces it matches the space owner.
+function callerDid(req) {
+  return String(req.headers['x-milan-did'] || req.headers['x-dwn-did'] || req.body?.ownerDid || req.body?.did || req.query?.did || '').trim();
+}
+// Guard: the space must be unbound, or bound to the caller's DID. 403 otherwise.
+function didAllowed(spaceId, did) {
+  const owner = spaceOwnerDid(spaceId);
+  if (!owner) return true;           // not yet bound — first writer binds it
+  if (!did) return false;            // bound space needs a DID to access
+  return owner === did;
+}
 
 // ── best-effort real-DWN engine readiness (DIF/TBD SDK) ──────────────────────
 let _sdkReady = false, _sdkError = null;
@@ -107,15 +141,29 @@ function statusBody() {
 ['/api/dwn/users/provision', '/api/cloud-dwn/users/provision', '/api/dwn/user/provision']
   .forEach(r => app.post(r, auth, (req, res) => {
     const spaceId = safeId(req.body?.spaceId || req.body?.did || req.body?.userId, '');
+    const did = String(req.body?.did || '').trim();
     if (!spaceId) return res.status(400).json({ ok: false, error: 'spaceId or did required' });
     ensureDir(path.join(spaceDir(spaceId), 'records'));
     ensureDir(path.join(spaceDir(spaceId), 'media'));
-    const metaFile = path.join(spaceDir(spaceId), 'space.json');
+    const metaFile = spaceMetaFile(spaceId);
     if (!fs.existsSync(metaFile)) {
-      writeJson(metaFile, { spaceId, did: req.body?.did || '', userId: req.body?.userId || '', email: req.body?.email || '', createdAt: new Date().toISOString() });
+      writeJson(metaFile, { spaceId, ownerDid: did, did, userId: req.body?.userId || '', email: req.body?.email || '', createdAt: new Date().toISOString() });
     }
-    res.json({ ok: true, provisioned: true, spaceId, realDwnProtocol: true, sdkReady: _sdkReady });
+    // Bind (or confirm) the owner DID — the key that unlocks this isolated space.
+    const ownerDid = bindSpaceDid(spaceId, did, { userId: req.body?.userId || '', email: req.body?.email || '' });
+    res.json({ ok: true, provisioned: true, spaceId, ownerDid, dwnAddress: `${req.protocol}://${req.get('host')}/api/dwn/space/${encodeURIComponent(spaceId)}`, realDwnProtocol: true, sdkReady: _sdkReady });
   }));
+
+// ── space info — DID-gated: only the owner DID can see their space ────────────
+app.get('/api/dwn/space/:spaceId', auth, (req, res) => {
+  const spaceId = req.params.spaceId;
+  const owner = spaceOwnerDid(spaceId);
+  if (!owner) return res.status(404).json({ ok: false, error: 'space not provisioned' });
+  if (!didAllowed(spaceId, callerDid(req))) return res.status(403).json({ ok: false, error: 'Access denied: this DWN space belongs to a different DID' });
+  const recDir = path.join(spaceDir(spaceId), 'records');
+  let records = 0; try { records = fs.readdirSync(recDir).filter(f => f.endsWith('.json')).length; } catch (_) {}
+  res.json({ ok: true, spaceId, ownerDid: owner, records, isolated: true });
+});
 
 // ── database snapshots: WRITE (PUT) + READ (GET) with all client aliases ─────
 const DB_ALIASES = [
@@ -144,22 +192,28 @@ DB_ALIASES.forEach(r => {
  '/api/dwn/ingest/record', '/api/dwn/records', '/api/cloud-dwn/records/write', '/api/cloud-dwn/node/records/write']
   .forEach(r => app.post(r, auth, (req, res) => {
     const record = req.body?.record || req.body;
-    const spaceId = req.body?.spaceId || record?.dwnSpaceId || record?.spaceId || 'shared';
+    const spaceId = safeId(req.body?.spaceId || record?.dwnSpaceId || record?.spaceId || 'shared', 'shared');
     const recordId = record?.id || record?.recordId;
+    const did = String(req.body?.ownerDid || record?.owner || callerDid(req) || '').trim();
     if (!recordId) return res.status(400).json({ ok: false, error: 'record.id required' });
+    // DID gate: a bound space only accepts writes from its owner DID.
+    if (!didAllowed(spaceId, did)) return res.status(403).json({ ok: false, error: 'Access denied: this DWN space belongs to a different DID' });
     try {
-      writeJson(recordFile(spaceId, recordId), { ownerDid: req.body?.ownerDid || record?.owner || '', spaceId, record, pushedAt: req.body?.pushedAt || new Date().toISOString() });
-      res.json({ ok: true, stored: true, id: recordId, spaceId, realDwnProtocol: true });
+      bindSpaceDid(spaceId, did); // first write binds the space to this DID
+      writeJson(recordFile(spaceId, recordId), { ownerDid: did, spaceId, record, pushedAt: req.body?.pushedAt || new Date().toISOString() });
+      res.json({ ok: true, stored: true, id: recordId, spaceId, ownerDid: did, realDwnProtocol: true });
     } catch (e) { res.status(500).json({ ok: false, error: 'record write failed: ' + e.message }); }
   }));
 
 // ── records: read one / list a space (handy for verification & recovery) ─────
 app.get('/api/dwn/records/read/:spaceId/:recordId', auth, (req, res) => {
+  if (!didAllowed(req.params.spaceId, callerDid(req))) return res.status(403).json({ ok: false, error: 'Access denied: this DWN space belongs to a different DID' });
   const stored = readJson(recordFile(req.params.spaceId, req.params.recordId));
   if (!stored) return res.status(404).json({ ok: false, error: 'record not found' });
   res.json({ ok: true, ...stored });
 });
 app.get('/api/dwn/records/list/:spaceId', auth, (req, res) => {
+  if (!didAllowed(req.params.spaceId, callerDid(req))) return res.status(403).json({ ok: false, error: 'Access denied: this DWN space belongs to a different DID' });
   const dir = path.join(spaceDir(req.params.spaceId), 'records');
   let ids = [];
   try { ids = fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => f.replace(/\.json$/, '')); } catch (_) {}
