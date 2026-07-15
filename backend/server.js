@@ -12,6 +12,16 @@ const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || process.env.APP_PUBLIC_UR
 const app = express();
 app.set('trust proxy', 1);
 
+// --- Reject malformed URLs early ---------------------------------------------
+// Bots/scanners probe paths with invalid percent-encoding (e.g. "/%C0", "/%ff").
+// Express' router calls decodeURIComponent() during matching, which throws a
+// URIError deep inside serve-static and spams the error log. Catch it up front
+// and answer a clean 400 so it never reaches the router.
+app.use((req, res, next) => {
+  try { decodeURIComponent(req.path); return next(); }
+  catch (_) { return res.status(400).type('text/plain').send('Bad Request: malformed URL'); }
+});
+
 // --- SEO: canonical host — 301 redirect www.* -> non-www (consolidate signals) ---
 app.use((req, res, next) => {
   const host = req.headers.host || '';
