@@ -29,4 +29,4 @@ jobs:
           gcloud compute ssh np7218468_gmail_com@milan-prod \
             --zone=us-central1-f \
             --tunnel-through-iap \
-            --command="git config --global --add safe.directory /home/np7218468_gmail_com/milan-app && cd /home/np7218468_gmail_com/milan-app && git fetch origin main && git reset --hard origin/main && cd backend && npm install && PM2_HOME=/home/np7218468_gmail_com/.pm2 pm2 restart milan"
+            --command="git config --global --add safe.directory /home/np7218468_gmail_com/milan-app && cd /home/np7218468_gmail_com/milan-app && git fetch origin main && git reset --hard origin/main && cd backend && npm install && (PM2_HOME=/home/np7218468_gmail_com/.pm2 pm2 restart milan --update-env || (sudo rm -f /home/np7218468_gmail_com/.pm2/rpc.sock /home/np7218468_gmail_com/.pm2/pub.sock && PM2_HOME=/home/np7218468_gmail_com/.pm2 pm2 resurrect))"
