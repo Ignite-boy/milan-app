@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Travel Planner — MILAN</title>
+<meta name="description" content="AI-powered travel planning assistant, built into MILAN.">
+<link rel="icon" href="https://milanlife.in/favicon.svg?v=20260712b" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070f;
+    --card: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.09);
+    --text: #eef0ff;
+    --muted: #9aa0c3;
+    --indigo: #6366f1;
+    --violet: #8b5cf6;
+    --grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #c084fc 100%);
+    --radius: 18px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  h1, h2, h3 { font-family: 'Sora', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  a { color: inherit; text-decoration: none; }
+
+  .glow {
+    position: fixed; pointer-events: none; z-index: 0;
+    width: 720px; height: 720px; border-radius: 50%;
+    filter: blur(140px); opacity: .18; background: #6366f1;
+    top: -280px; left: -160px;
+  }
+
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(16px);
+    background: rgba(7, 7, 15, 0.72);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .nav-inner {
+    max-width: 900px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.25rem; }
+  .brand span { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .back-link { font-size: .9rem; color: var(--muted); font-weight: 500; }
+  .back-link:hover { color: var(--text); }
+
+  main {
+    flex: 1; position: relative; z-index: 1;
+    max-width: 760px; margin: 0 auto; width: 100%;
+    padding: 40px 20px 24px;
+    display: flex; flex-direction: column;
+  }
+
+  .page-title { text-align: center; margin-bottom: 28px; }
+  .page-title h1 { font-size: 1.9rem; margin-bottom: 8px; }
+  .page-title p { color: var(--muted); font-size: .95rem; }
+
+  .chat-window {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 20px;
+    min-height: 320px;
+    max-height: 50vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: .95rem; white-space: pre-wrap; }
+  .msg.user { align-self: flex-end; background: var(--grad); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.bot { align-self: flex-start; background: rgba(255,255,255,.06); border: 1px solid var(--card-border); border-bottom-left-radius: 4px; }
+  .msg.placeholder { align-self: center; color: var(--muted); font-size: .9rem; text-align: center; }
+
+  .input-row { display: flex; gap: 10px; }
+  textarea#queryInput {
+    flex: 1; resize: none; min-height: 52px; max-height: 140px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--card-border);
+    border-radius: 14px; color: var(--text); font-family: inherit; font-size: .95rem;
+    padding: 14px 16px; outline: none;
+  }
+  textarea#queryInput:focus { border-color: var(--indigo); }
+  button#sendBtn {
+    padding: 0 22px; border-radius: 14px; border: none; cursor: pointer;
+    background: var(--grad); color: #fff; font-weight: 700; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  button#sendBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,.4); }
+  button#sendBtn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .hint { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 14px; }
+
+  @media (max-width: 640px) {
+    main { padding: 24px 14px 16px; }
+    .chat-window { max-height: 45vh; }
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="brand">✈️ <span>Travel Planner</span></div>
+    <a class="back-link" href="/">← Back to MILAN</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-title">
+    <h1>Plan your next trip</h1>
+    <p>Ask anything — destinations, itineraries, weather, budgets.</p>
+  </div>
+
+  <div class="chat-window" id="chatWindow">
+    <div class="msg placeholder">Try: "Plan a 3-day trip to Goa on a budget"</div>
+  </div>
+
+  <div class="input-row">
+    <textarea id="queryInput" placeholder="Where do you want to go?" rows="1"></textarea>
+    <button id="sendBtn">Send</button>
+  </div>
+  <p class="hint">Powered by MILAN's AI Travel Agent</p>
+</main>
+
+<script>
+  const chatWindow = document.getElementById('chatWindow');
+  const input = document.getElementById('queryInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const API_URL = '/travel-api/chat';
+  let placeholderRemoved = false;
+
+  function addMessage(text, sender) {
+    if (!placeholderRemoved) {
+      chatWindow.innerHTML = '';
+      placeholderRemoved = true;
+    }
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return div;
+  }
+
+  async function sendQuery() {
+    const query = input.value.trim();
+    if (!query) return;
+
+    addMessage(query, 'user');
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    const thinkingMsg = addMessage('Thinking...', 'bot');
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: query })
+      });
+      const data = await res.json();
+      const reply = data.response || data.message || data.reply || JSON.stringify(data);
+      thinkingMsg.textContent = reply;
+    } catch (err) {
+      thinkingMsg.textContent = 'Sorry, something went wrong. Please try again.';
+    } finally {
+      sendBtn.disabled = false;
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+  }
+
+  sendBtn.addEventListener('click', sendQuery);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendQuery();
+    }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+  });
+</script>
+</body>
+</html>
