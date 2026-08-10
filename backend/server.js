@@ -290,7 +290,12 @@ app.post('/api/dao/reputation',    dao.updateReputation);
 app.get('/api/dao/proposal/:id',   dao.getProposal);
 app.get('/api/dao/staker/:userId', dao.getStaker);
 
-
+app.get('/travel.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'travel.html'));
+});
+app.get('/travel', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'travel.html'));
+});
 app.get('/google9928e17b30912a08.html', (_req, res) => {
   res.type('text/html').send('google-site-verification: google9928e17b30912a08.html');
 });
