@@ -69,6 +69,14 @@
   .page-title h1 { font-size: 1.9rem; margin-bottom: 8px; }
   .page-title p { color: var(--muted); font-size: .95rem; }
 
+  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 24px; }
+  .suggestion-chip {
+    background: rgba(255,255,255,.05); border: 1px solid var(--card-border);
+    color: var(--muted); padding: 8px 14px; border-radius: 20px;
+    font-size: .85rem; cursor: pointer; transition: all .15s ease;
+  }
+  .suggestion-chip:hover { background: rgba(255,255,255,.09); color: var(--text); border-color: rgba(139,92,246,.4); }
+
   .chat-window {
     flex: 1;
     background: var(--card);
@@ -82,11 +90,22 @@
     flex-direction: column;
     gap: 14px;
     margin-bottom: 16px;
+    scroll-behavior: smooth;
   }
-  .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: .95rem; white-space: pre-wrap; }
+  .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: .95rem; white-space: pre-wrap; word-wrap: break-word; }
   .msg.user { align-self: flex-end; background: var(--grad); color: #fff; border-bottom-right-radius: 4px; }
   .msg.bot { align-self: flex-start; background: rgba(255,255,255,.06); border: 1px solid var(--card-border); border-bottom-left-radius: 4px; }
+  .msg.error { align-self: flex-start; background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; }
   .msg.placeholder { align-self: center; color: var(--muted); font-size: .9rem; text-align: center; }
+
+  .typing-dots { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .typing-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: .15s; }
+  .typing-dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-5px); opacity: 1; } }
 
   .input-row { display: flex; gap: 10px; }
   textarea#queryInput {
@@ -102,7 +121,7 @@
     display: flex; align-items: center; justify-content: center;
     transition: transform .15s ease, box-shadow .15s ease;
   }
-  button#sendBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,.4); }
+  button#sendBtn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,.4); }
   button#sendBtn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 
   .hint { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 14px; }
@@ -110,6 +129,7 @@
   @media (max-width: 640px) {
     main { padding: 24px 14px 16px; }
     .chat-window { max-height: 45vh; }
+    .suggestions { display: none; }
   }
 </style>
 </head>
@@ -129,8 +149,15 @@
     <p>Ask anything — destinations, itineraries, weather, budgets.</p>
   </div>
 
+  <div class="suggestions" id="suggestions">
+    <div class="suggestion-chip">Plan a 3-day trip to Goa on a budget</div>
+    <div class="suggestion-chip">Best time to visit Manali?</div>
+    <div class="suggestion-chip">Weekend trip near Delhi</div>
+    <div class="suggestion-chip">Weather in Lucknow this week</div>
+  </div>
+
   <div class="chat-window" id="chatWindow">
-    <div class="msg placeholder">Try: "Plan a 3-day trip to Goa on a budget"</div>
+    <div class="msg placeholder">Ask me anything about your next trip 🧳</div>
   </div>
 
   <div class="input-row">
@@ -144,13 +171,28 @@
   const chatWindow = document.getElementById('chatWindow');
   const input = document.getElementById('queryInput');
   const sendBtn = document.getElementById('sendBtn');
+  const suggestionsEl = document.getElementById('suggestions');
   const API_URL = '/travel-api/chat';
+
+  // Persistent session + user id for this browser
+  function getOrCreateId(key) {
+    let val = localStorage.getItem(key);
+    if (!val) {
+      val = key + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(key, val);
+    }
+    return val;
+  }
+  const userId = getOrCreateId('milan_travel_user_id');
+  const sessionId = getOrCreateId('milan_travel_session_id');
+
   let placeholderRemoved = false;
 
   function addMessage(text, sender) {
     if (!placeholderRemoved) {
       chatWindow.innerHTML = '';
       placeholderRemoved = true;
+      suggestionsEl.style.display = 'none';
     }
     const div = document.createElement('div');
     div.className = 'msg ' + sender;
@@ -160,34 +202,62 @@
     return div;
   }
 
-  async function sendQuery() {
-    const query = input.value.trim();
+  function addTypingIndicator() {
+    if (!placeholderRemoved) {
+      chatWindow.innerHTML = '';
+      placeholderRemoved = true;
+      suggestionsEl.style.display = 'none';
+    }
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return div;
+  }
+
+  async function sendQuery(text) {
+    const query = (text !== undefined ? text : input.value).trim();
     if (!query) return;
 
     addMessage(query, 'user');
     input.value = '';
     input.style.height = 'auto';
     sendBtn.disabled = true;
-    const thinkingMsg = addMessage('Thinking...', 'bot');
+    const typingMsg = addTypingIndicator();
 
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: query })
+        body: JSON.stringify({
+          message: query,
+          user_id: userId,
+          session_id: sessionId
+        })
       });
+
       const data = await res.json();
-      const reply = data.response || data.message || data.reply || JSON.stringify(data);
-      thinkingMsg.textContent = reply;
+
+      if (!res.ok) {
+        typingMsg.className = 'msg error';
+        typingMsg.textContent = 'Something went wrong. Please try rephrasing your question.';
+        return;
+      }
+
+      const reply = data.response || data.message || data.reply || data.answer || JSON.stringify(data);
+      typingMsg.className = 'msg bot';
+      typingMsg.textContent = reply;
     } catch (err) {
-      thinkingMsg.textContent = 'Sorry, something went wrong. Please try again.';
+      typingMsg.className = 'msg error';
+      typingMsg.textContent = 'Connection error. Please check your internet and try again.';
     } finally {
       sendBtn.disabled = false;
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
   }
 
-  sendBtn.addEventListener('click', sendQuery);
+  sendBtn.addEventListener('click', () => sendQuery());
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -197,6 +267,10 @@
   input.addEventListener('input', () => {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+  });
+
+  document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => sendQuery(chip.textContent));
   });
 </script>
 </body>
