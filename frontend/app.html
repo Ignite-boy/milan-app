@@ -37,7 +37,7 @@
 
   <script>!function(){var ua=String(navigator.userAgent||""),nativeApk=/MilanNativeAudio/i.test(ua);nativeApk&&document.documentElement.classList.add("native-apk","milan-open");try{var saved=String(localStorage.getItem("milanToken")||"").trim();nativeApk&&saved&&(document.documentElement.classList.add("milan-token-present","milan-open-fast-open"),window.__MILAN_NATIVE_TOKEN_PRESENT__=!0)}catch(_){}}();</script>
 
-  <script>!function(){var isNativeApk=/MilanNativeAudio/i.test(String(navigator.userAgent||""));if("serviceWorker"in navigator)isNativeApk?(navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(reg){try{reg.unregister()}catch(_){}})}).catch(function(){}),window.caches&&caches.keys().then(function(keys){keys.forEach(function(k){/^milan-/i.test(k)&&caches.delete(k).catch(function(){})})}).catch(function(){})):window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js?v=20260711").catch(function(){})})}();</script>
+  <script>!function(){var isNativeApk=/MilanNativeAudio/i.test(String(navigator.userAgent||""));if("serviceWorker"in navigator)isNativeApk?(navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(reg){try{reg.unregister()}catch(_){}})}).catch(function(){}),window.caches&&caches.keys().then(function(keys){keys.forEach(function(k){/^milan-/i.test(k)&&caches.delete(k).catch(function(){})})}).catch(function(){})):window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js?v=20260813").catch(function(){})})}();</script>
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="MILAN" />
   <meta property="og:title" content="MILAN — World's Decentralized Social Media | Own Your Data" />
@@ -85,6 +85,7 @@
   @media (prefers-reduced-motion:reduce){html.milan-instant-app #appView,html.milan-instant-app #feed .post{animation:none!important}}
   </style>
   <link rel="stylesheet" href="/milan-mobile-theme.css?v=20260710c">
+  <script src="/milan-navigation-warmup.js?v=20260813"></script>
 </head>
 <body class="milan-next-era">
 
