@@ -1,58 +1,8 @@
-# ═══════════════ MILAN — root .gitignore ═══════════════
-
-# ── Secrets: NEVER commit ──
-.env
-*.env
-.env.local
-.env.*
-!.env.example
-!.env.local.example
-**/.env
-**/*.pem
-**/*.key
-
-# ── Dependencies (reinstall with npm install) ──
-node_modules/
-**/node_modules/
-
-# ── Large regenerable binaries (reinstall on server, not tracked in git) ──
-backend/bin/
-*.exe
-
-# ── Local agent/tooling state ──
-.claude/
-
-# ── Real user data & live stores: NEVER commit ──
-backend/real-dwn-engine/
-backend/RESOLVERCACHE/
-backend/dwn/
-backend/data/
-backend/uploads/
-*.bak
-*.last-good.bak
-*-snapshot*.json
-
-# ── Build output / release artifacts ──
-milan-release/
+# Milan App - ignore junk
 *.zip
-*.tar.gz
-.next/
-out/
-build/
-dist/
-.cache/
-*.tsbuildinfo
-next-env.d.ts
-.vercel
-
-# ── Logs / runtime ──
+*.tmp
 *.log
-logs/
-npm-debug.log*
-
-# ── OS / editor ──
-.DS_Store
-Thumbs.db
-desktop.ini
+*.bak
+.tmp.driveupload/
+node_modules/
 .vscode/
-.idea/

@@ -1,1 +1,64 @@
-{}
+{
+  "423a30c4-90b5-44ef-8174-6bc5334d8dda": [
+    {
+      "id": "1786973513781-179eafb4c9d598",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-17T13:31:53.781Z"
+    },
+    {
+      "id": "1786973448022-edb3d8f455d488",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-17T13:30:48.022Z"
+    },
+    {
+      "id": "1786973447640-9f47fad881e5",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6Mks3kGira65fCfTZq3WmJ27WScobFd4jcULTZYACpKpEHg",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-423a30c4-90b5-44ef-8174-6bc5334d8dda-09a69e9a",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-423a30c4-90b5-44ef-8174-6bc5334d8dda-09a69e9a",
+        "remoteProvision": {
+          "ok": false,
+          "endpoint": "http://127.0.0.1:10000",
+          "error": "fetch failed",
+          "provisionedAt": "2026-08-17T13:30:47.626Z"
+        }
+      },
+      "at": "2026-08-17T13:30:47.640Z"
+    }
+  ],
+  "7aeca992-c3e9-4cf9-97a2-ea5d2cd8a448": [
+    {
+      "id": "1786974711720-6e9443973204d8",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6MkrLsRwY5mzPQRt1HJLAqUoiqXr87eqJdmtsxmBZW1q4PM",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-7aeca992-c3e9-4cf9-97a2-ea5d2cd8a448-27db8460",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-7aeca992-c3e9-4cf9-97a2-ea5d2cd8a448-27db8460",
+        "remoteProvision": {
+          "ok": false,
+          "endpoint": "http://127.0.0.1:10000",
+          "error": "fetch failed",
+          "provisionedAt": "2026-08-17T13:51:51.686Z"
+        }
+      },
+      "at": "2026-08-17T13:51:51.720Z"
+    }
+  ]
+}
