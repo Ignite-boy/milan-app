@@ -1,5 +1,5 @@
 /* ============================================================================
-   MILAN V95 — Mobile UI Parity (additive, non-destructive)
+   MILAN — Mobile UI Parity (additive, non-destructive)
    --------------------------------------------------------------------------
    Goal: every feature that shows on desktop is reachable on mobile / PWA.
    Previous builds hid .rightRail (People / Notifications / Saved) and the
@@ -18,8 +18,8 @@
    ========================================================================== */
 (function () {
   "use strict";
-  if (window.__MILAN_V95_MOBILE_PARITY__) return;
-  window.__MILAN_V95_MOBILE_PARITY__ = true;
+  if (window.__MILAN_MOBILE_PARITY__) return;
+  window.__MILAN_MOBILE_PARITY__ = true;
 
   var MOBILE_Q = "(max-width: 760px)";
   function isMobile() { return window.matchMedia(MOBILE_Q).matches; }
@@ -28,24 +28,24 @@
 
   /* ---- styles (scoped, additive) ---------------------------------------- */
   var css = document.createElement("style");
-  css.id = "milan-v95-mobile-parity-css";
+  css.id = "milan-mobile-parity-css";
   css.textContent = [
     /* Bottom nav — render on every small screen, not only premium-ui */
     "@media (max-width:760px){",
-    "  body.milan-v95 .milanBottomNav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:10px;right:10px;",
+    "  body.milan-mobile-ui .milanBottomNav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:10px;right:10px;",
     "    bottom:max(8px,env(safe-area-inset-bottom,0px));z-index:9000;min-height:64px;padding:7px;border-radius:24px;",
     "    background:rgba(10,18,38,.92);border:1px solid rgba(245,158,11,.22);box-shadow:0 18px 55px rgba(0,0,0,.45);",
     "    backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3)}",
-    "  body.milan-v95.dark .milanBottomNav{background:rgba(6,12,28,.94)}",
-    "  body.milan-v95 .milanBottomNav button{display:grid;place-items:center;gap:2px;background:0 0;color:#8ba4d4;border:0;",
+    "  body.milan-mobile-ui.dark .milanBottomNav{background:rgba(6,12,28,.94)}",
+    "  body.milan-mobile-ui .milanBottomNav button{display:grid;place-items:center;gap:2px;background:0 0;color:#8ba4d4;border:0;",
     "    border-radius:18px;padding:6px 2px;min-height:50px;box-shadow:none;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1}",
-    "  body.milan-v95 .milanBottomNav button b{font-size:20px;line-height:1}",
-    "  body.milan-v95 .milanBottomNav button.active{background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(217,70,239,.16));color:#fbbf24}",
-    "  body.milan-v95 .milanBottomNav button .nbDot{position:absolute;transform:translate(14px,-14px);min-width:16px;height:16px;",
+    "  body.milan-mobile-ui .milanBottomNav button b{font-size:20px;line-height:1}",
+    "  body.milan-mobile-ui .milanBottomNav button.active{background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(217,70,239,.16));color:#fbbf24}",
+    "  body.milan-mobile-ui .milanBottomNav button .nbDot{position:absolute;transform:translate(14px,-14px);min-width:16px;height:16px;",
     "    padding:0 4px;border-radius:999px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;display:none;align-items:center;justify-content:center}",
-    "  body.milan-v95 .milanBottomNav button.hasCount .nbDot{display:flex}",
+    "  body.milan-mobile-ui .milanBottomNav button.hasCount .nbDot{display:flex}",
     /* keep content above the fixed nav */
-    "  body.milan-v95{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}",
+    "  body.milan-mobile-ui{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}",
     /* mobile sheet that hosts the relocated right-rail panels */
     "  #milanMobileSheet{position:fixed;inset:0;z-index:8900;display:none}",
     "  #milanMobileSheet.open{display:block}",
@@ -56,9 +56,9 @@
     "  #milanMobileSheet .sheetGrip{width:44px;height:5px;border-radius:999px;background:rgba(148,163,184,.45);margin:6px auto 10px}",
     "  #milanMobileSheet .sheetHost .rightBox{margin-bottom:12px}",
     /* On mobile, the in-page right rail stays hidden; its cards live in the sheet instead */
-    "  body.milan-v95 .rightRail{display:none!important}",
+    "  body.milan-mobile-ui .rightRail{display:none!important}",
     /* Make sure the left menu (scopes) is reachable too — show it as chips */
-    "  body.milan-v95 .leftRail .menu{display:grid!important;grid-template-columns:repeat(2,1fr);gap:6px}",
+    "  body.milan-mobile-ui .leftRail .menu{display:grid!important;grid-template-columns:repeat(2,1fr);gap:6px}",
     "}",
     /* Desktop: never show mobile-only chrome */
     "@media (min-width:761px){.milanBottomNav{display:none!important}#milanMobileSheet{display:none!important}}"
@@ -207,12 +207,12 @@
 
   /* ---- activation ------------------------------------------------------- */
   function activate() {
-    document.body.classList.add("milan-v95");
+    document.body.classList.add("milan-mobile-ui");
     buildNav();
     syncAlertBadge();
   }
   function deactivate() {
-    document.body.classList.remove("milan-v95");
+    document.body.classList.remove("milan-mobile-ui");
     closeSheet();
   }
   function refresh() { isMobile() ? activate() : deactivate(); }

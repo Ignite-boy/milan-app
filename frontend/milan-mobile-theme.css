@@ -1,5 +1,5 @@
 /* ============================================================================
-   MILAN V102 — "Silver pill" mobile home skin (additive, mobile/PWA only)
+   MILAN — "Silver pill" mobile home skin (additive, mobile/PWA only)
    --------------------------------------------------------------------------
    Matches the approved design screenshot: dark navy canvas, components as
    bright silver pills with dark navy text. Desktop untouched. Loaded LAST.
@@ -173,7 +173,7 @@
   }
 
   /* ---- bottom navigation --------------------------------------------------- */
-  body.milan-v95 .milanBottomNav,
+  body.milan-mobile-ui .milanBottomNav,
   html.milan-premium-ui .milanBottomNav {
     background: rgba(8, 14, 32, 0.92) !important;
     border: 1px solid rgba(203, 213, 235, 0.35) !important;
@@ -182,7 +182,7 @@
     gap: 6px !important;
     box-shadow: 0 18px 55px rgba(0, 0, 0, 0.5) !important;
   }
-  body.milan-v95 .milanBottomNav button,
+  body.milan-mobile-ui .milanBottomNav button,
   html.milan-premium-ui .milanBottomNav button {
     background: linear-gradient(180deg, #ffffff 0%, #dde4f2 100%) !important;
     color: #17203a !important;
@@ -193,12 +193,12 @@
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff !important;
     min-height: 54px !important;
   }
-  body.milan-v95 .milanBottomNav button b,
+  body.milan-mobile-ui .milanBottomNav button b,
   html.milan-premium-ui .milanBottomNav button b {
     font-size: 20px !important;
     line-height: 1.05 !important;
   }
-  body.milan-v95 .milanBottomNav button.active,
+  body.milan-mobile-ui .milanBottomNav button.active,
   html.milan-premium-ui .milanBottomNav button.active {
     background: linear-gradient(180deg, #ffffff 0%, #cfd9ee 100%) !important;
     color: #101a33 !important;
@@ -214,7 +214,7 @@
   img, video, iframe, canvas { max-width: 100% !important; }
 
   /* content always clears the fixed bottom nav */
-  body.milan-v95,
+  body.milan-mobile-ui,
   html.milan-premium-ui body {
     padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px)) !important;
   }

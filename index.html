@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MILAN — Privacy-First Decentralized Social Network | Own Your Data (Web5)</title>
+  <meta name="description" content="MILAN is a free, privacy-first decentralized social network built on Web5 (DWN + DID). No ads, no tracking — you own your data. Your Space. Your People.">
+  <link rel="icon" href="https://milanlife.in/favicon.svg?v=20260712b" type="image/svg+xml">
+  <link rel="canonical" href="https://www.milanlife.in/">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MILAN — Your Space. Your People.">
+  <meta property="og:description" content="A privacy-first, decentralized social network where you own your data. Built on Web5 (DWN + DID). No ads. No tracking. Ever.">
+  <meta property="og:image" content="https://milanlife.in/assets/og-cover.png">
+  <meta property="og:url" content="https://ignite-boy.github.io/milan-app/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #07070f;
+      --bg-soft: #0d0d1c;
+      --card: rgba(255, 255, 255, 0.04);
+      --card-border: rgba(255, 255, 255, 0.09);
+      --text: #eef0ff;
+      --muted: #9aa0c3;
+      --indigo: #6366f1;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #c084fc 100%);
+      --radius: 18px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: 'Sora', 'Inter', sans-serif; letter-spacing: -0.02em; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; }
+
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Ambient glow ── */
+    .glow {
+      position: fixed; pointer-events: none; z-index: 0;
+      width: 720px; height: 720px; border-radius: 50%;
+      filter: blur(140px); opacity: .22;
+    }
+    .glow-1 { top: -280px; left: -160px; background: #6366f1; }
+    .glow-2 { top: 30%; right: -300px; background: #8b5cf6; opacity: .14; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(16px);
+      background: rgba(7, 7, 15, 0.72);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.35rem; }
+    .brand img { width: 34px; height: 34px; border-radius: 9px; }
+    .brand span { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-size: .95rem; color: var(--muted); font-weight: 500; }
+    .nav-links a:hover { color: var(--text); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 12px; font-weight: 600; font-size: .95rem;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+      cursor: pointer; border: none;
+    }
+    .btn-primary {
+      background: var(--grad); color: #fff;
+      box-shadow: 0 8px 28px rgba(99, 102, 241, .35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(139, 92, 246, .45); }
+    .btn-ghost {
+      background: rgba(255,255,255,.06); color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.11); transform: translateY(-2px); }
+    .nav-cta { padding: 9px 18px; font-size: .9rem; }
+
+    /* ── Hero ── */
+    header { position: relative; z-index: 1; text-align: center; padding: 96px 0 72px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .82rem; font-weight: 600; color: #c4b5fd;
+      background: rgba(139, 92, 246, .12); border: 1px solid rgba(139, 92, 246, .3);
+      padding: 7px 16px; border-radius: 999px; margin-bottom: 28px;
+      letter-spacing: .02em;
+    }
+    .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 10px var(--emerald); }
+    header h1 {
+      font-size: clamp(2.6rem, 6.5vw, 4.6rem);
+      font-weight: 800; line-height: 1.08; margin-bottom: 22px;
+    }
+    header h1 .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sub {
+      max-width: 620px; margin: 0 auto 40px; color: var(--muted);
+      font-size: clamp(1.02rem, 2vw, 1.2rem);
+    }
+    .sub strong { color: var(--text); font-weight: 600; }
+    .hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
+    .btn-lg { padding: 15px 32px; font-size: 1.05rem; border-radius: 14px; }
+
+    .hero-stats {
+      display: flex; justify-content: center; gap: clamp(24px, 6vw, 72px);
+      flex-wrap: wrap; padding-top: 34px;
+      border-top: 1px solid rgba(255,255,255,.07);
+      max-width: 760px; margin: 0 auto;
+    }
+    .stat b { display: block; font-family: 'Sora', sans-serif; font-size: 1.5rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat span { font-size: .84rem; color: var(--muted); }
+
+    /* ── Sections ── */
+    section { position: relative; z-index: 1; padding: 84px 0; }
+    .sec-head { text-align: center; max-width: 640px; margin: 0 auto 56px; }
+    .sec-head .kicker {
+      font-size: .8rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--violet); margin-bottom: 14px;
+    }
+    .sec-head h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; margin-bottom: 14px; }
+    .sec-head p { color: var(--muted); }
+
+    /* Feature grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+    .card {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 30px 28px;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+    .card:hover { transform: translateY(-5px); border-color: rgba(139, 92, 246, .45); background: rgba(139, 92, 246, .06); }
+    .card .ico {
+      width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; margin-bottom: 18px;
+      background: rgba(99, 102, 241, .14); border: 1px solid rgba(99, 102, 241, .3);
+    }
+    .card h3 { font-size: 1.12rem; margin-bottom: 9px; }
+    .card p { color: var(--muted); font-size: .94rem; }
+
+    /* Comparison table */
+    .compare-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--card-border); }
+    table.compare { width: 100%; border-collapse: collapse; background: var(--card); min-width: 560px; }
+    .compare th, .compare td { padding: 16px 22px; text-align: left; font-size: .95rem; }
+    .compare thead th {
+      font-family: 'Sora', sans-serif; font-size: .98rem;
+      border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,.03);
+    }
+    .compare thead th:last-child { color: #c4b5fd; }
+    .compare tbody tr + tr td { border-top: 1px solid rgba(255,255,255,.05); }
+    .compare td:first-child { color: var(--muted); }
+    .compare td.bad { color: #f87171; }
+    .compare td.good { color: var(--emerald); font-weight: 600; }
+
+    /* How it works */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; counter-reset: step; }
+    .step { position: relative; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 34px 26px 28px; }
+    .step::before {
+      counter-increment: step; content: "0" counter(step);
+      position: absolute; top: -16px; left: 24px;
+      font-family: 'Sora', sans-serif; font-weight: 800; font-size: .95rem;
+      background: var(--grad); color: #fff; padding: 5px 13px; border-radius: 9px;
+      box-shadow: 0 6px 18px rgba(99, 102, 241, .4);
+    }
+    .step h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .step p { color: var(--muted); font-size: .92rem; }
+
+    /* Tech chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .chip {
+      font-size: .9rem; font-weight: 600; color: var(--text);
+      background: var(--card); border: 1px solid var(--card-border);
+      padding: 10px 20px; border-radius: 999px;
+    }
+    .chip em { font-style: normal; color: var(--violet); margin-right: 6px; }
+
+    /* Final CTA */
+    .cta-band {
+      text-align: center; border-radius: 24px; padding: 72px 32px;
+      background: linear-gradient(160deg, rgba(99,102,241,.16), rgba(139,92,246,.10) 60%, rgba(16,185,129,.08));
+      border: 1px solid rgba(139, 92, 246, .3);
+    }
+    .cta-band h2 { font-size: clamp(1.9rem, 4.5vw, 2.8rem); font-weight: 800; margin-bottom: 16px; }
+    .cta-band p { color: var(--muted); max-width: 520px; margin: 0 auto 36px; }
+
+    /* Footer */
+    footer { border-top: 1px solid rgba(255,255,255,.07); padding: 44px 0 52px; position: relative; z-index: 1; }
+    .foot { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between; color: var(--muted); font-size: .9rem; }
+    .foot-links { display: flex; flex-wrap: wrap; gap: 22px; }
+    .foot-links a:hover { color: var(--text); }
+    .foot .heart { color: #f472b6; }
+
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+      header { padding: 68px 0 56px; }
+      section { padding: 60px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <nav>
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top">
+        <img src="https://milanlife.in/assets/MILAN-LOGO.png" alt="MILAN logo"
+             onerror="this.style.display='none'">
+        <span>MILAN</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#tech">Tech</a>
+        <a href="https://github.com/Ignite-boy/milan-app" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <a class="btn btn-primary nav-cta" href="https://www.milanlife.in" target="_blank" rel="noopener">Launch App ↗</a>
+    </div>
+  </nav>
+
+  <header id="top">
+    <div class="wrap">
+      <div class="pill"><span class="dot"></span> Live at milanlife.in · Built on Web5</div>
+      <h1>Your Space.<br><span class="grad">Your People.</span></h1>
+      <p class="sub">
+        MILAN is a <strong>privacy-first, decentralized social network</strong> where <strong>you own your data</strong> —
+        powered by Web5 Decentralized Web Nodes and self-sovereign identity.
+        <strong>No ads. No tracking. Ever.</strong>
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary btn-lg" href="https://www.milanlife.in" target="_blank" rel="noopener">🚀 Launch MILAN</a>
+        <a class="btn btn-ghost btn-lg" href="https://github.com/Ignite-boy/milan-app" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>100%</b><span>Your data, your DWN</span></div>
+        <div class="stat"><b>0</b><span>Ads &amp; trackers</span></div>
+        <div class="stat"><b>DID</b><span>Self-sovereign identity</span></div>
+        <div class="stat"><b>PWA</b><span>Installable anywhere</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">Why MILAN</div>
+        <h2>Social media, re-imagined around <em style="font-style:normal;color:#c4b5fd">ownership</em></h2>
+        <p>On traditional platforms, you are the product. MILAN flips the model — every user gets a cryptographically-secured personal data space.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="ico">🔐</div>
+          <h3>You Own Your Data</h3>
+          <p>Every post, photo and message lives in your own Decentralized Web Node (DWN) — not on a corporate server. Nothing is shared without your consent.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🪪</div>
+          <h3>Self-Sovereign Identity</h3>
+          <p>Your identity is a W3C Decentralized Identifier (DID) that belongs to you — portable, cryptographic, and impossible for any platform to take away.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🚫</div>
+          <h3>No Ads. No Tracking.</h3>
+          <p>Zero advertisements, zero behavioural tracking, zero data selling. Private by default — visibility is always your choice, never an algorithm's.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🎬</div>
+          <h3>Reels, Posts &amp; Messaging</h3>
+          <p>A full modern social experience — short videos, rich media posts, real-time chat and profiles — with a premium, distraction-free interface.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🎵</div>
+          <h3>Free Music Built In</h3>
+          <p>Search and stream millions of Bollywood, Hollywood and global tracks right inside MILAN — free, with no signup required.</p>
+        </div>
+        <div class="card">
+          <div class="ico">📱</div>
+          <h3>Installable PWA</h3>
+          <p>Install MILAN on any phone, tablet or desktop straight from the browser. Fast, offline-capable, and app-store free.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">The Difference</div>
+        <h2>Traditional social media vs MILAN</h2>
+      </div>
+      <div class="compare-wrap">
+        <table class="compare">
+          <thead>
+            <tr><th></th><th>Traditional platforms</th><th>MILAN</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Where your data lives</td><td class="bad">Corporate servers</td><td class="good">Your own DWN</td></tr>
+            <tr><td>Who controls it</td><td class="bad">The platform</td><td class="good">You</td></tr>
+            <tr><td>Ads &amp; tracking</td><td class="bad">Everywhere</td><td class="good">None</td></tr>
+            <tr><td>Data selling</td><td class="bad">Business model</td><td class="good">Never</td></tr>
+            <tr><td>Identity</td><td class="bad">Owned by platform</td><td class="good">Self-sovereign DID</td></tr>
+            <tr><td>Default visibility</td><td class="bad">Public / algorithmic</td><td class="good">Private</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">How it works</div>
+        <h2>Decentralized under the hood, effortless on the surface</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <h3>Create your identity</h3>
+          <p>Sign up in seconds — MILAN generates your own Decentralized Identifier (DID) behind the scenes. No crypto knowledge needed.</p>
+        </div>
+        <div class="step">
+          <h3>Get your data space</h3>
+          <p>A personal Decentralized Web Node (DWN) is provisioned just for you. It's your private vault for everything you create.</p>
+        </div>
+        <div class="step">
+          <h3>Connect &amp; share</h3>
+          <p>Post, chat, and follow your people. You decide exactly what is shared, with whom, and for how long.</p>
+        </div>
+        <div class="step">
+          <h3>Stay in control</h3>
+          <p>Your data never leaves your control. Export it, delete it, or take it with you — the platform can't hold it hostage.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">Tech Stack</div>
+        <h2>Built on open standards</h2>
+      </div>
+      <div class="chips">
+        <span class="chip"><em>⬡</em> Web5 (DWN + DID)</span>
+        <span class="chip"><em>⬢</em> dwn-sdk-js</span>
+        <span class="chip"><em>◈</em> Node.js + Express</span>
+        <span class="chip"><em>⚡</em> WebSockets</span>
+        <span class="chip"><em>🛡</em> JWT + bcrypt</span>
+        <span class="chip"><em>📱</em> PWA + Service Worker</span>
+        <span class="chip"><em>🎞</em> FFmpeg media pipeline</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="cta-band">
+        <h2>Ready to own your <span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">social life?</span></h2>
+        <p>Join MILAN today — free forever, private by default, and yours by design.</p>
+        <a class="btn btn-primary btn-lg" href="https://www.milanlife.in" target="_blank" rel="noopener">Get Started Free ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot">
+      <div>© 2026 MILAN · Made with <span class="heart">♥</span> by Nitesh Pandey</div>
+      <div class="foot-links">
+        <a href="https://www.milanlife.in/about" target="_blank" rel="noopener">About</a>
+        <a href="https://www.milanlife.in/privacy" target="_blank" rel="noopener">Privacy</a>
+        <a href="https://www.milanlife.in/terms" target="_blank" rel="noopener">Terms</a>
+        <a href="https://www.milanlife.in/what-is-web5" target="_blank" rel="noopener">What is Web5?</a>
+        <a href="https://github.com/Ignite-boy/milan-app" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

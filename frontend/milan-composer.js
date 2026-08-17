@@ -1,4 +1,4 @@
-/* MILAN V7.2 — Facebook-style composer: collapsed by default, expand on focus.
+/* MILAN — Facebook-style composer: collapsed by default, expand on focus.
    App page only. Additive — never touches existing post/publish handlers. */
 (function () {
   "use strict";

@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
-// MILAN V49: reliable universal mobile video playback layer.
+// MILAN: reliable universal mobile video playback layer.
 // Browser engines cannot decode every video container/codec. V49 probes the upload first:
 // - already-safe H.264/AAC MP4 => fast remux with +faststart, then play immediately
 // - unsupported MOV/MKV/AVI/3GP/HEVC/etc => transcode to MP4 H.264/AAC
@@ -158,7 +158,7 @@ function videoIsBrowserSafe(probe = {}) {
   const safeVideo = vcodec === 'h264' || vcodec === 'avc1';
   const safeAudio = !audio || acodec === 'aac' || acodec === 'mp3' || acodec === 'mp4a';
   const safePix = !pixFmt || pixFmt === 'yuv420p' || pixFmt === 'yuvj420p';
-  // V56 hard fix: do NOT reject normal WhatsApp/phone MP4s only because ffprobe
+  // hard fix: do NOT reject normal WhatsApp/phone MP4s only because ffprobe
   // reports old SD color metadata like bt470bg/smpte170m. That was forcing an
   // unnecessary full transcode for perfectly normal H.264/AAC/yuv420p MP4 files,
   // and on Render/mobile it could leave posts in "preview is preparing".

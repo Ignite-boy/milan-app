@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const auth = require('../middleware/auth');
+const { isAdminEmail } = require('../utils/isAdmin');
 const { readJson, findUserById, findUserByDid, addActivity } = require('../utils/store');
 const dwnStore = require('../services/dwnService');
 const realDwn = require('../services/realDwnNodeClient');
@@ -456,7 +457,7 @@ async function streamMedia(req, res) {
   try {
     const u = current(req);
     if (!u) return res.status(404).json({ error: 'User not found' });
-    // V83 urgent video rule: when the player asks for the dedicated play.mp4/universal
+    // urgent video rule: when the player asks for the dedicated play.mp4/universal
     // route, make one best-effort browser-safe MP4 pass before streaming. This fixes the
     // "audio plays but video is black/not visible" case caused by unsupported video codecs
     // or non-faststart mobile files, while still falling back to the original if repair fails.
@@ -482,7 +483,7 @@ async function streamMedia(req, res) {
       if (key) headers.Authorization = `Bearer ${key}`;
       if (req.headers.range) headers.Range = req.headers.range;
       try {
-        // V80 hard fix: do NOT keep a 15s AbortSignal attached to the response body.
+        // hard fix: do NOT keep a 15s AbortSignal attached to the response body.
         // In Node fetch the same signal aborts the streaming body too, which made remote
         // DWN videos play for a few seconds and then suddenly stop in desktop/mobile/APK.
         // We only use the timer while opening the upstream connection, then clear it so
@@ -600,7 +601,11 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const u = current(req);
     if (!u) return res.status(404).json({ error: 'User not found' });
-    const record = await dwnStore.updateRecord(req.userId, u.user.did, req.params.id, req.body);
+    let record = await dwnStore.updateRecord(req.userId, u.user.did, req.params.id, req.body);
+    if (!record && isAdminEmail(req.userEmail)) {
+      const owner = dwnStore.ownerOfRecord(req.params.id);
+      if (owner) record = await dwnStore.updateRecord(owner.userId, owner.did, req.params.id, req.body);
+    }
     if (!record) return res.status(404).json({ error: 'Record not found or not owner' });
     addActivity(req.userId, 'record.updated.in.dwn', { id: record.id });
     res.json(record);
@@ -611,7 +616,11 @@ router.patch('/:id/permissions', auth, async (req, res) => {
   try {
     const u = current(req);
     if (!u) return res.status(404).json({ error: 'User not found' });
-    const record = await dwnStore.updatePermissions(req.userId, u.user.did, req.params.id, req.body);
+    let record = await dwnStore.updatePermissions(req.userId, u.user.did, req.params.id, req.body);
+    if (!record && isAdminEmail(req.userEmail)) {
+      const owner = dwnStore.ownerOfRecord(req.params.id);
+      if (owner) record = await dwnStore.updatePermissions(owner.userId, owner.did, req.params.id, req.body);
+    }
     if (!record) return res.status(404).json({ error: 'Record not found or not owner' });
     addActivity(req.userId, 'record.permissions.updated.in.dwn', { id: record.id, mode: record.accessMode });
     res.json(record);
@@ -644,7 +653,12 @@ router.delete('/:id/share/:did', auth, async (req, res) => {
 
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const deleted = await dwnStore.deleteRecord(req.userId, req.params.id);
+    let deleted = await dwnStore.deleteRecord(req.userId, req.params.id);
+    // Platform admin may remove any post (moderation / test cleanup).
+    if (!deleted && isAdminEmail(req.userEmail)) {
+      deleted = await dwnStore.adminDeleteRecord(req.params.id);
+      if (deleted) addActivity(req.userId, 'record.deleted.by.admin', { id: req.params.id });
+    }
     if (!deleted) return res.status(404).json({ error: 'Record not found or not owner' });
     addActivity(req.userId, 'record.deleted.from.dwn', { id: req.params.id });
     res.json({ deleted: true, storage: 'DWN' });

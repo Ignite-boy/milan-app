@@ -81,7 +81,7 @@ router.get('/status', async (_req, res) => {
   const remoteNode = await realDwn.ping().catch(err => ({ ok: false, error: err.message }));
   res.json({
     ok: true,
-    version: '49.0.0',
+    version: '1.0.0',
     mode: p.mode,
     productionDwn: {
       realDwnProtocol: !!p.remoteEndpoint && remoteNode.ok !== false,
@@ -109,7 +109,7 @@ router.get('/node/status', (_req, res) => {
   res.json({
     ok: true,
     node: 'MILAN_REAL_DWN_NODE',
-    version: '49.0.0',
+    version: '1.0.0',
     role: process.env.MILAN_DWN_NODE_MODE === 'true' ? 'real-dwn-node' : 'app-with-dwn-receiver',
     receiverRoot: cloudReceiverRoot(),
     databaseRoot: p.databaseRoot,
@@ -129,7 +129,7 @@ router.post('/ingest/record', requireCloudKey, express.json({ limit: process.env
   ensureDir(recordsDir);
   const envelope = {
     app: 'MILAN',
-    version: '49.0.0',
+    version: '1.0.0',
     receiver: 'milan-cloud-dwn',
     receivedAt: new Date().toISOString(),
     ownerDid: ownerDid || record.owner || '',
@@ -162,7 +162,7 @@ router.put('/ingest/media/:spaceId/:recordId', requireCloudKey, (req, res) => {
   req.pipe(stream);
   stream.on('finish', () => {
     writeJsonFile(path.join(dir, `${recordId}.media.json`), {
-      app: 'MILAN', version: '49.0.0', spaceId, recordId, mime, originalName: original,
+      app: 'MILAN', version: '1.0.0', spaceId, recordId, mime, originalName: original,
       bytes, file, receivedAt: new Date().toISOString()
     });
     res.status(202).json({ accepted: true, spaceId, recordId, bytes, file });
@@ -231,7 +231,7 @@ router.get('/receiver/files', auth, (req, res) => {
 
 
 // -----------------------------------------------------------------------------
-// V35 EMBEDDED PRODUCTION DWN ROUTES
+// EMBEDDED PRODUCTION DWN ROUTES
 // These routes make the existing single Render service operate as the production
 // DWN endpoint. No separate milan-real-dwn-node Render service is required.
 // -----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ function v35PutSnapshot(req, res) {
   const name = v35SnapshotName(req.params.name);
   const payload = v35CleanSnapshotForFile(name, v35SnapshotPayload(req));
   const file = path.join(v35DbRoot(), name);
-  // V36: database files are stored as raw app JSON, not as DWN envelopes.
+  // database files are stored as raw app JSON, not as DWN envelopes.
   // This prevents users.json from turning into rows such as ok/app/node/version.
   v35WriteJsonFile(file, payload || {});
   return res.json({ ok: true, accepted: true, name, embeddedDwnNode: true, realDwnProtocol: true, sdkReady: true, updatedAt: v35Now() });
@@ -298,7 +298,7 @@ function v35ProvisionUser(req, res) {
     ok: true,
     app: 'MILAN',
     node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN',
-    version: '49.0.0',
+    version: '1.0.0',
     realDwnProtocol: true,
     sdkReady: true,
     embeddedDwnNode: true,
@@ -324,7 +324,7 @@ function v35SaveRecord(req, res) {
   if (!record.id) record.id = `record-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const root = v35SpaceRoot(spaceId);
   const file = path.join(root, 'records', `${safeName(record.id)}.json`);
-  const envelope = { ok: true, accepted: true, app: 'MILAN', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', version: '49.0.0', realDwnProtocol: true, sdkReady: true, embeddedDwnNode: true, interface: 'Records', method: 'Write', spaceId, ownerDid: body.ownerDid || record.owner || '', userId: body.userId || '', record, receivedAt: v35Now() };
+  const envelope = { ok: true, accepted: true, app: 'MILAN', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', version: '1.0.0', realDwnProtocol: true, sdkReady: true, embeddedDwnNode: true, interface: 'Records', method: 'Write', spaceId, ownerDid: body.ownerDid || record.owner || '', userId: body.userId || '', record, receivedAt: v35Now() };
   v35WriteJsonFile(file, envelope);
   const indexFile = path.join(root, 'DWN_RECORD_INDEX.json');
   const index = v35ReadJsonFile(indexFile, {});
@@ -367,7 +367,7 @@ function v35HandleMediaWrite(req, res) {
     if (aborted) return;
     try {
       fs.renameSync(tmp, file);
-      const meta = { ok: true, accepted: true, app: 'MILAN', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', version: '49.0.0', realDwnProtocol: true, sdkReady: true, embeddedDwnNode: true, spaceId, recordId, mime, originalName: original, bytes, file, receivedAt: v35Now() };
+      const meta = { ok: true, accepted: true, app: 'MILAN', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', version: '1.0.0', realDwnProtocol: true, sdkReady: true, embeddedDwnNode: true, spaceId, recordId, mime, originalName: original, bytes, file, receivedAt: v35Now() };
       v35WriteJsonFile(path.join(dir, `${recordId}.media.json`), meta);
       res.status(202).json(meta);
     } catch (err) {
@@ -413,7 +413,7 @@ function v35StreamMedia(req, res) {
   fs.createReadStream(file, { highWaterMark: 1024 * 1024 }).pipe(res);
 }
 function v35Routes(req, res) {
-  res.json({ ok: true, version: '49.0.0', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', embeddedDwnNode: true, realDwnProtocol: true, sdkReady: true, routes: [
+  res.json({ ok: true, version: '1.0.0', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', embeddedDwnNode: true, realDwnProtocol: true, sdkReady: true, routes: [
     'GET /api/dwn/routes',
     'GET /api/dwn/node/status',
     'POST /api/dwn/users/provision',
@@ -426,7 +426,7 @@ function v35Routes(req, res) {
 
 router.get('/routes', v35Routes);
 router.get('/node/routes', v35Routes);
-router.get('/health', (_req, res) => res.json({ ok: true, version: '49.0.0', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', embeddedDwnNode: true, realDwnProtocol: true, sdkReady: true, time: v35Now() }));
+router.get('/health', (_req, res) => res.json({ ok: true, version: '1.0.0', node: 'MILAN_V49_EMBEDDED_PRODUCTION_DWN', embeddedDwnNode: true, realDwnProtocol: true, sdkReady: true, time: v35Now() }));
 router.post('/users/provision', requireCloudKey, express.json({ limit: '25mb' }), v35ProvisionUser);
 router.post('/user/provision', requireCloudKey, express.json({ limit: '25mb' }), v35ProvisionUser);
 router.put('/database/:name', requireCloudKey, express.json({ limit: '100mb' }), v35PutSnapshot);

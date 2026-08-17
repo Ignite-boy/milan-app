@@ -15,6 +15,10 @@ User-agent: Bingbot
 Allow: /
 Disallow: /api/
 
+User-agent: Slurp
+Allow: /
+Disallow: /api/
+
 User-agent: Google-Extended
 Allow: /
 Disallow: /api/

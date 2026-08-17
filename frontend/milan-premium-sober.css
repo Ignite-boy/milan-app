@@ -75,7 +75,7 @@ body::after { display: none !important; content: none !important; }
 #milan-confetti-canvas { display: none !important; }
 #milan-reward-popup { display: none !important; }
 #milan-live-badge, .milan-live-indicator { display: none !important; }
-/* day/night auto background tinting from V2 — override to stay calm */
+/* day/night auto background tinting — override to stay calm */
 body[style*="background-image"] { background-image: none !important; }
 
 /* ============================================================
@@ -285,7 +285,7 @@ html.milan-premium-ui .menu button.active, html.milan-premium-ui .menu button:ho
 ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,196,0.4) !important; }
 ::selection { background: rgba(79,124,246,0.3); color: #fff; }
 
-/* AI chips / V3 chips: calm them down */
+/* AI chips: calm them down */
 .milan-ai-chip, .milan-feed-tab, .milan-chip, .milan-filter-chips button {
   background: rgba(148,163,196,0.05) !important;
   border: 1px solid var(--line) !important;

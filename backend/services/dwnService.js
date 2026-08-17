@@ -11,7 +11,7 @@ const ACCESS = ['private', 'public', 'shared_did'];
 const MAX_TEXT_BYTES = Number(process.env.MAX_RECORD_TEXT_BYTES || 10 * 1024 * 1024);
 const MAX_MEDIA_BYTES = Number(process.env.MAX_MEDIA_BYTES || 5000 * 1024 * 1024);
 const MAX_MEDIA_MB = Math.round(MAX_MEDIA_BYTES / 1024 / 1024);
-// V49 accepts every file type. BROWSER_SAFE_MEDIA is used only to decide inline preview, not to block uploads.
+// accepts every file type. BROWSER_SAFE_MEDIA is used only to decide inline preview, not to block uploads.
 const INLINE_PREVIEW_MIME = BROWSER_SAFE_MEDIA;
 const DWN_DIR = dwnRoot();
 const DATABASE_DIR = databaseRoot();
@@ -36,7 +36,7 @@ const mediaProcessingQueue = new Set();
 const mediaRepairLocks = new Map();
 const MILAN_SYNC_VIDEO_PROCESS_BYTES = Number(process.env.MILAN_SYNC_VIDEO_PROCESS_BYTES || 150 * 1024 * 1024);
 const MILAN_PROCESSING_STALE_MS = Number(process.env.MILAN_PROCESSING_STALE_MS || 20 * 1000);
-// V55 hard-core anti-stuck rule: processing must never stay forever.
+// hard-core anti-stuck rule: processing must never stay forever.
 // Small WhatsApp/reel videos should either become playable quickly or show a clear repair/download state.
 const MILAN_PROCESSING_HARD_TIMEOUT_MS = Number(process.env.MILAN_PROCESSING_HARD_TIMEOUT_MS || 3 * 60 * 1000);
 const MILAN_PROCESSING_SMALL_TIMEOUT_MS = Number(process.env.MILAN_PROCESSING_SMALL_TIMEOUT_MS || 90 * 1000);
@@ -209,7 +209,7 @@ function extractDataUrl(record) {
 function persistMediaFile(userId, record) {
   const media = extractDataUrl(record);
   if (!media) return;
-  // V49: do not block unknown file types. Store them as downloadable files.
+  // do not block unknown file types. Store them as downloadable files.
   const approxBytes = Buffer.byteLength(media.base64, 'base64');
   if (approxBytes > MAX_MEDIA_BYTES) {
     record.mediaPersistError = `Media exceeds the configured DWN upload limit of ${MAX_MEDIA_MB} MB`;
@@ -441,7 +441,7 @@ async function initDwn() {
   compactExistingIndex();
   repairIndexFromRecordFiles();
 
-  // V49 production DWN: users are assigned a remote production DWN node space.
+  // production DWN: users are assigned a remote production DWN node space.
   // Local app dwn-data remains only temporary cache/staging; authoritative data/media is pushed to REAL_DWN_NODE_ENDPOINT.
   dwnInstance = {
     type: 'production-dwn-node-remote-only-cache',
@@ -478,7 +478,7 @@ function getStatus() {
       maxTextBytes: MAX_TEXT_BYTES
     },
     cloud: persistenceInfo(),
-    note: 'MILAN V49 production DWN mode. Render app stores files/cache only; authoritative records/media/database snapshots go to REAL_DWN_NODE_ENDPOINT.'
+    note: 'MILAN production DWN mode. Render app stores files/cache only; authoritative records/media/database snapshots go to REAL_DWN_NODE_ENDPOINT.'
   };
 }
 
@@ -686,7 +686,7 @@ async function createMediaRecordFromFile(userId, ownerDid, meta = {}, tempPath) 
 
   const detectedCategory = categoryForMime(mimeType, originalName);
   const deferVideoProcessing = String(process.env.MILAN_DEFER_VIDEO_PROCESSING || 'true').toLowerCase() !== 'false';
-  // V53: small/normal mobile videos are converted/remuxed immediately before the post appears.
+  // small/normal mobile videos are converted/remuxed immediately before the post appears.
   // Only large videos are accepted first and processed in background. This removes the common
   // "uploaded but 0:00 / still preparing" problem shown on mobile.
   const fastAcceptVideo = detectedCategory === 'video' && deferVideoProcessing && inputSizeBytes > MILAN_SYNC_VIDEO_PROCESS_BYTES;
@@ -719,11 +719,11 @@ async function createMediaRecordFromFile(userId, ownerDid, meta = {}, tempPath) 
   }
 
   const previewCategory = compatibility.previewCategory || detectedCategory || categoryForMime(mimeType, originalName);
-  // V49: never mark a video playable only because its container says MP4.
+  // never mark a video playable only because its container says MP4.
   // Many mobile/iPhone/WhatsApp MP4 files contain HEVC or unsupported audio; those create
   // the black 0:00 player. A video is marked browser-playable only after a successful
   // ffmpeg faststart/remux/transcode or a positive compatibility check.
-  // V50: treat mp4/webm containers as playable by default even without full transcode proof.
+  // treat mp4/webm containers as playable by default even without full transcode proof.
   // This makes common phone videos (WhatsApp, camera MP4s) play instantly without a repair call.
   // Non-playable formats (HEVC, MKV) will still trigger repair via onerror on the client.
   // Facebook-style rule: after upload, do not promise that every MP4/MOV is playable.
@@ -820,7 +820,7 @@ async function createMediaRecordFromFile(userId, ownerDid, meta = {}, tempPath) 
     record.mediaReadyAt = new Date().toISOString();
     await markCloudSync(record, ownerDid);
   } else if (embeddedMediaMode) {
-    // V49: embedded one-command Render app should stream the normalized local MP4 directly.
+    // embedded one-command Render app should stream the normalized local MP4 directly.
     // Marking it remote-only makes the browser hit an internal/self DWN URL path and was the
     // main reason uploaded WhatsApp MP4 files could show 0:00 / not playable after upload.
     delete record.mediaRemoteOnly;
@@ -895,7 +895,7 @@ async function repairMediaForBrowserUnlocked(userId, did, id) {
   const currentMime = media.mimeType || found.record.dataFormat || detectMimeFromFile(full, originalName).mimeType || 'application/octet-stream';
   setRecordMediaProcessing(found, { processing: false, status: 'checking', warning: 'Repair is running in background. Direct playback/download stays available.' });
   persistFoundRecord(found);
-  // V57: repair must be fast first. Do not force full transcode for normal H.264/AAC MP4.
+  // repair must be fast first. Do not force full transcode for normal H.264/AAC MP4.
   // Full transcode is still used automatically when remux/probe says the video is unsafe.
   const forceRepairTranscode = ['1','true','yes','on'].includes(String(process.env.MILAN_FORCE_REPAIR_TRANSCODE || 'false').toLowerCase());
   const compatibility = await normalizeUploadedMedia({ filePath: full, mimeType: currentMime, originalName, force: forceRepairTranscode });
@@ -1185,6 +1185,17 @@ async function findRecordById(id) {
   return findRecordRaw(id);
 }
 
+// Admin moderation helpers — resolve/delete a record regardless of owner.
+function ownerOfRecord(id) {
+  const found = findRecordRaw(id);
+  return found ? { userId: found.userId, did: found.record.owner } : null;
+}
+async function adminDeleteRecord(id) {
+  const found = findRecordRaw(id);
+  if (!found) return false;
+  return deleteRecord(found.userId, id);
+}
+
 async function approveAccessForRecord(recordId, ownerDid, readerDid, requestId = '') {
   const found = findRecordRaw(recordId);
   if (!found || found.record.owner !== ownerDid) return null;
@@ -1243,7 +1254,7 @@ async function getMediaStream(id, did) {
     const fileForCategory = media.fileName || found.record.title || (fallbackFullPath ? path.basename(fallbackFullPath) : '');
     const previewCategory = media.previewCategory || found.record.mediaCompatibility?.previewCategory || categoryForMime(mimeForCategory, fileForCategory);
     const remoteUrl = found.record.mediaRemoteUrl || realDwn.mediaUrl(found.record.dwnSpaceId, found.record.id);
-    // V58: for video playback, prefer the local browser-safe cache when it exists.
+    // for video playback, prefer the local browser-safe cache when it exists.
     // Remote DWN media can be slower or return imperfect range headers; the local normalized
     // MP4 is what makes uploaded videos start smoothly on mobile.
     const preferLocalVideo = fallbackReady && previewCategory === 'video' && String(process.env.MILAN_VIDEO_LOCAL_CACHE_FIRST || 'true').toLowerCase() !== 'false';
@@ -1285,6 +1296,8 @@ module.exports = {
   cleanDids,
   listVisibleRecords,
   listPublicRecords,
+  ownerOfRecord,
+  adminDeleteRecord,
   listSharedWithMe,
   getRecord,
   getMediaStream,

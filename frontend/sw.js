@@ -1,78 +1,98 @@
-/* MILAN service worker - v95
-   Goal: stay FRESH on Android/WebView (no stale app shell) while still giving a
-   real offline experience. We do NOT cache the HTML/JS app shell (prevents old
-   login patches from returning). We DO precache a small offline fallback + icons
-   so failed navigations show a proper page instead of a browser error. */
+/* MILAN service worker: offline fallback + safe static asset warm cache. */
 
-var CACHE_NAME = 'milan-v101-offline-shell';
-var OFFLINE_URL = '/offline.html';
-var PRECACHE = [OFFLINE_URL, '/favicon.svg', '/assets/icon-192.png', '/manifest.json'];
+const SHELL_CACHE = 'milan-offline-shell-v3';
+const STATIC_CACHE = 'milan-static-v1';
+const OFFLINE_URL = '/offline.html';
 
-self.addEventListener('install', function (event) {
+function isCacheableStaticAsset(request, url) {
+  return request.destination === 'script' ||
+    request.destination === 'style' ||
+    request.destination === 'font' ||
+    request.destination === 'image' ||
+    url.pathname.startsWith('/assets/');
+}
+
+async function putStatic(request, response) {
+  if (!response || !response.ok || response.type !== 'basic') return response;
+  const cache = await caches.open(STATIC_CACHE);
+  await cache.put(request, response.clone());
+  return response;
+}
+
+async function warmUrls(urls) {
+  const cache = await caches.open(STATIC_CACHE);
+  await Promise.all(urls.slice(0, 12).map(async (rawUrl) => {
+    try {
+      const url = new URL(rawUrl, self.location.origin);
+      if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+      const request = new Request(url.href, { credentials: 'same-origin' });
+      const response = await fetch(request);
+      if (response.ok && response.type === 'basic') await cache.put(request, response.clone());
+    } catch (_) {
+      // Prefetching is opportunistic: a failed warmup must never affect navigation.
+    }
+  }));
+}
+
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function (cache) { return cache.addAll(PRECACHE); })
-      .then(function () { return self.skipWaiting(); })
-      .catch(function () { return self.skipWaiting(); })
+    caches.open(SHELL_CACHE)
+      .then((cache) => cache.add(OFFLINE_URL))
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', function (event) {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then(function (keys) {
-        return Promise.all(keys.map(function (k) {
-          return k === CACHE_NAME ? null : caches.delete(k);
-        }));
-      })
-      .then(function () { return self.clients.claim(); })
+    Promise.all([
+      self.registration.navigationPreload.enable().catch(() => {}),
+      caches.keys().then((keys) => Promise.all(
+        keys
+          .filter((key) => ![SHELL_CACHE, STATIC_CACHE].includes(key))
+          .map((key) => caches.delete(key))
+      ))
+    ]).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', function (event) {
-  var req = event.request;
-  var url = new URL(req.url);
+self.addEventListener('message', (event) => {
+  if (!event.data || event.data.type !== 'milan:prefetch' || !Array.isArray(event.data.urls)) return;
+  event.waitUntil(warmUrls(event.data.urls));
+});
 
-  if (req.method !== 'GET') return;
-  if (url.pathname.indexOf('/api/') === 0 || req.headers.has('range') ||
-      /\.(mp4|webm|mov|m4v|3gp|m3u8)$/i.test(url.pathname)) return;
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
 
-  // Versioned JS/CSS (?v=...) are immutable: cache-first. The URL changes when
-  // the file changes, so this can never serve a stale build — it just makes
-  // repeat app opens instant and tolerant of flaky mobile networks.
-  if (/\.(js|css)$/i.test(url.pathname) && /[?&]v=/.test(url.search)) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(function (cache) {
-        return cache.match(req).then(function (hit) {
-          if (hit) return hit;
-          return fetch(req).then(function (res) {
-            if (res && res.ok) cache.put(req, res.clone());
-            return res;
-          });
-        });
-      })
-    );
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+  if (request.headers.has('range') || /\.(mp4|webm|mov|m4v|3gp|m3u8)$/i.test(url.pathname)) return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        return await event.preloadResponse || await fetch(request);
+      } catch (_) {
+        return await caches.match(OFFLINE_URL);
+      }
+    })());
     return;
   }
 
-  // Navigations: always try network fresh; if offline, show cached offline page.
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req, { cache: 'no-store' })
-        .catch(function () { return fetch(req); })
-        .catch(function () { return caches.match(OFFLINE_URL); })
-    );
-    return;
-  }
+  if (!isCacheableStaticAsset(request, url)) return;
 
-  // Static precached assets: network-first, fall back to cache.
-  event.respondWith(
-    fetch(req, { cache: 'no-store' })
-      .catch(function () { return caches.match(req); })
-      .then(function (res) {
-        return res || caches.match(req).then(function (c) {
-          return c || caches.match(OFFLINE_URL);
-        });
-      })
-  );
+  event.respondWith((async () => {
+    const cache = await caches.open(STATIC_CACHE);
+    const cached = await cache.match(request);
+    const refresh = fetch(request)
+      .then((response) => putStatic(request, response))
+      .catch(() => null);
+
+    if (cached) {
+      event.waitUntil(refresh);
+      return cached;
+    }
+    return await refresh || Response.error();
+  })());
 });

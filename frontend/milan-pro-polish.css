@@ -1,0 +1,469 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MILAN PRO POLISH — final unifying design layer (load LAST).
+   Purpose: one consistent, professional design language over all earlier
+   skins — calm surfaces, single indigo→violet accent, uniform pills/cards,
+   tidy floating controls. No functional/JS changes; pure CSS.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --mp-bg: #070811;
+  --mp-surface: rgba(255, 255, 255, 0.035);
+  --mp-surface-2: rgba(255, 255, 255, 0.055);
+  --mp-border: rgba(255, 255, 255, 0.08);
+  --mp-border-strong: rgba(139, 92, 246, 0.45);
+  --mp-text: #eef0ff;
+  --mp-muted: #9aa2c7;
+  --mp-indigo: #6366f1;
+  --mp-violet: #8b5cf6;
+  --mp-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #a78bfa 100%);
+  --mp-grad-soft: linear-gradient(135deg, rgba(99,102,241,.18), rgba(139,92,246,.14));
+  --mp-radius: 16px;
+  --mp-radius-sm: 12px;
+  --mp-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --mp-shadow-accent: 0 8px 24px rgba(99, 102, 241, 0.35);
+}
+
+/* ── Base canvas ─────────────────────────────────────────────────────────── */
+body {
+  background:
+    radial-gradient(900px 500px at -10% -10%, rgba(99, 102, 241, 0.10), transparent 60%),
+    radial-gradient(800px 500px at 110% 15%, rgba(139, 92, 246, 0.08), transparent 60%),
+    var(--mp-bg) !important;
+}
+
+::selection { background: rgba(139, 92, 246, 0.4); }
+
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.45); }
+
+:focus-visible {
+  outline: 2px solid var(--mp-violet) !important;
+  outline-offset: 2px;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+header.topbar {
+  background: rgba(7, 8, 17, 0.82) !important;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-bottom: 1px solid var(--mp-border) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.topbar .brand-name {
+  background: var(--mp-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.topbar .brand .tag {
+  color: var(--mp-muted) !important;
+  background: none !important;
+  font-size: 0.72rem;
+}
+.topbar .brand img { border-radius: 10px; }
+
+.topbar .search input,
+.topbar .search select {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  border-radius: var(--mp-radius-sm) !important;
+  color: var(--mp-text) !important;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.topbar .search input:focus,
+.topbar .search select:focus {
+  border-color: var(--mp-border-strong) !important;
+  background: var(--mp-surface-2) !important;
+}
+
+/* All header action buttons: one calm, uniform style */
+.topActions button,
+.topActions .ghost,
+.topActions .danger {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  color: var(--mp-text) !important;
+  border-radius: var(--mp-radius-sm) !important;
+  font-weight: 600;
+  box-shadow: none !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.topActions button:hover {
+  background: var(--mp-surface-2) !important;
+  border-color: var(--mp-border-strong) !important;
+  transform: translateY(-1px);
+}
+/* Logout: quiet by default, red only on hover */
+.topActions .danger,
+.topActions #logoutBtn {
+  color: #f0a1a8 !important;
+}
+.topActions .danger:hover,
+.topActions #logoutBtn:hover {
+  background: rgba(244, 63, 94, 0.14) !important;
+  border-color: rgba(244, 63, 94, 0.45) !important;
+  color: #fda4af !important;
+}
+.topActions .health {
+  border-radius: 999px !important;
+  border: 1px solid var(--mp-border) !important;
+  background: var(--mp-surface) !important;
+  color: var(--mp-muted) !important;
+  font-size: 0.75rem;
+}
+.topActions .navlinks a {
+  color: var(--mp-muted) !important;
+  border-radius: 8px;
+}
+.topActions .navlinks a:hover { color: var(--mp-text) !important; }
+
+/* ── Cards: one surface language everywhere ──────────────────────────────── */
+.card,
+.card.composer,
+.card.profileCard,
+.card.menu,
+.card.rightBox,
+.card.quickCard,
+#milan-shell-sysstatus,
+#milan-sidebar-gamify {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  border-radius: var(--mp-radius) !important;
+  box-shadow: var(--mp-shadow);
+}
+
+.card .sectionTitle,
+.sectionTitle {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* Feed post cards */
+.feed .card, .feed article, .feed .post {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  border-radius: var(--mp-radius) !important;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.feed .card:hover, .feed article:hover, .feed .post:hover {
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Empty states */
+.empty {
+  border: 1px dashed rgba(139, 92, 246, 0.3) !important;
+  border-radius: var(--mp-radius) !important;
+  background: rgba(139, 92, 246, 0.05) !important;
+  color: var(--mp-muted) !important;
+}
+
+/* ── Pills / chips / tabs: ONE consistent pill system ────────────────────── */
+.milan-chip,
+.milan-feed-tab {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  color: var(--mp-muted) !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease;
+}
+.milan-chip:hover,
+.milan-feed-tab:hover {
+  color: var(--mp-text) !important;
+  border-color: var(--mp-border-strong) !important;
+  background: var(--mp-surface-2) !important;
+}
+.milan-chip.active,
+.milan-feed-tab.active {
+  background: var(--mp-grad) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: var(--mp-shadow-accent) !important;
+}
+
+/* ── Composer ────────────────────────────────────────────────────────────── */
+.card.composer textarea,
+.card.composer input,
+.card.composer select {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--mp-border) !important;
+  border-radius: var(--mp-radius-sm) !important;
+  color: var(--mp-text) !important;
+  transition: border-color 0.15s ease;
+}
+.card.composer textarea:focus,
+.card.composer input:focus,
+.card.composer select:focus {
+  border-color: var(--mp-border-strong) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+.card.composer .avatar {
+  background: var(--mp-grad) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+/* Primary action buttons (Publish / ok) */
+button.ok,
+#publishBtn,
+#loginBtn,
+#registerBtn {
+  background: var(--mp-grad) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: var(--mp-radius-sm) !important;
+  font-weight: 700 !important;
+  box-shadow: var(--mp-shadow-accent) !important;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+button.ok:hover,
+#publishBtn:hover,
+#loginBtn:hover,
+#registerBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.45) !important;
+}
+
+/* Secondary/ghost buttons everywhere */
+button.ghost {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  color: var(--mp-text) !important;
+  border-radius: var(--mp-radius-sm) !important;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+button.ghost:hover {
+  background: var(--mp-surface-2) !important;
+  border-color: var(--mp-border-strong) !important;
+}
+
+/* ── Left rail ───────────────────────────────────────────────────────────── */
+.card.menu button,
+.card.menu a {
+  border-radius: var(--mp-radius-sm) !important;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.card.menu button:hover,
+.card.menu a:hover {
+  background: var(--mp-surface-2) !important;
+}
+.card.menu button.active,
+.card.menu .active {
+  background: var(--mp-grad-soft) !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
+  color: var(--mp-text) !important;
+}
+
+.card.profileCard .avatar,
+#composerAvatar {
+  border: 2px solid rgba(139, 92, 246, 0.5) !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+/* ── Auth screen (login/register) ───────────────────────────────────────── */
+.authBox.card { box-shadow: var(--mp-shadow), 0 0 60px rgba(99, 102, 241, 0.08) !important; }
+.authBox .tabs .tab.active {
+  background: var(--mp-grad-soft) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+}
+.authBox input {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--mp-border) !important;
+  border-radius: var(--mp-radius-sm) !important;
+}
+.authBox input:focus {
+  border-color: var(--mp-border-strong) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+
+/* ── Music banner: subtle, on-brand ─────────────────────────────────────── */
+#milan-music-banner {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.16), rgba(139, 92, 246, 0.12)) !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.25) !important;
+}
+
+/* ── Bottom nav (mobile): clean glass bar ───────────────────────────────── */
+#milanBottomNav,
+.milanBottomNav {
+  background: rgba(10, 11, 22, 0.88) !important;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid var(--mp-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* ── Floating controls: uniform, on-brand ───────────────────────────────── */
+#milan-fab,
+#milan-mic-btn,
+#milan-fab-top,
+#milan-burger {
+  background: var(--mp-grad) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: var(--mp-shadow-accent) !important;
+}
+#milan-flow-btn,
+.ma-fab {
+  background: rgba(10, 11, 22, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  color: var(--mp-text) !important;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--mp-shadow) !important;
+}
+
+/* Mobile: organise the floating controls into a tidy right-side rail,
+   clear of the bottom navigation bar. */
+@media (max-width: 768px) {
+  #milan-fab {
+    right: 12px !important; left: auto !important;
+    bottom: 100px !important; top: auto !important;
+    width: 54px !important; height: 54px !important;
+  }
+  #milan-mic-btn {
+    right: 16px !important; left: auto !important;
+    bottom: 166px !important; top: auto !important;
+    width: 46px !important; height: 46px !important;
+  }
+  #milan-fab-top {
+    right: 19px !important; left: auto !important;
+    bottom: 222px !important; top: auto !important;
+    width: 40px !important; height: 40px !important;
+  }
+  #milan-flow-btn {
+    right: 12px !important; left: auto !important;
+    bottom: 272px !important; top: auto !important;
+  }
+  #milan-burger {
+    left: 12px !important; right: auto !important;
+    bottom: 100px !important; top: auto !important;
+    width: 50px !important; height: 50px !important;
+  }
+  .ma-fab {
+    left: 72px !important; right: auto !important;
+    bottom: 102px !important; top: auto !important;
+  }
+
+  /* Header: let actions wrap neatly instead of overflowing */
+  .topbar .topinner { flex-wrap: wrap; row-gap: 8px; }
+  .topbar .topActions { flex-wrap: wrap; row-gap: 6px; }
+}
+
+/* ── Modals & toasts ─────────────────────────────────────────────────────── */
+.modal {
+  background: rgba(13, 14, 26, 0.97) !important;
+  border: 1px solid var(--mp-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6) !important;
+}
+.modalBack { backdrop-filter: blur(6px); }
+.toast {
+  background: rgba(13, 14, 26, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  border-radius: var(--mp-radius-sm) !important;
+  box-shadow: var(--mp-shadow) !important;
+}
+
+/* ── Small touches ───────────────────────────────────────────────────────── */
+#milan-greeting { color: var(--mp-text); font-weight: 700; }
+a { transition: color 0.15s ease; }
+img { border-radius: inherit; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HIGH-SPECIFICITY OVERRIDES
+   Earlier skins use selectors like `html:not([data-mcm]) button.ghost` that
+   outrank plain class selectors. The #appView id prefix outranks them all,
+   killing the leftover gold/yellow accents for one calm indigo system.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Header action buttons — uniform, no gold */
+#appView .topActions button,
+#appView .topActions button.ghost,
+#appView .topActions #refreshBtn,
+#appView .topActions #themeBtn,
+#appView .topActions #milan-model-btn,
+#appView .topActions #milan-dwn-toggle {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  color: var(--mp-text) !important;
+  border-radius: var(--mp-radius-sm) !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+#appView .topActions button:hover {
+  background: var(--mp-surface-2) !important;
+  border-color: var(--mp-border-strong) !important;
+}
+#appView .topActions #milan-dwn-toggle.active {
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #6ee7b7 !important;
+}
+#appView .topActions #logoutBtn {
+  color: #f0a1a8 !important;
+}
+#appView .topActions #logoutBtn:hover {
+  background: rgba(244, 63, 94, 0.14) !important;
+  border-color: rgba(244, 63, 94, 0.45) !important;
+}
+
+/* Ghost buttons app-wide — beat the html:not() gold rule */
+#appView button.ghost {
+  background: var(--mp-surface) !important;
+  border: 1px solid var(--mp-border) !important;
+  color: var(--mp-text) !important;
+  text-shadow: none !important;
+}
+#appView button.ghost:hover {
+  background: var(--mp-surface-2) !important;
+  border-color: var(--mp-border-strong) !important;
+}
+
+/* Left menu — active item on-brand, not gold */
+#appView .card.menu button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--mp-muted) !important;
+  border-radius: var(--mp-radius-sm) !important;
+}
+#appView .card.menu button:hover {
+  background: var(--mp-surface-2) !important;
+  color: var(--mp-text) !important;
+}
+#appView .card.menu button.active {
+  background: var(--mp-grad-soft) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  color: var(--mp-text) !important;
+  text-shadow: none !important;
+}
+
+/* Upgrade pill — premium but on-brand */
+#appView #mpTopPill,
+#appView .mp-top-pill {
+  background: var(--mp-grad-soft) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  color: var(--mp-text) !important;
+  border-radius: 999px !important;
+}
+
+/* Mobile header: never clip buttons */
+@media (max-width: 768px) {
+  #appView .topbar .topinner,
+  #appView .topbar .topActions {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    row-gap: 6px;
+  }
+}

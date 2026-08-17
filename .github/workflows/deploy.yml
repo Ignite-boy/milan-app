@@ -1,0 +1,34 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    env:
+      NODE_OPTIONS: "--no-warnings"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/332264924975/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-deployer@milan-500008.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy via IAP tunnel
+        run: |
+          gcloud compute ssh np7218468_gmail_com@milan-prod \
+            --zone=us-central1-f \
+            --tunnel-through-iap \
+            --command="git config --global --add safe.directory /home/np7218468_gmail_com/milan-app && cd /home/np7218468_gmail_com/milan-app && git fetch origin main && git reset --hard origin/main && cd backend && npm install && (PM2_HOME=/home/np7218468_gmail_com/.pm2 pm2 restart milan --update-env || (sudo rm -f /home/np7218468_gmail_com/.pm2/rpc.sock /home/np7218468_gmail_com/.pm2/pub.sock && PM2_HOME=/home/np7218468_gmail_com/.pm2 pm2 resurrect))"

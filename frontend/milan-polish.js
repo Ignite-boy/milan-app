@@ -1,4 +1,4 @@
-/* MILAN V7.2 — Launch-grade polish layer (additive, every page).
+/* MILAN — Launch-grade polish layer (additive, every page).
  * Accessibility (skip link), resilience (offline state), and performance
  * (off-screen image lazy-loading + async decode). Never touches existing logic.
  */

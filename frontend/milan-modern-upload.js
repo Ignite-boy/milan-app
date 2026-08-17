@@ -7,8 +7,8 @@
    ============================================================ */
 (function () {
   'use strict';
-  if (window.__milanModernUploadV1) return;
-  window.__milanModernUploadV1 = true;
+  if (window.__milanModernUpload) return;
+  window.__milanModernUpload = true;
 
   var ACCENT = '#4f7cf6';
 

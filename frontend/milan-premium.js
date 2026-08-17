@@ -23,6 +23,50 @@
   var API_BASE = window.MILAN_API_BASE || "";           // same-origin by default
   var STORE_KEY = "milan_premium";
 
+  function authHeaders() {
+    var h = { "Content-Type": "application/json" };
+    try {
+      var t = String(localStorage.getItem("milanToken") || "").trim();
+      if (t) h.Authorization = "Bearer " + t;
+    } catch (e) {}
+    return h;
+  }
+
+  /* Live config from the server: Razorpay key + plans. Keys live in the
+     backend .env, never in this file. Until configured, demo mode stays on. */
+  function loadConfig() {
+    return fetch(API_BASE + "/api/billing/config")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cfg) {
+        if (cfg && cfg.configured && cfg.keyId) {
+          RAZORPAY_KEY = cfg.keyId;
+          DEMO = false;
+        }
+        if (cfg && cfg.plans && cfg.plans.premium) {
+          PLANS.premium.price.monthly = cfg.plans.premium.monthly || PLANS.premium.price.monthly;
+          PLANS.premium.price.annual = cfg.plans.premium.annual || PLANS.premium.price.annual;
+        }
+      }).catch(function () {});
+  }
+
+  /* Server-side entitlement is the source of truth — sync it down so
+     Premium follows the account across devices. */
+  function syncEntitlement() {
+    var h = authHeaders();
+    if (!h.Authorization) return Promise.resolve();
+    return fetch(API_BASE + "/api/billing/status", { headers: h })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.ok) return;
+        if (d.premium) {
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(d.premium)); } catch (e) {}
+        } else {
+          try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+        }
+        applyPremiumState();
+      }).catch(function () {});
+  }
+
   var PLANS = {
     premium: {
       id: "premium",
@@ -97,19 +141,22 @@
     return sdkPromise;
   }
 
-  function createOrder(amountPaise) {
+  function createOrder(plan, cycle) {
+    // The server decides the price from {plan, cycle} — never trusts the client.
     return fetch(API_BASE + "/api/billing/order", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: amountPaise, currency: "INR" })
-    }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+      headers: authHeaders(),
+      body: JSON.stringify({ plan: plan.id, cycle: cycle })
+    }).then(function (r) {
+      return r.json().then(function (d) { return r.ok ? d : Promise.reject(new Error(d && d.error || "Could not start the payment.")); });
+    });
   }
   function verifyPayment(resp) {
     return fetch(API_BASE + "/api/billing/verify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(resp)
-    }).then(function (r) { return r.ok; }).catch(function () { return true; });
+    }).then(function (r) { return r.ok; }).catch(function () { return false; });
   }
 
   /* returns a Promise<{ok, paymentId, demo}> ; rejects on cancel/fail */
@@ -126,18 +173,19 @@
 
     return loadRazorpay().then(function (ready) {
       if (!ready) throw new Error("Could not load the payment gateway. Check your connection.");
-      return createOrder(paise).then(function (order) {
+      return createOrder(plan, cycle).then(function (order) {
+        if (!order || !order.id) throw new Error("Could not create the payment order.");
         var u = currentUser();
         return new Promise(function (resolve, reject) {
           var opts = {
-            key: RAZORPAY_KEY,
-            amount: paise,
+            key: order.keyId || RAZORPAY_KEY,
+            amount: order.amount, // server-verified amount, not the client's
             currency: "INR",
             name: "MILAN Premium",
             description: plan.name + " · " + (cycle === "annual" ? "Annual" : "Monthly"),
-            order_id: order ? order.id : undefined,
+            order_id: order.id,
             prefill: { name: u.name, email: u.email },
-            theme: { color: "#d8b35a", backdrop_color: "#0a0b12" },
+            theme: { color: "#8b5cf6", backdrop_color: "#0a0b12" },
             notes: { plan: plan.id, cycle: cycle },
             handler: function (resp) {
               verifyPayment(resp).then(function (ok) {
@@ -276,6 +324,8 @@
       '</ul>' +
       '<button class="mp-ghost" id="mpCancel" style="width:100%;margin-top:22px">Cancel subscription</button>';
     body().querySelector("#mpCancel").addEventListener("click", function () {
+      // Tell the server first — it owns the entitlement.
+      fetch(API_BASE + "/api/billing/cancel", { method: "POST", headers: authHeaders() }).catch(function () {});
       try { localStorage.removeItem(STORE_KEY); } catch (x) {}
       applyPremiumState(); closeModal();
     });
@@ -349,6 +399,8 @@
 
   /* The app view starts hidden and renders after login; observe for it. */
   function boot() {
+    loadConfig();       // pick up the live Razorpay key from the server
+    syncEntitlement();  // server-side premium status wins over localStorage
     tryInject();
     var obs = new MutationObserver(function () { tryInject(); });
     obs.observe(document.body, { childList: true, subtree: true });

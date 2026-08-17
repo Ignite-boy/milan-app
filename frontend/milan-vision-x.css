@@ -354,7 +354,7 @@ a:hover { color: #b9a4ff; }
   overflow: visible !important;
   padding: 16px 22px !important; gap: 9px !important;
 }
-html.milan-v72 body { overflow-y: auto !important; height: auto !important; }
+html.milan-shell body { overflow-y: auto !important; height: auto !important; }
 
 /* Compact: shrink the logo block + tighten spacing (right panel only). */
 #authView .authBox.card .authTop { zoom: 0.7; margin-bottom: 0 !important; }
@@ -380,14 +380,14 @@ html.milan-v72 body { overflow-y: auto !important; height: auto !important; }
      scroll can never break. A small body zoom makes everything compact without
      touching the scroll. ───────────────────────────────────────────────── */
   /* Lock the page so it can't scroll; each column scrolls on its own. */
-  html.milan-v72:has(#appView:not(.hidden)) body {
+  html.milan-shell:has(#appView:not(.hidden)) body {
     margin: 0 !important; padding: 0 !important;
     height: 100vh !important; overflow: hidden !important;
   }
 
-  html.milan-v72 #appView .topbar { position: sticky !important; top: 0; z-index: 60; }
+  html.milan-shell #appView .topbar { position: sticky !important; top: 0; z-index: 60; }
 
-  html.milan-v72 #appView .layout {
+  html.milan-shell #appView .layout {
     display: grid !important;
     grid-template-columns: 300px minmax(0, 1fr) 360px !important;
     gap: 16px !important;
@@ -400,9 +400,9 @@ html.milan-v72 body { overflow-y: auto !important; height: auto !important; }
      parent (whose height never resolved here), not max-height — an absolute
      calc(). That guarantees a real scroll box, so the rails stay fixed and the
      feed scrolls, every time. ~108px = sticky topbar + the grid padding. */
-  html.milan-v72 #appView .leftRail.side,
-  html.milan-v72 #appView .rightRail.side,
-  html.milan-v72 #appView .main {
+  html.milan-shell #appView .leftRail.side,
+  html.milan-shell #appView .rightRail.side,
+  html.milan-shell #appView .main {
     height: calc(100vh - 108px) !important;
     overflow-y: auto !important; overflow-x: hidden !important;
     overscroll-behavior: contain;
@@ -411,24 +411,24 @@ html.milan-v72 body { overflow-y: auto !important; height: auto !important; }
   /* .main is a fixed-height flex column — stop its children from being SHRUNK
      to fit (flex-shrink:1 was clipping the feed-tab / pill rows). They keep
      their natural height; .main just scrolls. */
-  html.milan-v72 #appView .main > * { flex-shrink: 0 !important; }
-  html.milan-v72 #appView .leftRail.side > *,
-  html.milan-v72 #appView .rightRail.side > * { flex-shrink: 0 !important; }
-  html.milan-v72 #appView .leftRail.side,
-  html.milan-v72 #appView .rightRail.side { scrollbar-width: none; }
-  html.milan-v72 #appView .leftRail.side::-webkit-scrollbar,
-  html.milan-v72 #appView .rightRail.side::-webkit-scrollbar { width: 0; height: 0; }
-  html.milan-v72 #appView .main::-webkit-scrollbar { width: 8px; }
-  html.milan-v72 #appView .main::-webkit-scrollbar-thumb {
+  html.milan-shell #appView .main > * { flex-shrink: 0 !important; }
+  html.milan-shell #appView .leftRail.side > *,
+  html.milan-shell #appView .rightRail.side > * { flex-shrink: 0 !important; }
+  html.milan-shell #appView .leftRail.side,
+  html.milan-shell #appView .rightRail.side { scrollbar-width: none; }
+  html.milan-shell #appView .leftRail.side::-webkit-scrollbar,
+  html.milan-shell #appView .rightRail.side::-webkit-scrollbar { width: 0; height: 0; }
+  html.milan-shell #appView .main::-webkit-scrollbar { width: 8px; }
+  html.milan-shell #appView .main::-webkit-scrollbar-thumb {
     background: rgba(154,160,184,0.28); border-radius: 99px;
   }
 }
 
 /* ── Feed: facebook-flavoured post cards ─────────────────────────────── */
-html.milan-v72 .main { min-width: 0; }     /* prevent overflow blowouts */
-html.milan-v72 .feedCard,
-html.milan-v72 .postCard,
-html.milan-v72 .post {
+html.milan-shell .main { min-width: 0; }     /* prevent overflow blowouts */
+html.milan-shell .feedCard,
+html.milan-shell .postCard,
+html.milan-shell .post {
   background: var(--vx-surface) !important;
   border: 1px solid var(--vx-hair) !important;
   border-radius: 16px !important;
@@ -436,23 +436,23 @@ html.milan-v72 .post {
   overflow: hidden;                        /* let media sit flush to edges */
   margin-bottom: 16px;
 }
-html.milan-v72 .post .media,
-html.milan-v72 .postBody .media,
-html.milan-v72 .feedCard img.media,
-html.milan-v72 .feedCard video.media {
+html.milan-shell .post .media,
+html.milan-shell .postBody .media,
+html.milan-shell .feedCard img.media,
+html.milan-shell .feedCard video.media {
   width: 100%;
   border-radius: 0 !important;             /* edge-to-edge like FB */
   border-left: 0; border-right: 0;
 }
-html.milan-v72 .postHead { padding: 12px 14px 0; }
-html.milan-v72 .postBody,
-html.milan-v72 .postText { padding-left: 14px; padding-right: 14px; }
-html.milan-v72 .reactionBar {
+html.milan-shell .postHead { padding: 12px 14px 0; }
+html.milan-shell .postBody,
+html.milan-shell .postText { padding-left: 14px; padding-right: 14px; }
+html.milan-shell .reactionBar {
   padding: 6px 8px;
   margin-top: 6px;
   border-top: 1px solid var(--vx-hair) !important;
 }
-html.milan-v72 .reactionBar button { flex: 1; justify-content: center; }
+html.milan-shell .reactionBar button { flex: 1; justify-content: center; }
 
 /* ── Mobile: first-class touch experience ────────────────────────────── */
 @media (max-width: 720px) {
@@ -463,8 +463,8 @@ html.milan-v72 .reactionBar button { flex: 1; justify-content: center; }
   input, textarea, select { font-size: 16px !important; } /* prevents iOS zoom */
   .topbar { padding-left: 12px; padding-right: 12px; }
   /* On phones the rails stack normally and scroll with the page. */
-  html.milan-v72 .leftRail,
-  html.milan-v72 .rightRail { position: static; max-height: none; overflow: visible; }
+  html.milan-shell .leftRail,
+  html.milan-shell .rightRail { position: static; max-height: none; overflow: visible; }
 }
 
 /* ── Motion safety ───────────────────────────────────────────────────── */

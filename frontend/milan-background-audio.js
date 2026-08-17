@@ -1,5 +1,5 @@
 /* ============================================================================
-   MILAN V100 — Background audio keep-alive (additive, non-destructive)
+   MILAN — Background audio keep-alive (additive, non-destructive)
    --------------------------------------------------------------------------
    Goal: music keeps playing when the app is minimised / screen locks —
    both on the /music page (Audius <audio> + YouTube engine) and for the

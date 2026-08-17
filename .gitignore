@@ -1,58 +1,87 @@
-# ═══════════════ MILAN — root .gitignore ═══════════════
+# =============================================================================
+#  MILAN — .gitignore
+# =============================================================================
 
-# ── Secrets: NEVER commit ──
+# -----------------------------------------------------------------------------
+#  Secrets & credentials — NEVER commit
+# -----------------------------------------------------------------------------
 .env
-*.env
-.env.local
 .env.*
+*.env
 !.env.example
 !.env.local.example
-**/.env
-**/*.pem
-**/*.key
+*.pem
+*.key
+*.p12
 
-# ── Dependencies (reinstall with npm install) ──
+# -----------------------------------------------------------------------------
+#  Dependencies
+# -----------------------------------------------------------------------------
 node_modules/
-**/node_modules/
 
-# ── Large regenerable binaries (reinstall on server, not tracked in git) ──
+# -----------------------------------------------------------------------------
+#  Standalone DWN node — deps + persistent user data are never committed
+# -----------------------------------------------------------------------------
+dwn-node/node_modules/
+dwn-node/data/
+
+# -----------------------------------------------------------------------------
+#  Large / regenerable binaries (reinstalled on the server, not tracked)
+# -----------------------------------------------------------------------------
 backend/bin/
 *.exe
 
-# ── Local agent/tooling state ──
-.claude/
-
-# ── Real user data & live stores: NEVER commit ──
+# -----------------------------------------------------------------------------
+#  User data & live stores — NEVER commit
+# -----------------------------------------------------------------------------
+backend/dwn/
 backend/real-dwn-engine/
 backend/RESOLVERCACHE/
-backend/dwn/
 backend/data/
 backend/uploads/
 *.bak
 *.last-good.bak
 *-snapshot*.json
 
-# ── Build output / release artifacts ──
+# -----------------------------------------------------------------------------
+#  Build output & release artifacts
+# -----------------------------------------------------------------------------
+dist/
+build/
+out/
+.next/
+.cache/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
 milan-release/
 *.zip
 *.tar.gz
-.next/
-out/
-build/
-dist/
-.cache/
-*.tsbuildinfo
-next-env.d.ts
-.vercel
 
-# ── Logs / runtime ──
-*.log
+# -----------------------------------------------------------------------------
+#  Logs & runtime
+# -----------------------------------------------------------------------------
 logs/
+*.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids/
+*.pid
+*.seed
 
-# ── OS / editor ──
+# -----------------------------------------------------------------------------
+#  Local tooling / agent state
+# -----------------------------------------------------------------------------
+.claude/
+
+# -----------------------------------------------------------------------------
+#  OS & editor
+# -----------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+*.swp
+*~

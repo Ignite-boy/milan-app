@@ -1,0 +1,93 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# MILAN standalone DWN node — build + run as a Docker container on the GCP VM.
+#
+# Independent of the main app: this runs the DWN node in its own container with
+# its own persistent volume (/opt/milan-dwn-data), so app redeploys never touch
+# user data. By default it binds to 127.0.0.1:3100 (localhost only — MILAN talks
+# to it privately, nothing is exposed to the internet).
+#
+# Required repo secrets (VM_* are already set for the app deploy):
+#   VM_HOST, VM_USER, VM_SSH_KEY_B64   — same VM as the app (or a dedicated one)
+#   DWN_NODE_API_KEY                   — long random string; MUST match the value
+#                                        you put in the app's REAL_DWN_NODE_API_KEY
+#
+# VM prerequisites (one-time):
+#   • Docker installed and usable by VM_USER  (sudo usermod -aG docker $USER)
+#   • sudo mkdir -p /opt/milan-dwn-data && sudo chown $USER /opt/milan-dwn-data
+# ─────────────────────────────────────────────────────────────────────────────
+name: Deploy DWN Node
+
+on:
+  push:
+    branches: [main]
+    paths: ['dwn-node/**', '.github/workflows/deploy-dwn-node.yml']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  # Shared with the app deploy so the two never touch the same git checkout at once.
+  group: milan-vm-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare SSH key
+        env:
+          VM_SSH_KEY_B64: ${{ secrets.VM_SSH_KEY_B64 }}
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          if [ -n "$VM_SSH_KEY_B64" ]; then
+            printf '%s' "$VM_SSH_KEY_B64" | tr -d ' \n\r' | base64 -d > ~/.ssh/deploy_key
+          else
+            printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null 2>&1 || { echo "::error::VM_SSH_KEY_B64 is not a valid private key"; exit 1; }
+
+      - name: Build & run DWN node on VM
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+          DWN_NODE_API_KEY: ${{ secrets.DWN_NODE_API_KEY }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30 \
+            "$VM_USER@$VM_HOST" \
+            "GH_TOKEN=$GH_TOKEN REPO_SLUG=${{ github.repository }} DWN_NODE_API_KEY='$DWN_NODE_API_KEY' bash -s" << 'DEPLOY'
+          set -e
+          [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
+          [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
+
+          APP="$HOME/milan-app"
+          REPO="https://x-access-token:${GH_TOKEN}@github.com/${REPO_SLUG}.git"
+
+          # Make sure the repo (and dwn-node/) is present & current on the VM.
+          mkdir -p "$APP"; cd "$APP"
+          if [ ! -d .git ]; then git init -b main; fi
+          rm -f .git/index.lock
+          git fetch "$REPO" main
+          git checkout -f -B main FETCH_HEAD
+
+          # Persistent data dir (survives container rebuilds).
+          mkdir -p /opt/milan-dwn-data 2>/dev/null || sudo mkdir -p /opt/milan-dwn-data
+
+          echo "Building milan-dwn-node image…"
+          docker build -t milan-dwn-node "$APP/dwn-node"
+
+          echo "Restarting container…"
+          docker rm -f milan-dwn-node 2>/dev/null || true
+          docker run -d --name milan-dwn-node --restart unless-stopped \
+            -p 127.0.0.1:3100:3100 \
+            -v /opt/milan-dwn-data:/data \
+            -e DWN_NODE_API_KEY="$DWN_NODE_API_KEY" \
+            milan-dwn-node
+
+          sleep 3
+          echo "Health check:"
+          curl -fsS http://127.0.0.1:3100/health && echo "" && echo "✅ DWN node is up on 127.0.0.1:3100"
+          DEPLOY
