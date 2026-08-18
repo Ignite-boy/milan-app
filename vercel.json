@@ -1,6 +1,21 @@
 {
-  "redirects": [
-    { "source": "/(.*)", "has": [{ "type": "host", "value": "www.milanlife.in" }], "destination": "https://milanlife.in/$1", "permanent": true },
-    { "source": "/(.*)", "has": [{ "type": "host", "value": "milan-app.vercel.app" }], "destination": "https://milanlife.in/$1", "permanent": true }
+  "version": 2,
+  "public": true,
+  "github": { "silent": true },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" },
+    { "source": "/city/:path*", "destination": "/frontend/city/:path*" },
+    { "source": "/(.*).html", "destination": "/frontend/$1.html" },
+    { "source": "/(.*)", "destination": "/frontend/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
   ]
 }
