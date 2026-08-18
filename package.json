@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@upstash/redis": "^1.38.2",
+    "bcryptjs": "^3.0.3",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

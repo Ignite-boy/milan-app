@@ -1,1 +1,8 @@
-{"outputDirectory":"frontend","rewrites":[{"source":"/app","destination":"/app.html"},{"source":"/(.*)","destination":"/app.html"}]}
+{
+  "outputDirectory": "frontend",
+  "rewrites": [
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/app.html" }
+  ]
+}

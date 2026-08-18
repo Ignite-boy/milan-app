@@ -1,0 +1,29 @@
+{
+  "app": "MILAN",
+  "version": "49.0.0",
+  "realDwnProtocol": true,
+  "sdkReady": true,
+  "appStoresUserData": false,
+  "model": "production-dwn-node-one-user-one-did-one-isolated-space",
+  "isolation": "single-user",
+  "spaceId": "milan-7788d1df-0337-40b9-94ff-140c495301b6-f45fd2f8",
+  "userId": "7788d1df-0337-40b9-94ff-140c495301b6",
+  "ownerDid": "did:key:zPKuB64LmDvFhc8k8eJ_0WnmfYf5IxK3Kk7PZj51pmis",
+  "email": "mynitesh13@gmail.com",
+  "endpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-7788d1df-0337-40b9-94ff-140c495301b6-f45fd2f8",
+  "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-7788d1df-0337-40b9-94ff-140c495301b6-f45fd2f8",
+  "cloudStorageRoot": "D:\\milan-app\\backend\\dwn",
+  "cloudDatabaseRoot": "D:\\milan-app\\backend\\dwn\\database",
+  "cloudMode": "production-remote-dwn",
+  "remoteEndpoint": "http://127.0.0.1:10000",
+  "permanentExpected": true,
+  "createdAt": "2026-08-18T07:03:20.086Z",
+  "updatedAt": "2026-08-18T07:03:20.086Z",
+  "accessPolicy": {
+    "ownerOnlyByDefault": true,
+    "sharingRequiresExplicitDIDPermission": true,
+    "adminCanSeePrivatePayloads": false,
+    "isolatedPerUser": true,
+    "cloudAuthoritative": true
+  }
+}

@@ -60,5 +60,67 @@
       },
       "at": "2026-08-17T13:51:51.720Z"
     }
+  ],
+  "7788d1df-0337-40b9-94ff-140c495301b6": [
+    {
+      "id": "1787036600690-a04a9fd2bd5438",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:zPKuB64LmDvFhc8k8eJ_0WnmfYf5IxK3Kk7PZj51pmis",
+        "realDwnDid": false,
+        "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-7788d1df-0337-40b9-94ff-140c495301b6-f45fd2f8",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-7788d1df-0337-40b9-94ff-140c495301b6-f45fd2f8",
+        "remoteProvision": {
+          "ok": false,
+          "endpoint": "http://127.0.0.1:10000",
+          "error": "fetch failed",
+          "provisionedAt": "2026-08-18T07:03:20.672Z"
+        }
+      },
+      "at": "2026-08-18T07:03:20.690Z"
+    }
+  ],
+  "c3fc0045-4d8b-4638-a706-72b82bf700fa": [
+    {
+      "id": "1787038477597-265d8591587348",
+      "action": "auth.login",
+      "details": {
+        "email": "mynitesh13@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-18T07:34:37.597Z"
+    },
+    {
+      "id": "1787038153011-7b0ec63464ffa8",
+      "action": "auth.login",
+      "details": {
+        "email": "mynitesh13@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-18T07:29:13.011Z"
+    },
+    {
+      "id": "1787038152437-9de5769854d288",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:zfuKJzEo443oUBkar-S-5fAxHWXe3FKNwVE7IM7k5Otg",
+        "realDwnDid": false,
+        "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-c3fc0045-4d8b-4638-a706-72b82bf700fa-b6f552f4",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-c3fc0045-4d8b-4638-a706-72b82bf700fa-b6f552f4",
+        "remoteProvision": {
+          "ok": false,
+          "endpoint": "http://127.0.0.1:10000",
+          "error": "fetch failed",
+          "provisionedAt": "2026-08-18T07:29:12.412Z"
+        }
+      },
+      "at": "2026-08-18T07:29:12.437Z"
+    }
   ]
 }
