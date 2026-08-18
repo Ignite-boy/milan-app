@@ -17,7 +17,7 @@
         "ok": false,
         "endpoint": "http://127.0.0.1:10000",
         "error": "fetch failed",
-        "provisionedAt": "2026-08-18T07:34:37.594Z"
+        "provisionedAt": "2026-08-18T08:25:45.891Z"
       },
       "didServiceId": "#dwn",
       "isolation": "single-user",
@@ -78,7 +78,7 @@
       "cloudDwnRoot": "D:\\milan-app\\backend\\dwn",
       "cloudDwnPermanentExpected": true
     },
-    "login_count": 2,
+    "login_count": 4,
     "created_at": "2026-08-18T07:29:12.163Z",
     "emailVerified": false,
     "emailVerification": {
@@ -86,6 +86,95 @@
       "codeHash": "12ebbf08c6cee1e06e3ae22d3ecb674e9b2f46a203486393d712aa192de4e0ca",
       "expires": 1787124552415
     },
-    "last_login_at": "2026-08-18T07:34:37.594Z"
+    "last_login_at": "2026-08-18T08:25:45.891Z"
+  },
+  "mynitesh@gmail.com": {
+    "id": "fc8382b7-97c8-4161-98d3-44c453e6ae33",
+    "email": "mynitesh@gmail.com",
+    "password_hash": "$2a$10$gBxcWfoAtsrEjkJ4qMI0Pe2mF0FuoN3zdaKoAZx.4uR./.RYi.eDK",
+    "did": "did:key:ziT4FWWKy1t4n086cprBIQVCDFvMZ8ZBYn5lZuq6j4dc",
+    "raw_seed": "16d3ce10cd3b51adc3fb35dc8f7b8b00bec0945e41cf67e3488b95d1b98bae1d",
+    "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+    "dwn": {
+      "endpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+      "mode": "production-remote-dwn",
+      "realDwnConfigured": true,
+      "realCloudConfigured": true,
+      "assignedAt": "2026-08-18T08:32:34.558Z",
+      "realDwnDid": false,
+      "remoteProvision": {
+        "ok": false,
+        "endpoint": "http://127.0.0.1:10000",
+        "error": "fetch failed",
+        "provisionedAt": "2026-08-18T08:32:35.707Z"
+      },
+      "didServiceId": "#dwn",
+      "isolation": "single-user",
+      "spaceId": "milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+      "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+      "cloud": {
+        "mode": "production-remote-dwn",
+        "remoteOnly": false,
+        "root": "D:\\milan-app\\backend\\dwn",
+        "databaseRoot": "D:\\milan-app\\backend\\dwn\\database",
+        "isolatedRoot": "D:\\milan-app\\backend\\dwn\\isolated-users",
+        "remoteEndpoint": "http://127.0.0.1:10000",
+        "apiKeyConfigured": true,
+        "renderRuntime": false,
+        "usingRenderDiskPath": false,
+        "usingRuntimeFallback": false,
+        "fallbackUsed": false,
+        "appStoresUserData": false,
+        "remoteWriteEnabled": true,
+        "realDwnProtocol": true,
+        "sdkReady": true,
+        "selectedBy": "production-real-dwn-node-endpoint",
+        "candidateAttempts": [
+          {
+            "root": "D:\\milan-app\\backend\\dwn",
+            "ok": true
+          }
+        ],
+        "permanentExpected": true,
+        "requiresCloudDwn": true,
+        "warning": ""
+      },
+      "policy": {
+        "ownerOnlyByDefault": true,
+        "sharingRequiresExplicitDIDPermission": true,
+        "adminCanSeePrivatePayloads": false,
+        "isolatedPerUser": true,
+        "cloudAuthoritative": true
+      }
+    },
+    "profile": {
+      "display_name": "Nitesh",
+      "bio": "",
+      "website": "",
+      "avatar": "",
+      "updated_at": "2026-08-18T08:32:35.059Z"
+    },
+    "settings": {
+      "theme": "dark",
+      "accent": "blue",
+      "dwnMode": "production-remote-dwn",
+      "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+      "realCloudDwnConfigured": true,
+      "dwnIsolation": "single-user",
+      "dwnSpaceId": "milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+      "realDwnProtocol": false,
+      "realDwnDid": false,
+      "cloudDwnRoot": "D:\\milan-app\\backend\\dwn",
+      "cloudDwnPermanentExpected": true
+    },
+    "login_count": 1,
+    "created_at": "2026-08-18T08:32:35.059Z",
+    "emailVerified": false,
+    "emailVerification": {
+      "tokenHash": "ce4eb53057f75b4b608f3b27a6c11d33291fda4990cc5625ea345131e4628267",
+      "codeHash": "bbca22ad5af5bddda3555b5b31e1a16a6a8d8976c7cbdb9b752f32bdd767ed42",
+      "expires": 1787128355233
+    },
+    "last_login_at": "2026-08-18T08:32:35.707Z"
   }
 }

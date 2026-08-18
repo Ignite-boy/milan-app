@@ -84,6 +84,26 @@
   ],
   "c3fc0045-4d8b-4638-a706-72b82bf700fa": [
     {
+      "id": "1787041545920-4ffdf1ab9261f8",
+      "action": "auth.login",
+      "details": {
+        "email": "mynitesh13@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-18T08:25:45.920Z"
+    },
+    {
+      "id": "1787041151036-14a8a1bee3894",
+      "action": "auth.login",
+      "details": {
+        "email": "mynitesh13@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-18T08:19:11.036Z"
+    },
+    {
       "id": "1787038477597-265d8591587348",
       "action": "auth.login",
       "details": {
@@ -121,6 +141,37 @@
         }
       },
       "at": "2026-08-18T07:29:12.437Z"
+    }
+  ],
+  "fc8382b7-97c8-4161-98d3-44c453e6ae33": [
+    {
+      "id": "1787041955722-a9aed46cbceb18",
+      "action": "auth.login",
+      "details": {
+        "email": "mynitesh@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
+      },
+      "at": "2026-08-18T08:32:35.722Z"
+    },
+    {
+      "id": "1787041955262-c9c14ce3d81dd",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:ziT4FWWKy1t4n086cprBIQVCDFvMZ8ZBYn5lZuq6j4dc",
+        "realDwnDid": false,
+        "dwnEndpoint": "http://127.0.0.1:10000/api/isolated-dwn/milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-fc8382b7-97c8-4161-98d3-44c453e6ae33-a593f683",
+        "remoteProvision": {
+          "ok": false,
+          "endpoint": "http://127.0.0.1:10000",
+          "error": "fetch failed",
+          "provisionedAt": "2026-08-18T08:32:35.232Z"
+        }
+      },
+      "at": "2026-08-18T08:32:35.262Z"
     }
   ]
 }
