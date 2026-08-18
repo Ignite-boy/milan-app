@@ -1,8 +1,6 @@
 {
-  "outputDirectory": "frontend",
-  "rewrites": [
-    { "source": "/app", "destination": "/app.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/app.html" }
+  "redirects": [
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "www.milanlife.in" }], "destination": "https://milanlife.in/$1", "permanent": true },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "milan-app.vercel.app" }], "destination": "https://milanlife.in/$1", "permanent": true }
   ]
 }

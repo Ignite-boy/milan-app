@@ -4,6 +4,7 @@ const cors = require('cors');
 const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
+const { saveUsersHybrid } = require('./services/userStoreHybrid');
 const { ensureFile, hydrateFilesFromRealDwn, repairUsersFile } = require('./utils/store');
 const dwnStore = require('./services/dwnService');
 const { dwnRoot, databaseRoot, persistenceInfo } = require('./services/cloudDwnRegistry');
@@ -168,7 +169,7 @@ app.post('/api/v3/streak/:userId', (req, res) => {
       streak.max = Math.max(streak.max || 0, streak.count);
       streak.lastDay = today;
       users[userKey].streak = streak;
-      fs.writeFileSync(global.usersFile, JSON.stringify(users, null, 2));
+      saveUsersHybrid(users, global.usersFile);
     }
     const milestones = [3, 7, 14, 30, 60, 100, 365];
     const newMilestone = milestones.includes(streak.count);
@@ -189,7 +190,7 @@ app.post('/api/v3/xp/:userId/award', (req, res) => {
     users[userKey].xp = prevXP + Number(amount);
     const newLevel = Math.floor(users[userKey].xp / 200) + 1;
     const levelUp = newLevel > prevLevel;
-    fs.writeFileSync(global.usersFile, JSON.stringify(users, null, 2));
+    saveUsersHybrid(users, global.usersFile);
     res.json({ ok: true, xp: users[userKey].xp, level: newLevel, levelUp, reason: reason || 'action', awarded: Number(amount) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -798,3 +799,4 @@ function listenWithFallback(port, attempts = 0) {
   }
   listenWithFallback(PORT);
 })();
+
