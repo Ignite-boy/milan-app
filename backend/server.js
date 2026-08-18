@@ -797,6 +797,6 @@ function listenWithFallback(port, attempts = 0) {
   } catch (err) {
     console.warn('Real DWN engine init skipped:', err.message);
   }
-  listenWithFallback(PORT);
-})();
+  if(!process.env.VERCEL){ listenWithFallback(PORT); } })(); module.exports = app; 
+
 
