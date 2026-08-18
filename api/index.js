@@ -1,30 +1,37 @@
-// Vercel lightweight entry - serves frontend static only, no DWN
-const path = require('path');
-const fs = require('fs');
+﻿const path = require('path');
 const express = require('express');
-const app = require('express')();
+const app = express();
 
 app.disable('x-powered-by');
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve frontend static
+const BACKEND_URL = process.env.BACKEND_URL || 'https://milan-api-4n3n.onrender.com';
+
+app.use('/api', async (req, res) => {
+  try {
+    const targetUrl = BACKEND_URL + req.originalUrl;
+    console.log('Proxying', req.method, req.originalUrl, '->', targetUrl);
+    const resp = await fetch(targetUrl, {
+      method: req.method,
+      headers: { 'Content-Type': 'application/json', ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}) },
+      body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
+    });
+    const text = await resp.text();
+    res.status(resp.status);
+    try { res.set('Content-Type', resp.headers.get('content-type') || 'application/json'); } catch {}
+    res.send(text);
+  } catch (e) {
+    console.error('Proxy failed', e);
+    res.status(502).json({ ok: false, error: 'Backend proxy failed', details: e.message, backend: BACKEND_URL });
+  }
+});
+
 const frontendPath = path.join(__dirname, '../frontend');
-app.use(express.static(frontendPath, { maxAge: '1h', etag: true }));
+app.use(express.static(frontendPath, { maxAge: '1h' }));
 
-// Minimal health for Vercel
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, app: 'MILAN Frontend on Vercel', time: new Date().toISOString() });
-});
-
-// For any /api/* that doesn't exist yet, return 503 so frontend knows backend is elsewhere
-app.use('/api', (_req, res) => {
-  res.status(503).json({ ok: false, error: 'Backend not on Vercel. Deploy backend to api.milanlife.in' });
-});
-
-// SPA fallback - serve index.html
 app.get('*', (_req, res) => {
-  const indexFile = path.join(frontendPath, 'index.html');
-  if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
-  res.status(404).send('Frontend not found');
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 module.exports = app;
