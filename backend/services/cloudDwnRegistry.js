@@ -141,7 +141,18 @@ function unique(values) {
   return out;
 }
 
+function isVercelRuntime() {
+  return !!(process.env.VERCEL || process.env.VERCEL_ENV);
+}
+
 function candidateRoots() {
+  if (isVercelRuntime()) {
+    return unique([
+      process.env.MILAN_CLOUD_DWN_ROOT,
+      process.env.MILAN_DATA_ROOT,
+      path.join('/tmp', 'milan-dwn')
+    ]);
+  }
   if (!isRenderRuntime()) {
     return unique([
       process.env.MILAN_CLOUD_DWN_ROOT,
@@ -162,7 +173,6 @@ function candidateRoots() {
     path.join('/tmp', 'milan-dwn')
   ]);
 }
-
 function testWritable(root) {
   try {
     fs.mkdirSync(root, { recursive: true });
