@@ -1,9 +1,6 @@
 {
+  "outputDirectory": "frontend",
   "rewrites": [
-    { "source": "/assets/(.*)", "destination": "/frontend/assets/$1" },
-    { "source": "/favicon.ico", "destination": "/frontend/favicon.ico" },
-    { "source": "/favicon.svg", "destination": "/frontend/favicon.svg" },
-    { "source": "/manifest.json", "destination": "/frontend/manifest.json" },
-    { "source": "/(.*)", "destination": "/api/index.js" }
+    { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }
