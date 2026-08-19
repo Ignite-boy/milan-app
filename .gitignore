@@ -8,3 +8,5 @@ node_modules/
 .vscode/
 .vercel
 .env*
+node_modules
+.env
