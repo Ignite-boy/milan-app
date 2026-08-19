@@ -88,7 +88,7 @@
     var exact = list.some(function (c) { return c.city.toLowerCase() === q; });
     if (!exact && q.length > 2) {
       html += '<button type="button" class="milan-geo-item" data-city="' + esc(q.replace(/\b\w/g, function (ch) { return ch.toUpperCase(); })) +
-        '" data-state="">Use “' + esc(q) + '” <span>your city</span></button>';
+        '" data-state="">Use "' + esc(q) + '" <span>your city</span></button>';
     }
     box.innerHTML = html;
     Array.prototype.forEach.call(box.querySelectorAll('.milan-geo-item'), function (b) {
