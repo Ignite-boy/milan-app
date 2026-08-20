@@ -1,1 +1,125 @@
-{}
+[
+  {
+    "id": "81f52369-7c3e-4895-a629-43d4f2fe5f1f",
+    "email": "np7218468@gmail.com",
+    "password_hash": "$2a$10$p7DGOTJlUUGQEIg/Y6XoUOyxz5h7IMZjNT4v7xfhPwjGQSrQ3GwwC",
+    "did": "did:key:z6Mkfdv4dG5ZDyMsxX35EtiD6W5gXx1T99dwEDoUepkWw8At",
+    "raw_seed": "27c8397a64dfbe29ce6b52338cb90af8e98d892223a74e555f05fe9a53928b36",
+    "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+    "dwn": {
+      "endpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+      "mode": "production-remote-dwn",
+      "realDwnConfigured": true,
+      "realCloudConfigured": true,
+      "assignedAt": "2026-08-20T13:58:02.433Z",
+      "realDwnDid": true,
+      "remoteProvision": {
+        "ok": true,
+        "endpoint": "http://127.0.0.1:5000",
+        "response": {
+          "ok": true,
+          "accepted": true,
+          "embeddedDwnNode": true,
+          "realDwnProtocol": true,
+          "sdkReady": true,
+          "spaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+          "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+          "manifest": {
+            "ok": true,
+            "app": "MILAN",
+            "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+            "version": "49.0.0",
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "embeddedDwnNode": true,
+            "userIsolation": "did-based-one-user-one-dwn-space",
+            "spaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+            "ownerDid": "did:key:z6Mkfdv4dG5ZDyMsxX35EtiD6W5gXx1T99dwEDoUepkWw8At",
+            "userId": "81f52369-7c3e-4895-a629-43d4f2fe5f1f",
+            "email": "np7218468@gmail.com",
+            "profile": {
+              "display_name": "Nitesh",
+              "bio": "",
+              "website": "",
+              "avatar": "",
+              "updated_at": "2026-08-20T13:58:02.767Z"
+            },
+            "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+            "recordsRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860/records",
+            "mediaRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860/media",
+            "createdAt": "2026-08-20T13:58:02.423Z",
+            "updatedAt": "2026-08-20T13:58:02.815Z"
+          }
+        },
+        "provisionedAt": "2026-08-20T13:58:02.846Z"
+      },
+      "didServiceId": "#dwn",
+      "isolation": "single-user",
+      "spaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+      "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+      "cloud": {
+        "mode": "production-remote-dwn",
+        "remoteOnly": false,
+        "root": "/mnt/d/milan-app/backend/dwn",
+        "databaseRoot": "/mnt/d/milan-app/backend/dwn/database",
+        "isolatedRoot": "/mnt/d/milan-app/backend/dwn/isolated-users",
+        "remoteEndpoint": "http://127.0.0.1:5000",
+        "apiKeyConfigured": true,
+        "renderRuntime": false,
+        "usingRenderDiskPath": false,
+        "usingRuntimeFallback": false,
+        "fallbackUsed": false,
+        "appStoresUserData": false,
+        "remoteWriteEnabled": true,
+        "realDwnProtocol": true,
+        "sdkReady": true,
+        "selectedBy": "production-real-dwn-node-endpoint",
+        "candidateAttempts": [
+          {
+            "root": "/mnt/d/milan-app/backend/dwn",
+            "ok": true
+          }
+        ],
+        "permanentExpected": true,
+        "requiresCloudDwn": true,
+        "warning": ""
+      },
+      "policy": {
+        "ownerOnlyByDefault": true,
+        "sharingRequiresExplicitDIDPermission": true,
+        "adminCanSeePrivatePayloads": false,
+        "isolatedPerUser": true,
+        "cloudAuthoritative": true
+      }
+    },
+    "profile": {
+      "display_name": "Nitesh",
+      "bio": "",
+      "website": "",
+      "avatar": "",
+      "updated_at": "2026-08-20T13:58:02.767Z"
+    },
+    "settings": {
+      "theme": "dark",
+      "accent": "blue",
+      "dwnMode": "production-remote-dwn",
+      "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+      "realCloudDwnConfigured": true,
+      "dwnIsolation": "single-user",
+      "dwnSpaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+      "realDwnProtocol": true,
+      "realDwnDid": true,
+      "cloudDwnRoot": "/mnt/d/milan-app/backend/dwn",
+      "cloudDwnPermanentExpected": true
+    },
+    "login_count": 1,
+    "created_at": "2026-08-20T13:58:02.767Z",
+    "emailVerified": false,
+    "emailVerification": {
+      "tokenHash": "36c4e83ae9b2fb14a6758721ea95f20b0883d41cf5823f224d953dcc32a53d2e",
+      "codeHash": "6ddde436948a6bf00ce8b8c4dca23f51e99d8a463f96573b6e36526d00ba1c9c",
+      "expires": 1787320682847
+    },
+    "last_login_at": "2026-08-20T13:58:03.837Z"
+  }
+]

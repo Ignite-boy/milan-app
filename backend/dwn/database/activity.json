@@ -179,5 +179,135 @@
       },
       "at": "2026-08-20T10:07:45.053Z"
     }
+  ],
+  "81f52369-7c3e-4895-a629-43d4f2fe5f1f": [
+    {
+      "id": "1787234283857-aff2e0543a553",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-20T13:58:03.857Z"
+    },
+    {
+      "id": "1787234282912-81e2a39bd111f",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6Mkfdv4dG5ZDyMsxX35EtiD6W5gXx1T99dwEDoUepkWw8At",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+        "remoteProvision": {
+          "ok": true,
+          "endpoint": "http://127.0.0.1:5000",
+          "response": {
+            "ok": true,
+            "accepted": true,
+            "embeddedDwnNode": true,
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "spaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+            "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+            "manifest": {
+              "ok": true,
+              "app": "MILAN",
+              "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+              "version": "49.0.0",
+              "realDwnProtocol": true,
+              "sdkReady": true,
+              "embeddedDwnNode": true,
+              "userIsolation": "did-based-one-user-one-dwn-space",
+              "spaceId": "milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+              "ownerDid": "did:key:z6Mkfdv4dG5ZDyMsxX35EtiD6W5gXx1T99dwEDoUepkWw8At",
+              "userId": "81f52369-7c3e-4895-a629-43d4f2fe5f1f",
+              "email": "np7218468@gmail.com",
+              "profile": {
+                "display_name": "Nitesh",
+                "bio": "",
+                "website": "",
+                "avatar": "",
+                "updated_at": "2026-08-20T13:58:02.767Z"
+              },
+              "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860",
+              "recordsRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860/records",
+              "mediaRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-81f52369-7c3e-4895-a629-43d4f2fe5f1f-294ea860/media",
+              "createdAt": "2026-08-20T13:58:02.423Z",
+              "updatedAt": "2026-08-20T13:58:02.815Z"
+            }
+          },
+          "provisionedAt": "2026-08-20T13:58:02.846Z"
+        }
+      },
+      "at": "2026-08-20T13:58:02.912Z"
+    }
+  ],
+  "cc46513f-db1d-46ab-be4b-eadf25115e18": [
+    {
+      "id": "1787237169880-4aaf5818ab15",
+      "action": "auth.login",
+      "details": {
+        "email": "test@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-20T14:46:09.880Z"
+    },
+    {
+      "id": "1787237169560-e908118e308ac",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6MktbhFEjjFQd7g1HHKyneFSLxBeNgEoVGNfVbgLQ9CKuoa",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a",
+        "remoteProvision": {
+          "ok": true,
+          "endpoint": "http://127.0.0.1:5000",
+          "response": {
+            "ok": true,
+            "accepted": true,
+            "embeddedDwnNode": true,
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "spaceId": "milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a",
+            "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a",
+            "manifest": {
+              "ok": true,
+              "app": "MILAN",
+              "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+              "version": "49.0.0",
+              "realDwnProtocol": true,
+              "sdkReady": true,
+              "embeddedDwnNode": true,
+              "userIsolation": "did-based-one-user-one-dwn-space",
+              "spaceId": "milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a",
+              "ownerDid": "did:key:z6MktbhFEjjFQd7g1HHKyneFSLxBeNgEoVGNfVbgLQ9CKuoa",
+              "userId": "cc46513f-db1d-46ab-be4b-eadf25115e18",
+              "email": "test@gmail.com",
+              "profile": {
+                "display_name": "Nitesh Pandey",
+                "bio": "",
+                "website": "",
+                "avatar": "",
+                "updated_at": "2026-08-20T14:46:09.428Z"
+              },
+              "storageRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a",
+              "recordsRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a/records",
+              "mediaRoot": "/mnt/d/milan-app/backend/dwn/isolated-users/milan-cc46513f-db1d-46ab-be4b-eadf25115e18-793f572a/media",
+              "createdAt": "2026-08-20T14:46:09.241Z",
+              "updatedAt": "2026-08-20T14:46:09.477Z"
+            }
+          },
+          "provisionedAt": "2026-08-20T14:46:09.494Z"
+        }
+      },
+      "at": "2026-08-20T14:46:09.560Z"
+    }
   ]
 }
