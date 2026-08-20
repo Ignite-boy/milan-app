@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const realDwn = require('./realDwnNodeClient');
 const realDwnEngine = require('./realDwnEngine');
+const supabaseDatabase = require('../utils/supabaseDatabase');
 
 // MILAN V49 PRODUCTION DWN RULE:
 // 1 user = 1 DID = 1 isolated production DWN space.
@@ -606,37 +607,43 @@ async function provisionRemoteUserDwn(user = {}) {
 }
 
 async function syncDatabaseSnapshot(name, data) {
-  const p = persistenceInfo();
-  if (!p.remoteEndpoint) return { ok: false, skipped: 'remote-dwn-not-configured' };
-  if (isEmbeddedSelfEndpoint(p.remoteEndpoint)) {
-    try {
-      const response = directPutDatabaseSnapshot(name, data);
-      return { ok: true, endpoint: p.remoteEndpoint, response, syncedAt: new Date().toISOString(), embeddedDwnNode: true };
-    } catch (err) {
-      return { ok: false, endpoint: p.remoteEndpoint, error: err.message, syncedAt: new Date().toISOString(), embeddedDwnNode: true };
-    }
-  }
   try {
-    const response = await realDwn.pushDatabaseSnapshot(name, data);
-    return { ok: true, endpoint: p.remoteEndpoint, response, syncedAt: new Date().toISOString() };
+    const response = await supabaseDatabase.pushDatabaseSnapshot(name, data);
+    return {
+      ok: true,
+      backend: 'supabase-storage',
+      response,
+      syncedAt: new Date().toISOString()
+    };
   } catch (err) {
-    return { ok: false, endpoint: p.remoteEndpoint, error: err.message, syncedAt: new Date().toISOString() };
+    console.error('[Supabase DB sync failed]', name, err.message);
+    return {
+      ok: false,
+      backend: 'supabase-storage',
+      error: err.message,
+      syncedAt: new Date().toISOString()
+    };
   }
 }
 
 async function pullDatabaseSnapshot(name) {
-  const p = persistenceInfo();
-  if (!p.remoteEndpoint) return { ok: false, skipped: 'remote-dwn-not-configured' };
-  if (isEmbeddedSelfEndpoint(p.remoteEndpoint)) {
-    const direct = directPullDatabaseSnapshot(name);
-    if (direct.ok) return { ok: true, endpoint: p.remoteEndpoint, data: direct.data, pulledAt: new Date().toISOString(), embeddedDwnNode: true, missing: direct.missing || false };
-    return { ok: false, endpoint: p.remoteEndpoint, error: direct.error, pulledAt: new Date().toISOString(), embeddedDwnNode: true };
-  }
   try {
-    const data = await realDwn.pullDatabaseSnapshot(name);
-    return { ok: true, endpoint: p.remoteEndpoint, data, pulledAt: new Date().toISOString() };
+    const response = await supabaseDatabase.pullDatabaseSnapshot(name);
+    return {
+      ok: true,
+      backend: 'supabase-storage',
+      data: response.data,
+      missing: response.missing || false,
+      pulledAt: new Date().toISOString()
+    };
   } catch (err) {
-    return { ok: false, endpoint: p.remoteEndpoint, error: err.message, pulledAt: new Date().toISOString() };
+    console.error('[Supabase DB pull failed]', name, err.message);
+    return {
+      ok: false,
+      backend: 'supabase-storage',
+      error: err.message,
+      data: {}
+    };
   }
 }
 
