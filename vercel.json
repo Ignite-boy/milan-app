@@ -1,6 +1,9 @@
 {
   "outputDirectory": "frontend",
   "rewrites": [
-    { "source": "/api/auth/:action", "destination": "/api/auth" }
+    { "source": "/api/auth/:action", "destination": "/api/auth.js" },
+    { "source": "/api/:path*", "destination": "/api/index.js" },
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/(.*)", "destination": "/$1" }
   ]
 }
