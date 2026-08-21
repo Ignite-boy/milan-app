@@ -126,6 +126,41 @@
       if (!id) id = vidId(p.textContent || '');
       if (!id) return;
       if (p.querySelector('.myt-embed')) return;
+
+      // Hide/remove the raw YouTube URL from visible post text.
+      // Keep the detected video ID so the embedded player still works.
+      try {
+        var walker = document.createTreeWalker(
+          p,
+          NodeFilter.SHOW_TEXT,
+          {
+            acceptNode: function (node) {
+              if (!node.nodeValue || !/youtube\\.com\\/|youtu\\.be\\//i.test(node.nodeValue)) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              return NodeFilter.FILTER_ACCEPT;
+            }
+          }
+        );
+
+        var nodes = [];
+        var node;
+        while ((node = walker.nextNode())) nodes.push(node);
+
+        nodes.forEach(function (textNode) {
+          textNode.nodeValue = textNode.nodeValue.replace(
+            /https?:\\/\\/(?:www\\.)?(?:youtube\\.com\\/(?:watch\\?v=|shorts\\/|embed\\/|live\\/)[A-Za-z0-9_-]{11}(?:[^\\s]*)?|youtu\\.be\\/[A-Za-z0-9_-]{11}(?:[^\\s]*)?)/gi,
+            ''
+          );
+        });
+      } catch (e) {}
+
+      // Also hide a link element if the URL was auto-linkified.
+      if (a) {
+        a.style.display = 'none';
+        a.setAttribute('aria-hidden', 'true');
+      }
+
       var target = p.querySelector('.postText, .postBody, .post-body, .text, .caption, .body') || p;
       target.appendChild(embed(id));
     });
