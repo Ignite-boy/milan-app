@@ -107,7 +107,7 @@ async function persistUsersAuthoritatively(users) {
   }
   if (!result || result.ok === false) {
     let msg = result?.error || 'Production DWN users.json sync failed';
-    if (/404|No compatible route|No compatible route accepted/i.test(msg)) msg = 'Production embedded DWN sync failed. Run V49 BOOM_REPLACE_RENDER_APP.bat once and redeploy milan-app latest commit if Auto Deploy is off. Original: ' + msg;
+    if (/404|No compatible route|No compatible route accepted/i.test(msg)) msg = 'Production DWN sync failed; verify the configured remote DWN endpoint. Original: ' + msg;
     const err = new Error(msg);
     err.status = 503;
     throw err;
