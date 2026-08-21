@@ -132,6 +132,40 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Session restore endpoint used by /app on every load.
+  if (req.method === 'GET') {
+    try {
+      const header = String(req.headers.authorization || '');
+      const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+      if (!token) return res.status(401).json({ error: 'No token provided' });
+
+      const decoded = jwt.verify(token, JWT);
+      const users = await readUsers();
+      const email = String(decoded.email || '').toLowerCase();
+      const user = users[email];
+
+      if (!user || (decoded.userId && user.id !== decoded.userId)) {
+        return res.status(401).json({ error: 'Session user not found' });
+      }
+
+      return res.status(200).json({
+        email: user.email,
+        did: user.did,
+        profile: {
+          display_name: user.name || user.email.split('@')[0],
+          bio: '',
+          website: '',
+          avatar: ''
+        },
+        settings: {},
+        login_count: user.login_count || 0,
+        created_at: user.created_at
+      });
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+  }
+
   if (req.method !== 'POST') {
     return res
       .status(405)
