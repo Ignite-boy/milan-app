@@ -1,0 +1,10 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/notifications/page": "/notifications",
+  "/page": "/",
+  "/people/page": "/people",
+  "/profile/page": "/profile",
+  "/saved/page": "/saved",
+  "/settings/page": "/settings"
+}

@@ -1,0 +1,13 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/notifications/page.js")
+R.c("server/chunks/ssr/next-app_0v4m9oo._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0gte5s8._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1-a1ig5._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__11whbnz._.js")
+R.c("server/chunks/ssr/next-app_app_layout_jsx_0w85bf8._.js")
+R.c("server/chunks/ssr/0gmm_next_dist_client_components_0ffxpct._.js")
+R.c("server/chunks/ssr/0gmm_next_dist_client_components_builtin_forbidden_1lu1lv6.js")
+R.c("server/chunks/ssr/0gmm_next_dist_client_components_builtin_unauthorized_0w11wvr.js")
+R.c("server/chunks/ssr/0gmm_next_dist_client_components_builtin_global-error_057-mwy.js")
+R.c("server/chunks/ssr/next-app__next-internal_server_app_notifications_page_actions_1fqn5-6.js")
+R.m(20784)
+module.exports=R.m(20784).exports
