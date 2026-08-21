@@ -8,86 +8,47 @@ import Sidebar from "./Sidebar";
 import Feed from "./Feed";
 import { api } from "../../lib/api";
 
-const People = dynamic(() => import("./People"), {
-  loading: () => <div className="milan-card">Loading people...</div>,
-});
-
-const Notifications = dynamic(() => import("./Notifications"), {
-  loading: () => <div className="milan-card">Loading notifications...</div>,
-});
-
-const Saved = dynamic(() => import("./Saved"), {
-  loading: () => <div className="milan-card">Loading saved posts...</div>,
-});
-
-const Profile = dynamic(() => import("./Profile"), {
-  loading: () => <div className="milan-card">Loading profile...</div>,
-});
-
-const Settings = dynamic(() => import("./Settings"), {
-  loading: () => <div className="milan-card">Loading settings...</div>,
-});
-
-const RightPanel = dynamic(() => import("./RightPanel"));
+const People = dynamic(() => import("./People"), { ssr: false });
+const Notifications = dynamic(() => import("./Notifications"), { ssr: false });
+const Saved = dynamic(() => import("./Saved"), { ssr: false });
+const Profile = dynamic(() => import("./Profile"), { ssr: false });
+const Settings = dynamic(() => import("./Settings"), { ssr: false });
+const RightPanel = dynamic(() => import("./RightPanel"), { ssr: false });
 
 export default function AppShell() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    const token = localStorage.getItem("milanToken");
 
-    async function restoreSession() {
-      const token = localStorage.getItem("milanToken");
+    if (!token) {
+      window.location.replace("/");
+      return;
+    }
 
-      if (!token) {
-        window.location.replace("/");
-        return;
-      }
-
-      try {
-        const me = await api("/auth/me");
-
-        if (mounted) {
-          setUser(me);
-          setLoading(false);
-        }
-      } catch (error) {
-        if ((error.status === 401 || error.status === 403) && mounted) {
+    api("/auth/me")
+      .then((me) => {
+        setUser(me);
+        setAuthChecked(true);
+      })
+      .catch((error) => {
+        if (error.status === 401 || error.status === 403) {
           localStorage.removeItem("milanToken");
           localStorage.removeItem("milanBootCache");
           window.location.replace("/");
           return;
         }
 
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    restoreSession();
-
-    return () => {
-      mounted = false;
-    };
+        // Keep the already-rendered app alive on transient network/API errors.
+        setAuthChecked(true);
+      });
   }, []);
 
   function logout() {
     localStorage.removeItem("milanToken");
     localStorage.removeItem("milanBootCache");
     window.location.replace("/");
-  }
-
-  if (loading) {
-    return (
-      <main className="milan-loading">
-        <div className="milan-loading-card">
-          <strong>Milan</strong>
-          <span>Opening your space...</span>
-        </div>
-      </main>
-    );
   }
 
   return (
@@ -99,6 +60,7 @@ export default function AppShell() {
 
         <main className="milan-main">
           <Feed user={user} />
+
           <People />
           <Notifications />
           <Saved />
@@ -108,6 +70,12 @@ export default function AppShell() {
 
         <RightPanel user={user} />
       </div>
+
+      {!authChecked && (
+        <div className="milan-session-indicator" aria-live="polite">
+          <span />
+        </div>
+      )}
     </FadeIn>
   );
 }

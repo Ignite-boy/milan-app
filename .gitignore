@@ -45,3 +45,4 @@ backend/dwn/isolated-users/
 backend/dwn/audit/
 backend/RESOLVERCACHE/
 backend/dwn/database/*.json
+.next/
