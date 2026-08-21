@@ -139,8 +139,12 @@ function pushDatabaseSnapshotAsync(file, data) {
   } catch (err) { console.warn('Production DWN DB sync unavailable:', err.message); }
 }
 function writeJson(file, data) {
-  ensureFile(file, Array.isArray(data) ? [] : {});
   const cleanData = cleanByFileName(file, data);
+  if (process.env.VERCEL) {
+    pushDatabaseSnapshotAsync(file, cleanData);
+    return;
+  }
+  ensureFile(file, Array.isArray(data) ? [] : {});
   atomicWriteJson(file, cleanData);
   pushDatabaseSnapshotAsync(file, cleanData);
 }

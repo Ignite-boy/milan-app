@@ -61,7 +61,9 @@ async function loadUsersFromDwn() {
     const normalized = normalizePulledSnapshot(pulled);
     if (normalized.ok && normalized.data && typeof normalized.data === 'object' && !Array.isArray(normalized.data)) {
       global.__milanHydratingFromDwn = true;
-      writeJson(global.usersFile, cleanUsersDb(normalized.data));
+      if (!process.env.VERCEL) {
+        writeJson(global.usersFile, cleanUsersDb(normalized.data));
+      }
       return cleanUsersDb(normalized.data);
     }
   } catch (err) {
@@ -79,7 +81,9 @@ async function loadUsersFromDwnDetailed() {
     const normalized = normalizePulledSnapshot(pulled);
     if (normalized.ok && normalized.data && typeof normalized.data === 'object' && !Array.isArray(normalized.data)) {
       global.__milanHydratingFromDwn = true;
-      writeJson(global.usersFile, cleanUsersDb(normalized.data));
+      if (!process.env.VERCEL) {
+        writeJson(global.usersFile, cleanUsersDb(normalized.data));
+      }
       const cleanedUsers = cleanUsersDb(normalized.data);
       return { users: cleanedUsers, fromRemote: true, missing: Object.keys(cleanedUsers).length === 0 };
     }
@@ -94,7 +98,13 @@ async function loadUsersFromDwnDetailed() {
 }
 
 async function persistUsersAuthoritatively(users) {
-  const result = await writeJsonAndSync(global.usersFile, users);
+  let result;
+  if (process.env.VERCEL) {
+    const { syncDatabaseSnapshot } = require('../services/cloudDwnRegistry');
+    result = await syncDatabaseSnapshot('users.json', users);
+  } else {
+    result = await writeJsonAndSync(global.usersFile, users);
+  }
   if (!result || result.ok === false) {
     let msg = result?.error || 'Production DWN users.json sync failed';
     if (/404|No compatible route|No compatible route accepted/i.test(msg)) msg = 'Production embedded DWN sync failed. Run V49 BOOM_REPLACE_RENDER_APP.bat once and redeploy milan-app latest commit if Auto Deploy is off. Original: ' + msg;
