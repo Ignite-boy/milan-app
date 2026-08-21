@@ -105,49 +105,6 @@
   @media (prefers-reduced-motion:reduce){html.milan-instant-app #appView,html.milan-instant-app #feed .post{animation:none!important}}
   </style>
   <link rel="stylesheet" href="/milan-v102-silver-mobile.css?v=20260710c">
-
-<style id="milan-reload-stability">
-html {
-  background: #050e2b;
-}
-body {
-  min-height: 100vh;
-  background: #050e2b;
-  overflow-x: hidden;
-}
-.topbar {
-  min-height: 80px;
-}
-.auth,
-.topinner,
-.milan-app-shell {
-  min-height: 100vh;
-}
-img {
-  max-width: 100%;
-}
-.milan-instant-app {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: .01ms !important;
-    transition-duration: .01ms !important;
-  }
-}
-</style>
-
-
-<script id="milan-stable-boot">
-(function () {
-  document.documentElement.classList.add("milan-instant-app");
-  window.addEventListener("pageshow", function () {
-    document.documentElement.classList.add("milan-ready");
-  }, { once: true });
-})();
-</script>
-
 </head>
 <body class="milan-next-era">
 
