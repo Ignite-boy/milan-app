@@ -11,7 +11,7 @@ self.__SERVER_FILES_MANIFEST={
     "cleanDistDir": true,
     "assetPrefix": "",
     "cacheMaxMemorySize": 52428800,
-    "configOrigin": "default",
+    "configOrigin": "next.config.mjs",
     "useFileSystemPublicRoutes": true,
     "generateEtags": true,
     "pageExtensions": [
@@ -105,7 +105,7 @@ self.__SERVER_FILES_MANIFEST={
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/mnt/d/milan-app",
+    "outputFileTracingRoot": "/mnt/d/milan-app/next-app/",
     "enablePrerenderSourceMaps": true,
     "cacheComponents": false,
     "cacheLife": {
@@ -232,9 +232,8 @@ self.__SERVER_FILES_MANIFEST={
       "turbopackFileSystemCacheForBuild": true,
       "turbopackInferModuleSideEffects": true,
       "turbopackPluginRuntimeStrategy": "childProcesses",
-      "turbopackMemoryEvictionMode": "auto",
-      "middlewarePrefetch": "flexible",
       "optimizePackageImports": [
+        "framer-motion",
         "lucide-react",
         "date-fns",
         "lodash-es",
@@ -311,6 +310,7 @@ self.__SERVER_FILES_MANIFEST={
         "react-icons/vsc",
         "react-icons/wi"
       ],
+      "turbopackMemoryEvictionMode": "auto",
       "useCacheTimeout": 54,
       "instantInsights": {
         "validationLevel": "warning"
@@ -320,15 +320,15 @@ self.__SERVER_FILES_MANIFEST={
     },
     "htmlLimitedBots": "[\\w-]+-Google|Google-[\\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight",
     "bundlePagesRouterDependencies": false,
-    "configFileName": "next.config.js",
-    "repoRoot": "/mnt/d/milan-app",
+    "configFileName": "next.config.mjs",
     "turbopack": {
-      "root": "/mnt/d/milan-app"
+      "root": "/mnt/d/milan-app/next-app/"
     },
+    "repoRoot": "/mnt/d/milan-app",
     "distDirRoot": ".next"
   },
   "appDir": "/mnt/d/milan-app/next-app",
-  "relativeAppDir": "next-app",
+  "relativeAppDir": "",
   "files": [
     ".next/package.json",
     ".next/routes-manifest.json",

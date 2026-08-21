@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
 import PostComposer from "./PostComposer";
 import PostCard from "./PostCard";
+import SectionReveal from "./SectionReveal";
 
 export default function Feed({ user }) {
   const [posts, setPosts] = useState([]);
@@ -35,7 +36,8 @@ export default function Feed({ user }) {
   }
 
   return (
-    <section className="milan-feed" id="home">
+    <SectionReveal>
+      <section className="milan-feed" id="home">
       <div className="feed-heading">
         <div>
           <span className="eyebrow">HOME</span>
@@ -78,6 +80,7 @@ export default function Feed({ user }) {
           />
         ))}
       </div>
-    </section>
+      </section>
+    </SectionReveal>
   );
 }

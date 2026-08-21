@@ -953,3 +953,71 @@ a {
     padding: 20px 12px 40px;
   }
 }
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  text-rendering: optimizeSpeed;
+}
+
+.milan-card {
+  contain: layout paint;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+.milan-app-shell {
+  min-height: 100vh;
+  will-change: opacity, transform;
+}
+
+.milan-loading {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  background: var(--milan-bg);
+}
+
+.milan-loading-card {
+  animation: milan-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes milan-pulse {
+  0%, 100% {
+    opacity: .55;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.milan-card,
+.milan-header,
+.milan-sidebar {
+  contain: layout paint;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milan-loading-card {
+    animation: none;
+  }
+}
