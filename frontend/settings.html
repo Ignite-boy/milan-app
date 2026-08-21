@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -95,7 +95,7 @@ button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff}
         <div class="grid2">
           <div><label>Website</label><input id="a_website" placeholder="https://"></div>
           <div><label>Language</label>
-            <select id="a_lang"><option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="es">Spanish</option><option value="fr">French</option></select>
+            <select id="a_lang"><option value="en-US">English</option><option value="en-US">Hindi</option><option value="bn">Bengali</option><option value="es">Spanish</option><option value="fr">French</option></select>
           </div>
         </div>
         <label>Email</label><input id="a_email" disabled>
@@ -265,7 +265,7 @@ function load(){
     // account
     $("a_name").value=S.profile.display_name||""; $("a_username").value=S.account.username||"";
     $("a_bio").value=S.profile.bio||""; $("a_website").value=S.profile.website||"";
-    $("a_lang").value=S.account.language||"en"; $("a_email").value=S.account.email||""; $("a_did").textContent=S.account.did||"—";
+    $("a_lang").value=S.account.language||"en-US"; $("a_email").value=S.account.email||""; $("a_did").textContent=S.account.did||"—";
     // privacy
     $("p_profile").value=S.privacy.profileVisibility; $("p_audience").value=S.privacy.defaultPostAudience;
     $("p_friend").value=S.privacy.whoCanFriendRequest; $("p_message").value=S.privacy.whoCanMessage||"everyone";
