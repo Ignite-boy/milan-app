@@ -4,6 +4,8 @@
     { "source": "/api/auth/:action", "destination": "/api/auth.js" },
     { "source": "/api/:path*", "destination": "/api/index.js" },
     { "source": "/app", "destination": "/app.html" },
+    { "source": "/music", "destination": "/music.html" },
+    { "source": "/milan-music", "destination": "/music.html" },
     { "source": "/(.*)", "destination": "/$1" }
   ]
 }
