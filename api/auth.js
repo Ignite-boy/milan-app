@@ -25,6 +25,7 @@ function getSupabase() {
 
 const BUCKET = process.env.SUPABASE_BUCKET || 'milan-dwn-storage';
 const AUTH_FILE = 'database/auth-users.json';
+const USERS_FILE = 'database/users.json';
 const JWT = process.env.JWT_SECRET;
 
 if (!JWT) {
@@ -57,14 +58,51 @@ async function readUsers() {
 
 async function writeUsers(users) {
   const supabase = getSupabase();
-  const body = JSON.stringify(users, null, 2);
 
-  const { error } = await supabase.storage
+  const authBody = JSON.stringify(users, null, 2);
+
+  let { error } = await supabase.storage
     .from(BUCKET)
-    .upload(AUTH_FILE, body, {
+    .upload(AUTH_FILE, authBody, {
       contentType: 'application/json',
       upsert: true,
     });
+
+  if (error) throw error;
+
+  let mirror = {};
+  try {
+    const existing = await supabase.storage.from(BUCKET).download(USERS_FILE);
+    if (!existing.error && existing.data) {
+      const text = await existing.data.text();
+      if (text.trim()) mirror = JSON.parse(text) || {};
+    }
+  } catch (_) {}
+
+  for (const [email, user] of Object.entries(users)) {
+    const old = mirror[email] || {};
+    mirror[email] = {
+      ...old,
+      ...user,
+      profile: {
+        ...(old.profile || {}),
+        display_name: user.name,
+      },
+      settings: {
+        ...(old.settings || {}),
+      },
+      tokenVersion: Number(old.tokenVersion || 0),
+    };
+  }
+
+  const mirrorBody = JSON.stringify(mirror, null, 2);
+
+  ({ error } = await supabase.storage
+    .from(BUCKET)
+    .upload(USERS_FILE, mirrorBody, {
+      contentType: 'application/json',
+      upsert: true,
+    }));
 
   if (error) throw error;
 }
