@@ -1,0 +1,6 @@
+.tmp.driveupload
+**/.tmp.driveupload
+node_modules
+.git
+.vercel
+.env*

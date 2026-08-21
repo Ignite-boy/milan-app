@@ -47,7 +47,7 @@ const SKIP_DIRS = new Set([
 
 /* Dev/audit docs excluded unless --include-docs. */
 const DEV_DOCS = new Set([
-  "AUDIT_REPORT.md", "AUTO_DEPLOY.md", "MAIL_SETUP.md", "MILAN_V7_UPDATE_NOTES.md",
+  "AUDIT_REPORT.md", "AUTO_DEPLOY.md", "MAIL_SETUP.md", "MILAN-UPDATE_NOTES.md",
   "PERFORMANCE.md", "PERF_SEO_ADVANCED.md", "REAL_DWN_IMPLEMENTATION.md",
   "SEO_IMPLEMENTATION.md", "SEO_STRATEGY.md", "SETTINGS_GUIDE.md", "FEED_UI_PROMPT.md",
 ]);

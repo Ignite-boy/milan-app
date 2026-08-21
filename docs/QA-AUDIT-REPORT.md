@@ -84,7 +84,7 @@ These require the live app + browser and should be walked through before launch:
 
 ## Note on tooling
 The sandbox's mirror of the project served **stale/truncated copies** of some JS
-files (e.g. `server.js`, `milan-v72-master.js`, `milan-more-menu.js` looked cut
+files (e.g. `server.js`, `milan-core.js`, `milan-more-menu.js` looked cut
 off). The **actual files on disk are complete and valid** — verified directly.
 So any `node --check` run inside that sandbox will report false "Unexpected end
 of input" errors; ignore those. Run lint/tests in your own local checkout.
