@@ -68,35 +68,6 @@
 
 
 
-
-<script>
-(function(){
-  try {
-    if (localStorage.getItem("milan_token")) {
-      document.documentElement.classList.add("milan-session-present");
-    }
-  } catch (_) {}
-})();
-</script>
-
-<style id="milan-session-gate">
-html.milan-session-present #authView{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-html.milan-session-present #appView{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-}
-html.milan-session-present #appView.hidden{
-  display:block !important;
-}
-</style>
-
 </head>
 <body class="milan-next-era">
 <div id="authView" class="auth">

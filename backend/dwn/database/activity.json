@@ -312,6 +312,212 @@
   ],
   "e1d4ed1e-3cd5-48be-9961-864ef5ece8cd": [
     {
+      "id": "1787392894399-30f9b21011de88",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T10:01:34.399Z"
+    },
+    {
+      "id": "1787392840493-5933061fab81a",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T10:00:40.493Z"
+    },
+    {
+      "id": "1787392556833-28a46d7e8d3c68",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T09:55:56.833Z"
+    },
+    {
+      "id": "1787389812098-f8928c1911f65",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T09:10:12.098Z"
+    },
+    {
+      "id": "1787389578442-083860a7255a5",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::ffff:127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T09:06:18.442Z"
+    },
+    {
+      "id": "1787388198241-ba2ee4b8d172c",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:43:18.241Z"
+    },
+    {
+      "id": "1787388181568-6cce7534310818",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:43:01.568Z"
+    },
+    {
+      "id": "1787387702020-c14d6b28af8d28",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:35:02.020Z"
+    },
+    {
+      "id": "1787387690010-836f9073c0bf08",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:34:50.010Z"
+    },
+    {
+      "id": "1787387663877-f0181826b7a7",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:34:23.877Z"
+    },
+    {
+      "id": "1787386631170-0618a4c63fb908",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:17:11.170Z"
+    },
+    {
+      "id": "1787386558168-6baf11dad56e28",
+      "action": "record.deleted.from.dwn",
+      "details": {
+        "id": "6176c293-00c8-464a-a2b2-70bb79fcff59"
+      },
+      "at": "2026-08-22T08:15:58.168Z"
+    },
+    {
+      "id": "1787386545852-dbd94296eef2a",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T08:15:45.852Z"
+    },
+    {
+      "id": "1787385236821-f05c9018ec78d8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T07:53:56.821Z"
+    },
+    {
+      "id": "1787384167017-09583031e41e5",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T07:36:07.017Z"
+    },
+    {
+      "id": "1787384076828-3c5db867b3e5b",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T07:34:36.828Z"
+    },
+    {
+      "id": "1787384042128-1eddb77a003488",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T07:34:02.128Z"
+    },
+    {
+      "id": "1787383743533-710dc34264994",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T07:29:03.533Z"
+    },
+    {
+      "id": "1787383548913-c4ff2430dc8878",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T07:25:48.913Z"
+    },
+    {
+      "id": "1787315821115-ff384d4dfa1f2",
+      "action": "record.deleted.from.dwn",
+      "details": {
+        "id": "c3dc6c6a-f1be-4662-9059-d80dfe0f6406"
+      },
+      "at": "2026-08-21T12:37:01.115Z"
+    },
+    {
+      "id": "1787315552218-fabd42c3a28728",
+      "action": "record.created.in.dwn",
+      "details": {
+        "title": "Aasma Aasma (From \"Do Deewane Seher Mein\") · Jubin Nautiyal · Neeti Mohan · Hesh",
+        "accessMode": "private",
+        "dwnRecordId": "ee7a3ff8-5d3b-4a68-bb9d-575d5bc7fdf0"
+      },
+      "at": "2026-08-21T12:32:32.218Z"
+    },
+    {
       "id": "1787315033006-eec16f9ed8c03",
       "action": "social.reaction.updated",
       "details": {

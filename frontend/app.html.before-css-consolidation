@@ -67,38 +67,30 @@
 
 
 
-
-
-<script>
-(function(){
-  try {
-    if (localStorage.getItem("milan_token")) {
-      document.documentElement.classList.add("milan-session-present");
-    }
-  } catch (_) {}
-})();
-</script>
-
-<style id="milan-session-gate">
-html.milan-session-present #authView{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-html.milan-session-present #appView{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-}
-html.milan-session-present #appView.hidden{
-  display:block !important;
-}
-</style>
-
 </head>
 <body class="milan-next-era">
+<div id="milanBootShell" aria-hidden="true">
+  <div class="shellTop">
+    <img class="shellLogo" src="/assets/milan-logo.png" alt="">
+    <div>
+      <div class="shellBrand">MILAN</div>
+      <div class="shellTag">Your Space. Your People</div>
+    </div>
+  </div>
+  <div class="shellBody">
+    <div>
+      <div class="skeletonCard shellProfile shine"></div>
+      <div class="skeletonCard shellMenu shine"></div>
+    </div>
+    <div>
+      <div class="skeletonCard shellComposer shine"></div>
+      <div class="skeletonCard shellFeed shine"></div>
+    </div>
+    <div class="skeletonCard shellRight shine"></div>
+  </div>
+</div>
+
+
 <div id="authView" class="auth">
   <section class="authHero">
     <div class="heroStar" aria-hidden="true"></div>
