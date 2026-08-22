@@ -1,0 +1,171 @@
+/* =========================================================
+   MILAN — Point 8: Coordinated Loading Experience
+   Stabilizes existing boot/reload flow.
+   No API or authentication logic changed.
+   ========================================================= */
+
+/* Global rendering stability */
+html{
+  background:#050e2b;
+}
+
+body{
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Keep the main application visually stable during an
+   existing reload/refresh cycle. */
+html.milan-reload-active .topbar,
+body.milan-reload-active .topbar{
+  opacity:.98;
+}
+
+html.milan-reload-active .layout,
+body.milan-reload-active .layout{
+  transition:
+    opacity .16s ease,
+    transform .16s ease;
+}
+
+html.milan-reload-active .layout{
+  opacity:.98;
+}
+
+/* Do NOT hide the application.
+   We want cached content to remain visible while APIs refresh. */
+html.milan-reload-active #feed,
+body.milan-reload-active #feed{
+  opacity:.985;
+}
+
+/* Prevent cards from jumping while data is being refreshed. */
+html.milan-reload-active .card,
+body.milan-reload-active .card{
+  transition:
+    opacity .16s ease,
+    box-shadow .16s ease,
+    border-color .16s ease;
+}
+
+/* Feed refresh indicator */
+#feed{
+  position:relative;
+}
+
+html.milan-reload-active #feed:before{
+  content:"";
+  position:absolute;
+  top:-7px;
+  left:50%;
+  width:42px;
+  height:3px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(245,158,11,0),
+      rgba(245,158,11,.85),
+      rgba(217,70,239,.85),
+      rgba(217,70,239,0)
+    );
+  opacity:.72;
+  animation:milanRefreshPulse 1.15s ease-in-out infinite;
+  z-index:5;
+  pointer-events:none;
+}
+
+@keyframes milanRefreshPulse{
+  0%,100%{
+    width:28px;
+    opacity:.32;
+  }
+  50%{
+    width:64px;
+    opacity:.85;
+  }
+}
+
+/* Quiet loading state for empty feed placeholders */
+#feed > .empty{
+  min-height:140px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  overflow:hidden;
+}
+
+#feed > .empty:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  transform:translateX(-100%);
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.035),
+      transparent
+    );
+  animation:milanLoadingShine 1.45s linear infinite;
+  pointer-events:none;
+}
+
+@keyframes milanLoadingShine{
+  to{
+    transform:translateX(100%);
+  }
+}
+
+/* Buttons shouldn't visually jump while refresh is occurring */
+html.milan-reload-active button,
+body.milan-reload-active button{
+  transition:
+    background .14s ease,
+    border-color .14s ease,
+    color .14s ease,
+    opacity .14s ease,
+    box-shadow .14s ease;
+}
+
+/* Keep sidebars visually anchored */
+html.milan-reload-active .leftRail,
+html.milan-reload-active .rightRail{
+  transform:translateZ(0);
+  backface-visibility:hidden;
+}
+
+/* Smooth first reveal when existing boot code marks app ready */
+html.milan-shell-ready #appView,
+body.app-ready #appView{
+  animation:milanAppReveal .22s ease-out both;
+}
+
+@keyframes milanAppReveal{
+  from{
+    opacity:.985;
+  }
+  to{
+    opacity:1;
+  }
+}
+
+/* Respect reduced-motion */
+@media(prefers-reduced-motion:reduce){
+  *,
+  *:before,
+  *:after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    scroll-behavior:auto !important;
+    transition-duration:.001ms !important;
+  }
+}
+
+/* Mobile */
+@media(max-width:760px){
+  html.milan-reload-active #feed:before{
+    top:-5px;
+  }
+}

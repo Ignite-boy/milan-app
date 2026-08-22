@@ -97,6 +97,210 @@ html.milan-session-present #appView.hidden{
 }
 </style>
 
+<link rel="stylesheet" href="/assets/css/milan-hierarchy.css?v=20260822">
+<link rel="stylesheet" href="/assets/css/milan-profile-premium.css?v=20260822">
+<link rel="stylesheet" href="/assets/css/milan-feed-premium.css?v=20260822">
+<link rel="stylesheet" href="/assets/css/milan-composer-premium.css?v=20260822">
+
+<style id="milan-people-premium-style">
+.milan-people-premium-wrap{
+  position:relative;
+  z-index:40;
+}
+
+.milan-people-premium-panel{
+  position:absolute;
+  left:calc(100% + 12px);
+  top:-10px;
+  width:360px;
+  max-width:calc(100vw - 34px);
+  padding:15px;
+  border-radius:22px;
+
+  background:
+    radial-gradient(circle at 100% 0,
+      rgba(217,70,239,.14),
+      transparent 34%),
+    radial-gradient(circle at 0 0,
+      rgba(37,99,235,.14),
+      transparent 38%),
+    linear-gradient(155deg,
+      rgba(13,29,65,.985),
+      rgba(5,13,32,.99));
+
+  border:1px solid rgba(255,255,255,.09);
+
+  box-shadow:
+    0 24px 65px rgba(0,0,0,.42),
+    0 0 0 1px rgba(255,255,255,.02) inset;
+
+  backdrop-filter:blur(20px) saturate(1.15);
+  -webkit-backdrop-filter:blur(20px) saturate(1.15);
+
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateX(-5px) scale(.975);
+
+  transition:
+    opacity .16s ease,
+    transform .16s ease,
+    visibility .16s ease;
+}
+
+.milan-people-premium-panel.open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateX(0) scale(1);
+}
+
+.milan-people-premium-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:2px 2px 12px;
+}
+
+.milan-people-premium-head b{
+  color:#fff;
+  font-size:14px;
+  font-weight:950;
+}
+
+.milan-people-premium-head span{
+  color:#7f97b9;
+  font-size:10px;
+  font-weight:800;
+}
+
+.milan-people-premium-count{
+  margin-top:2px;
+  color:#8fa5c5;
+  font-size:10px;
+}
+
+.milan-people-premium-grid{
+  display:grid;
+  gap:8px;
+  max-height:360px;
+  overflow:auto;
+  scrollbar-width:thin;
+}
+
+.milan-people-premium-user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.055);
+  background:rgba(255,255,255,.028);
+  transition:
+    background .14s ease,
+    border-color .14s ease,
+    transform .14s ease;
+}
+
+.milan-people-premium-user:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.05);
+  border-color:rgba(245,158,11,.13);
+}
+
+.milan-people-premium-user .avatar{
+  width:40px;
+  height:40px;
+  min-width:40px;
+  border-radius:13px;
+}
+
+.milan-people-premium-meta{
+  min-width:0;
+  flex:1;
+}
+
+.milan-people-premium-name{
+  color:#f2f7ff;
+  font-size:12px;
+  font-weight:900;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.milan-people-premium-status{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin-top:4px;
+  color:#7f97b9;
+  font-size:9px;
+  font-weight:750;
+}
+
+.milan-people-premium-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#34d399;
+  box-shadow:0 0 0 3px rgba(52,211,153,.08);
+}
+
+.milan-people-premium-empty{
+  padding:22px 10px;
+  text-align:center;
+  color:#8298b8;
+  font-size:11px;
+}
+
+.milan-people-premium-footer{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.055);
+  color:#6f86a7;
+  font-size:9px;
+  text-align:center;
+}
+
+@media(max-width:1100px){
+  .milan-people-premium-panel{
+    left:0;
+    top:calc(100% + 9px);
+    width:340px;
+    transform:translateY(-5px) scale(.975);
+  }
+
+  .milan-people-premium-panel.open{
+    transform:translateY(0) scale(1);
+  }
+}
+
+@media(max-width:760px){
+  .milan-people-premium-panel{
+    position:fixed;
+    left:12px;
+    right:12px;
+    top:auto;
+    bottom:12px;
+    width:auto;
+    max-width:none;
+    max-height:min(70vh,520px);
+    padding:14px;
+    transform:translateY(8px) scale(.975);
+  }
+
+  .milan-people-premium-panel.open{
+    transform:translateY(0) scale(1);
+  }
+}
+</style>
+
+<link rel="stylesheet" href="/assets/css/milan-notifications-premium.css?v=20260822">
+<link rel="stylesheet" href="/assets/css/milan-edit-profile-premium.css?v=20260822">
+<link rel="stylesheet" href="/assets/css/milan-loading-premium.css?v=20260822">
+<link rel="stylesheet" href="/assets/css/milan-final-polish.css?v=20260822">
 </head>
 <body class="milan-next-era">
 <div id="authView" class="auth">
@@ -179,7 +383,14 @@ html.milan-session-present #appView.hidden{
 <div id="appView" class="hidden">
 
   <header class="topbar"><div class="topinner"><div class="brand"><img src="/assets/milan-logo.png" alt="MILAN logo"><div><span class="brand-name">Milan</span><div class="tag">Your Space. Your People</div></div></div><div class="search"><input id="globalSearch" placeholder="Search posts, people, tags, DI"><select id="filterAccess"><option value="">All access</option><option value="private">Private</option><option value="public">Public</option><option value="shared_did">Shared</option></select><select id="filterType"><option value="">All files</option><option value="image/">Photos</option><option value="video/">Videos</option><option value="audio/">Audio</option><option value="application/pdf">PDF</option><option value="text/">Text</option><option value="application/">Documents/Files</option></select></div><div class="topActions"><span class="health" id="health">Starting...</span><button class="ghost" id="refreshBtn">Refresh</button><button class="ghost" id="themeBtn">🌙</button><button class="danger" id="logoutBtn">Logout</button><div class="navlinks"><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/music">Music</a><a href="/settings">Settings</a><a href="/admin-users">Admin</a></div></div></div></header>
-  <main class="layout"><aside class="leftRail side"><div class="card profileCard"><div class="profileRow"><div class="avatar lg" id="myAvatar">M</div><div><h2 id="myName" style="margin:0">MILAN User</h2><div class="mini" id="myEmail"></div></div></div><div class="did" id="myDid"></div><div class="mini" id="myDwn"></div><div class="stats"><div class="stat"><b id="peopleCount">0</b><span class="mini">People</span></div><div class="stat"><b id="postCount">0</b><span class="mini">Visible posts</span></div><div class="stat"><b id="requestCount">0</b><span class="mini">Requests</span></div><div class="stat"><b id="notifCount">0</b><span class="mini">Alerts</span></div></div></div><div class="card menu"><button class="active" data-scope="all">🏠 Home Feed</button><button data-scope="mine">👤 My Posts</button><button data-scope="friends">👥 My People</button><button data-scope="public">🌍 Public Feed</button><button data-scope="saved">🔖 Saved</button><button id="profileBtn">⚙️ Edit Profile</button><button id="copyDidBtn">📋 Copy DID</button><button id="milanAiBtn" style="background:linear-gradient(135deg,#f59e0b,#d946ef);color:#fff;font-weight:900;margin-top:8px;">🤖 MILAN AI</button></div></aside>
+  <main class="layout"><aside class="leftRail side"><div class="card profileCard"><div class="profileRow"><div class="avatar lg" id="myAvatar">M</div><div><h2 id="myName" style="margin:0">MILAN User</h2><div class="mini" id="myEmail"></div></div></div><div class="did" id="myDid"></div><div class="mini" id="myDwn"></div><div class="stats"><div class="stat"><b id="peopleCount">0</b><span class="mini">People</span></div><div class="stat"><b id="postCount">0</b><span class="mini">Visible posts</span></div><div class="stat"><b id="requestCount">0</b><span class="mini">Requests</span></div><div class="stat"><b id="notifCount">0</b><span class="mini">Alerts</span></div></div></div><div class="card menu"><button class="active" data-scope="all">🏠 Home Feed</button><button data-scope="mine">👤 My Posts</button><button
+  data-scope="friends"
+  id="myPeopleBtn"
+  class="milan-people-premium-trigger"
+  aria-haspopup="true"
+  aria-expanded="false">
+  👥 My People
+</button><button data-scope="public">🌍 Public Feed</button><button data-scope="saved">🔖 Saved</button><button id="profileBtn">⚙️ Edit Profile</button><button id="copyDidBtn">📋 Copy DID</button><button id="milanAiBtn" style="background:linear-gradient(135deg,#f59e0b,#d946ef);color:#fff;font-weight:900;margin-top:8px;">🤖 MILAN AI</button></div></aside>
     <section class="main"><div class="advancedStrip"><div class="card quickCard"><b id="privacyScore">100%</b><span class="mini">Privacy confidence</span><div class="privacyMeter"><span id="privacyBar"></span></div></div><div class="card quickCard"><b id="spaceMode">Cloud DWN</b><span class="mini">Isolated user space</span></div><div class="card quickCard"><b>Live</b><span class="mini">No refresh for likes/comments</span></div><div class="card quickCard"><b>Search</b><span class="mini">Posts, tags, DID, people</span></div></div>
       <div class="card composer"><div class="composerHead"><div class="avatar" id="composerAvatar">M</div><textarea id="postText" placeholder="What do you want to share in your MILAN space?"></textarea></div><div class="grid2" style="margin-top:10px"><input id="postTitle" placeholder="Post title"><select id="privacy"><option value="private">Private — only me</option><option value="public">Public — visible in public feed</option><option value="shared_did">Share with DID</option></select></div><div id="shareBox" class="hidden" style="margin-top:10px"><textarea id="shareDids" placeholder="Paste one or more DIDs, comma separated"></textarea></div><div class="grid3" style="margin-top:10px"><input id="tagsInput" placeholder="Tags: family, private, work"><input id="mediaFile" type="file" accept="image/*,video/*,audio/*,.mp4,.mov,.m4v,.webm,.mkv,.avi,.3gp,.mpeg,.mpg,.ts"><button id="publishBtn" class="ok">Publish</button></div></div>
       <div class="sectionTitle"><h2>Feed</h2><span class="mini" id="feedHint">Live social updates enabled</span></div><div class="feed" id="feed"></div></section>

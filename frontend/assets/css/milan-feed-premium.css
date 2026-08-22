@@ -1,0 +1,402 @@
+/* =========================================================
+   MILAN — Point 3: Premium Feed
+   Visual-only layer. Feed logic/API untouched.
+   ========================================================= */
+
+.main #feed{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* ---------- Post shell ---------- */
+
+.main #feed .post{
+  position:relative;
+  overflow:hidden;
+  margin:0;
+  padding:0;
+  border-radius:24px;
+  background:
+    linear-gradient(160deg,
+      rgba(12,27,62,.985),
+      rgba(6,15,36,.995));
+  border:1px solid rgba(255,255,255,.075);
+  box-shadow:
+    0 18px 48px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.028);
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease;
+}
+
+.main #feed .post:hover{
+  transform:translateY(-1px);
+  border-color:rgba(255,255,255,.11);
+  box-shadow:
+    0 23px 56px rgba(0,0,0,.29),
+    inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+/* ---------- Header ---------- */
+
+.main #feed .postHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:17px 18px 12px;
+}
+
+.main #feed .postUser{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.main #feed .postUser > .avatar{
+  width:44px;
+  height:44px;
+  min-width:44px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.20),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.main #feed .postUser b{
+  display:block;
+  color:#fff;
+  font-size:14px;
+  line-height:1.25;
+  font-weight:950;
+  letter-spacing:-.01em;
+}
+
+.main #feed .postUser .mini{
+  margin-top:4px;
+  color:#8198bb;
+  font-size:10px;
+  line-height:1.45;
+}
+
+/* Keep owner/visibility badge visually secondary */
+
+.main #feed .postHead > div:last-child{
+  flex:0 0 auto;
+}
+
+.main #feed .postHead .badge{
+  font-size:10px;
+  padding:4px 8px;
+  background:rgba(255,255,255,.035);
+  color:#91a7c8;
+}
+
+/* ---------- Media ---------- */
+
+.main #feed .media{
+  position:relative;
+  margin:2px 0 0;
+  overflow:hidden;
+  background:#040a18;
+  border-top:1px solid rgba(255,255,255,.035);
+  border-bottom:1px solid rgba(255,255,255,.035);
+}
+
+.main #feed .media img{
+  display:block;
+  width:100%;
+  max-height:620px;
+  object-fit:cover;
+  background:#050b1a;
+}
+
+.main #feed .media video{
+  display:block;
+  width:100%;
+  max-height:620px;
+  min-height:220px;
+  object-fit:contain;
+  background:#020713;
+}
+
+.main #feed .media audio{
+  width:calc(100% - 32px);
+  margin:16px;
+}
+
+.main #feed .media iframe{
+  display:block;
+  width:100%;
+  min-height:520px;
+  border:0;
+  background:#050b18;
+}
+
+/* ---------- Media errors ---------- */
+
+.main #feed .mediaLoadError{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:12px;
+  padding:8px 11px;
+  border-radius:11px;
+  background:rgba(2,7,18,.84);
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
+  color:#b7c6dc;
+  font-size:11px;
+  text-align:center;
+}
+
+/* ---------- File card ---------- */
+
+.main #feed .fileCard{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin:14px 16px;
+  padding:12px;
+  border-radius:15px;
+  background:rgba(255,255,255,.028);
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.main #feed .fileIcon{
+  width:36px;
+  height:36px;
+  min-width:36px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:rgba(37,99,235,.11);
+  border:1px solid rgba(37,99,235,.14);
+}
+
+.main #feed .fileMeta{
+  min-width:0;
+  flex:1;
+}
+
+.main #feed .fileMeta b{
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#eaf2ff;
+  font-size:12px;
+}
+
+.main #feed .fileMeta .mini{
+  margin-top:3px;
+  color:#8298b8;
+  font-size:10px;
+}
+
+.main #feed .fileActions{
+  display:flex;
+  gap:6px;
+  flex:0 0 auto;
+}
+
+.main #feed .fileActions a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:7px 10px;
+  border-radius:10px;
+  color:#9fc5ff;
+  background:rgba(37,99,235,.08);
+  border:1px solid rgba(37,99,235,.14);
+  text-decoration:none;
+  font-size:10px;
+  font-weight:850;
+}
+
+/* ---------- Body ---------- */
+
+.main #feed .postBody{
+  padding:15px 18px 12px;
+}
+
+.main #feed .postTitle{
+  margin:0;
+  color:#fff;
+  font-size:20px;
+  line-height:1.26;
+  font-weight:950;
+  letter-spacing:-.025em;
+}
+
+.main #feed .postText{
+  margin-top:8px;
+  color:#d3def0;
+  font-size:14px;
+  line-height:1.62;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.main #feed .postBody .badge{
+  margin-top:5px;
+  margin-right:4px;
+  padding:4px 8px;
+  font-size:10px;
+  background:rgba(245,158,11,.055);
+  border-color:rgba(245,158,11,.11);
+  color:#c8a96d;
+}
+
+/* ---------- Metrics ---------- */
+
+.main #feed .postMetrics{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin:0 18px;
+  padding:10px 0;
+  border-top:1px solid rgba(255,255,255,.055);
+  border-bottom:1px solid rgba(255,255,255,.055);
+  color:#7f94b4;
+  font-size:10px;
+  font-weight:750;
+}
+
+.main #feed .postMetrics span{
+  position:relative;
+}
+
+.main #feed .postMetrics span + span:before{
+  content:"";
+  position:absolute;
+  left:-9px;
+  top:50%;
+  width:3px;
+  height:3px;
+  border-radius:50%;
+  background:#526887;
+  transform:translateY(-50%);
+}
+
+/* ---------- Action bar ---------- */
+
+.main #feed .reactionBar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:11px 12px 13px;
+}
+
+.main #feed .reactionBar button{
+  min-height:34px;
+  padding:7px 10px;
+  border-radius:11px;
+  background:rgba(255,255,255,.018);
+  border:1px solid rgba(255,255,255,.04);
+  color:#9db0ca;
+  font-size:11px;
+  font-weight:800;
+  box-shadow:none;
+}
+
+.main #feed .reactionBar button:hover{
+  background:rgba(255,255,255,.045);
+  border-color:rgba(255,255,255,.07);
+  color:#fff;
+  transform:none;
+}
+
+.main #feed .reactionBar button.active{
+  background:rgba(245,158,11,.09);
+  border-color:rgba(245,158,11,.16);
+  color:#ffd27b;
+}
+
+/* destructive action stays obvious but controlled */
+
+.main #feed .reactionBar button.danger{
+  background:rgba(239,68,68,.065);
+  border-color:rgba(239,68,68,.10);
+  color:#ff9999;
+}
+
+/* ---------- Empty / loading ---------- */
+
+.main #feed > .empty{
+  min-height:150px;
+  display:grid;
+  place-items:center;
+  border-radius:20px;
+  padding:28px;
+  background:
+    linear-gradient(160deg,
+      rgba(10,23,52,.92),
+      rgba(6,15,34,.96));
+  border:1px dashed rgba(255,255,255,.09);
+  color:#8ba2c1;
+}
+
+/* ---------- Post focus ---------- */
+
+.main #feed .post:focus-within{
+  border-color:rgba(59,130,246,.18);
+  box-shadow:
+    0 18px 48px rgba(0,0,0,.25),
+    0 0 0 3px rgba(59,130,246,.055);
+}
+
+/* ---------- Mobile ---------- */
+
+@media(max-width:760px){
+  .main #feed{
+    gap:12px;
+  }
+
+  .main #feed .post{
+    border-radius:19px;
+  }
+
+  .main #feed .postHead{
+    padding:14px 14px 10px;
+  }
+
+  .main #feed .postBody{
+    padding:13px 14px 10px;
+  }
+
+  .main #feed .postMetrics{
+    margin:0 14px;
+  }
+
+  .main #feed .reactionBar{
+    padding:9px 9px 11px;
+  }
+
+  .main #feed .postTitle{
+    font-size:18px;
+  }
+
+  .main #feed .media img,
+  .main #feed .media video{
+    max-height:460px;
+  }
+
+  .main #feed .media iframe{
+    min-height:420px;
+  }
+
+  .main #feed .fileCard{
+    margin:11px;
+  }
+}

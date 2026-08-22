@@ -1,0 +1,283 @@
+/* =========================================================
+   MILAN — Point 2: Premium Profile / Left Sidebar
+   Visual-only. Existing IDs, buttons and actions unchanged.
+   ========================================================= */
+
+.leftRail{
+  width:100%;
+}
+
+.profileCard{
+  position:relative;
+  overflow:hidden;
+  padding:18px;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 15% 0,
+      rgba(59,130,246,.18),
+      transparent 42%),
+    radial-gradient(circle at 100% 0,
+      rgba(217,70,239,.14),
+      transparent 38%),
+    linear-gradient(155deg,#0d2048,#071530 72%);
+  border:1px solid rgba(255,255,255,.085);
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+.profileCard:before{
+  content:"";
+  position:absolute;
+  width:170px;
+  height:170px;
+  top:-95px;
+  right:-70px;
+  border-radius:50%;
+  background:rgba(245,158,11,.12);
+  filter:blur(8px);
+  pointer-events:none;
+}
+
+.profileRow{
+  position:relative;
+  z-index:1;
+  align-items:center;
+  gap:13px;
+}
+
+.profileRow .avatar.lg{
+  width:66px;
+  height:66px;
+  min-width:66px;
+  border-radius:20px;
+  border:2px solid rgba(245,158,11,.34);
+  background:
+    linear-gradient(145deg,#172b5b,#091632);
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.28),
+    0 0 0 5px rgba(245,158,11,.045);
+  font-size:20px;
+  font-weight:950;
+}
+
+.profileRow h2{
+  color:#fff;
+  font-size:19px;
+  font-weight:950;
+  letter-spacing:-.025em;
+}
+
+.profileRow .mini{
+  margin-top:4px;
+  font-size:11px;
+  color:#92a6c7;
+}
+
+.profileCard .did{
+  position:relative;
+  margin-top:14px;
+  padding:11px 12px;
+  border-radius:15px;
+  background:rgba(2,8,22,.34);
+  border:1px solid rgba(255,255,255,.06);
+  color:#a9bddb;
+  min-height:38px;
+}
+
+.profileCard .did:before{
+  content:"DID";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-right:7px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:rgba(37,99,235,.13);
+  border:1px solid rgba(37,99,235,.18);
+  color:#73b7ff;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+
+.profileCard > .mini{
+  margin-top:9px;
+  padding:0 3px;
+  color:#7f96b9;
+  font-size:10px;
+}
+
+.profileCard .stats{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  margin-top:15px;
+}
+
+.profileCard .stat{
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  padding:9px 11px;
+  border-radius:15px;
+  background:rgba(255,255,255,.028);
+  border:1px solid rgba(255,255,255,.055);
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    background .16s ease;
+}
+
+.profileCard .stat:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.045);
+  border-color:rgba(245,158,11,.13);
+}
+
+.profileCard .stat b{
+  color:#fff;
+  font-size:18px;
+  line-height:1;
+  font-weight:950;
+}
+
+.profileCard .stat .mini{
+  margin-top:5px;
+  color:#8299bb;
+  font-size:10px;
+}
+
+/* Navigation card */
+
+.leftRail .menu{
+  margin-top:12px;
+  padding:7px;
+  border-radius:22px;
+  background:
+    linear-gradient(155deg,
+      rgba(10,23,52,.98),
+      rgba(6,15,34,.99));
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:
+    0 14px 34px rgba(0,0,0,.20),
+    inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.leftRail .menu button{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-height:43px;
+  margin:2px 0;
+  padding:9px 12px;
+  border-radius:13px;
+  background:transparent;
+  color:#aebed5;
+  font-size:13px;
+  font-weight:850;
+  text-align:left;
+  transition:
+    background .16s ease,
+    color .16s ease,
+    transform .16s ease,
+    padding-left .16s ease;
+}
+
+.leftRail .menu button:hover{
+  padding-left:15px;
+  background:rgba(255,255,255,.038);
+  color:#fff;
+  transform:none;
+}
+
+.leftRail .menu button.active{
+  padding-left:15px;
+  color:#fff;
+  background:
+    linear-gradient(135deg,
+      rgba(245,158,11,.15),
+      rgba(217,70,239,.075));
+  border:1px solid rgba(245,158,11,.13);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 8px 20px rgba(0,0,0,.13);
+}
+
+.leftRail .menu button.active:before{
+  content:"";
+  position:absolute;
+  left:-1px;
+  top:9px;
+  bottom:9px;
+  width:3px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#fbbf24,#d946ef);
+}
+
+.leftRail .menu #milanAiBtn{
+  margin-top:7px !important;
+  min-height:46px;
+  justify-content:center;
+  background:
+    linear-gradient(135deg,
+      rgba(245,158,11,.95),
+      rgba(217,70,239,.92)) !important;
+  border:0;
+  box-shadow:
+    0 10px 25px rgba(217,70,239,.16),
+    inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.leftRail .menu #milanAiBtn:hover{
+  transform:translateY(-1px);
+  padding-left:12px;
+}
+
+/* Premium hover affordance for My People */
+
+.leftRail .menu #myPeopleBtn{
+  position:relative;
+}
+
+.leftRail .menu #myPeopleBtn:after{
+  content:"›";
+  margin-left:auto;
+  color:#7288a9;
+  font-size:18px;
+  line-height:1;
+  transition:transform .16s ease,color .16s ease;
+}
+
+.leftRail .menu #myPeopleBtn:hover:after{
+  color:#fbbf24;
+  transform:translateX(2px);
+}
+
+@media(max-width:1100px){
+  .profileCard{
+    border-radius:20px;
+  }
+}
+
+@media(max-width:760px){
+  .profileCard{
+    padding:15px;
+  }
+
+  .profileRow .avatar.lg{
+    width:58px;
+    height:58px;
+    min-width:58px;
+    border-radius:17px;
+  }
+
+  .leftRail .menu{
+    margin-top:9px;
+  }
+}
