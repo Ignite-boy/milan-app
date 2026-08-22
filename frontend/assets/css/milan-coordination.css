@@ -1,0 +1,48 @@
+/* MILAN coordinated runtime */
+html.milan-coordinated-boot,
+html.milan-runtime-hydrating {
+  background: #050e2b !important;
+}
+
+html.milan-coordinated-boot #appView,
+html.milan-runtime-hydrating #appView {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+html.milan-coordinated-boot::before {
+  content: "MILAN";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  color: #fbbf24;
+  font: 900 30px/1 Inter, Segoe UI, system-ui, sans-serif;
+  letter-spacing: .18em;
+  background:
+    radial-gradient(circle at 50% 40%,
+      rgba(124,58,237,.22),
+      transparent 28%),
+    linear-gradient(145deg,#050e2b,#0a1a3e 55%,#0d3b7a);
+  transition: opacity .18s ease;
+}
+
+html.milan-runtime-hydrating::before {
+  content: "MILAN";
+}
+
+html.milan-runtime-ready #appView {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition:
+    opacity .18s ease,
+    visibility .18s ease;
+}
+
+html.milan-runtime-ready::before {
+  opacity: 0;
+  pointer-events: none;
+}
