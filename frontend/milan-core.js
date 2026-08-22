@@ -128,8 +128,7 @@
     var b = document.createElement("div");
     b.id = "milan-music-banner";
     b.innerHTML =
-      '<span>🎵 MILAN Music is <b>free</b> — search &amp; play millions of songs, no signup.</span>' +
-      '<a href="/music">Listen now →</a>' +
+
       '<button class="mmb-close" type="button" aria-label="Dismiss">×</button>';
     document.body.insertBefore(b, document.body.firstChild);
     b.querySelector(".mmb-close").addEventListener("click", function () {
