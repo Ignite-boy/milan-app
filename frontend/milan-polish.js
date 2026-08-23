@@ -14,23 +14,9 @@
   var toast = function (m) { if (window.milanToast) window.milanToast(m); };
 
   ready(function () {
-    skipLink();
     perfImages();
     offlineState();
   });
-
-  /* ---- A11y: keyboard "Skip to content" ---- */
-  function skipLink() {
-    if (document.querySelector(".milan-skip")) return;
-    var main = document.querySelector("main, #appView, #app, .layout, .feed") || null;
-    var id = main && main.id ? main.id : "milan-main";
-    if (main && !main.id) main.id = id;
-    var a = document.createElement("a");
-    a.className = "milan-skip";
-    a.href = "#" + id;
-    a.textContent = "Skip to content";
-    document.body.insertBefore(a, document.body.firstChild);
-  }
 
   /* ---- Performance: lazy-load OFF-SCREEN images, async-decode all ---- */
   function perfImages() {
