@@ -135,7 +135,7 @@
           NodeFilter.SHOW_TEXT,
           {
             acceptNode: function (node) {
-              if (!node.nodeValue || !/youtube\\.com\\/|youtu\\.be\\//i.test(node.nodeValue)) {
+              if (!node.nodeValue || !/youtube\.com\/|youtu\.be\//i.test(node.nodeValue)) {
                 return NodeFilter.FILTER_REJECT;
               }
               return NodeFilter.FILTER_ACCEPT;
@@ -149,7 +149,7 @@
 
         nodes.forEach(function (textNode) {
           textNode.nodeValue = textNode.nodeValue.replace(
-            /https?:\\/\\/(?:www\\.)?(?:youtube\\.com\\/(?:watch\\?v=|shorts\\/|embed\\/|live\\/)[A-Za-z0-9_-]{11}(?:[^\\s]*)?|youtu\\.be\\/[A-Za-z0-9_-]{11}(?:[^\\s]*)?)/gi,
+            /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)[A-Za-z0-9_-]{11}(?:[^\s]*)?|youtu\.be\/[A-Za-z0-9_-]{11}(?:[^\s]*)?)/gi,
             ''
           );
         });
@@ -286,6 +286,5 @@
       var tries = 0, iv = setInterval(function () { if (injectButton() || ++tries > 20) clearInterval(iv); }, 600);
     }
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (window.__milanAppReady) boot(); else window.addEventListener('milan:app-ready', boot, {once:true});
 })();

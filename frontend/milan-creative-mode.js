@@ -64,7 +64,17 @@
     { id: 'sakura', name: 'Sakura', emoji: '🌸', light: true,
       bg: 'radial-gradient(ellipse at 18% 0,rgba(249,168,212,.40),transparent 50%),radial-gradient(ellipse at 82% 12%,rgba(251,113,133,.20),transparent 45%),#fff2f7',
       surface: '#ffffff', surface2: '#ffe9f1', text: '#4a2c3a', muted: '#a6788a', line: 'rgba(251,113,133,.28)',
-      brand: '#f472b6', brand2: '#fb7185', btn: '#ffffff', input: '#fff2f7' }
+      brand: '#f472b6', brand2: '#fb7185', btn: '#ffffff', input: '#fff2f7' },
+    
+    { id: 'emerald', name: 'Emerald', emoji: '💚', light: false,
+      bg: 'radial-gradient(ellipse at 20% 0,rgba(16,185,129,.25),transparent 48%),radial-gradient(ellipse at 80% 15%,rgba(34,197,94,.20),transparent 45%),#06120d',
+      surface: '#0a1c13', surface2: '#0f291c', text: '#ecfff4', muted: '#86b89d', line: 'rgba(16,185,129,.20)',
+      brand: '#10b981', brand2: '#22c55e', btn: '#03100a', input: 'rgba(6,18,13,.88)' },
+
+    { id: 'ice', name: 'Ice', emoji: '🧊', light: true,
+      bg: 'radial-gradient(ellipse at 20% 0,rgba(125,211,252,.38),transparent 48%),radial-gradient(ellipse at 80% 12%,rgba(167,243,208,.28),transparent 45%),#f2fbff',
+      surface: '#ffffff', surface2: '#eaf8ff', text: '#17324d', muted: '#6b879f', line: 'rgba(14,165,233,.22)',
+      brand: '#0ea5e9', brand2: '#14b8a6', btn: '#ffffff', input: '#f2fbff' }
   ];
 
   function byId(id) { for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i]; return null; }
@@ -187,7 +197,7 @@
       '<div class="mcm-sheet" role="dialog" aria-label="Creative Mode themes">' +
         '<div class="mcm-head"><div style="display:flex;align-items:center;gap:9px"><img src="/assets/icon-192.png" alt="MILAN" style="height:26px;width:26px;border-radius:8px"><div class="mcm-title">Creative Mode</div></div>' +
         '<button class="mcm-x" aria-label="Close">✕</button></div>' +
-        '<div class="mcm-sub">Apne hisaab se poora look badlo — ek click me. ' + THEMES.length + ' themes.</div>' +
+        '<div class="mcm-sub">Customize the entire look your way — change it with one click. ' + THEMES.length + ' themes.</div>' +
         '<div class="mcm-grid">' + cards + '</div>' +
         '<div class="mcm-actions">' +
           '<button class="mcm-btn mcm-surprise">🎲 Surprise me</button>' +
@@ -207,7 +217,7 @@
       var pick; do { pick = THEMES[Math.floor(Math.random() * THEMES.length)]; } while (THEMES.length > 1 && pick.id === cur);
       apply(pick.id, true);
     });
-    overlay.querySelector('.mcm-reset').addEventListener('click', function () { apply('krishna', true); });
+    overlay.querySelector('.mcm-reset').addEventListener('click', function () { apply('mono', true); });
     return overlay;
   }
 
@@ -240,6 +250,5 @@
     if (saved && byId(saved)) document.documentElement.setAttribute('data-mcm', saved);
   } catch (e) {}
   // style injection needs <head>; if early, head exists already.
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (window.__milanAppReady) boot(); else window.addEventListener('milan:app-ready', boot, {once:true});
 })();

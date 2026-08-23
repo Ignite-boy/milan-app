@@ -97,6 +97,5 @@
     var n = 0, iv = setInterval(function () { killInstall(); if (setup() || ++n > 40) clearInterval(iv); }, 600);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (window.__milanAppReady) boot(); else window.addEventListener('milan:app-ready', boot, {once:true});
 })();

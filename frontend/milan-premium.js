@@ -358,6 +358,6 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
+    if (window.__milanAppReady) boot(); else window.addEventListener("milan:app-ready", boot, {once:true});
   } else { boot(); }
 })();

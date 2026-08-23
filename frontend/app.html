@@ -5,6 +5,142 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Milan</title>
   <link rel="stylesheet" href="/assets/css/app.css">
+
+<style>
+.milan-profile-dialog{
+  width:min(720px,94vw);
+  max-width:720px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:28px;
+  background:linear-gradient(180deg,#111a2d 0%,#090e18 100%);
+  color:#fff;
+  box-shadow:0 40px 120px rgba(0,0,0,.65);
+  overflow:hidden;
+}
+
+.milan-profile-dialog::backdrop{
+  background:rgba(2,6,23,.75);
+  backdrop-filter:blur(10px);
+}
+
+.milan-profile-card{
+  margin:0;
+  padding:0;
+}
+
+.milan-profile-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:24px 26px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(135deg,rgba(109,93,252,.18),rgba(45,124,255,.08));
+}
+
+.milan-profile-head h2{
+  margin:0;
+  font-size:24px;
+}
+
+.milan-profile-head p{
+  margin:5px 0 0;
+  color:#91a0b8;
+  font-size:12px;
+}
+
+.milan-profile-close{
+  width:40px;
+  height:40px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.milan-profile-body{
+  display:grid;
+  gap:14px;
+  max-height:65vh;
+  overflow:auto;
+  padding:24px 26px;
+}
+
+.milan-field{
+  display:grid;
+  gap:7px;
+  color:#e7edf7;
+  font-size:12px;
+  font-weight:800;
+}
+
+.milan-input{
+  width:100%;
+  padding:12px 13px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+  color:#fff;
+  outline:none;
+}
+
+.milan-input:focus{
+  border-color:#6d5dfc;
+  box-shadow:0 0 0 3px rgba(109,93,252,.14);
+}
+
+.milan-textarea{
+  min-height:110px;
+  resize:vertical;
+}
+
+.milan-field-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.milan-profile-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:18px 26px 22px;
+  border-top:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.02);
+}
+
+.milan-profile-cancel,
+.milan-profile-save{
+  padding:11px 18px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.milan-profile-cancel{
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+}
+
+.milan-profile-save{
+  border:0;
+  background:linear-gradient(135deg,#6d5dfc,#2d7cff);
+  color:#fff;
+  box-shadow:0 10px 25px rgba(45,124,255,.2);
+}
+
+@media(max-width:600px){
+  .milan-profile-dialog{width:96vw;border-radius:22px}
+  .milan-profile-head,
+  .milan-profile-body,
+  .milan-profile-actions{padding-left:18px;padding-right:18px}
+  .milan-field-grid{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 
 <body>
@@ -12,10 +148,16 @@
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-logo"><img src="/assets/milan-logo.png" alt="Milan"></div>
+    <div class="brand-logo" style="background:transparent!important;box-shadow:none!important;">
+  <img src="/assets/milan-logo.png" style="width:44px;height:44px;object-fit:contain;">
+</div>
     <div class="brand-text">
-      <strong>Milan</strong>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div>
+          <strong>Milan</strong>
       <span>Your Space. Your People.</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -24,7 +166,8 @@
   </div>
 
   <div class="top-actions">
-    <button class="icon-btn" title="Chat" onclick="location.href='/chat'">💬</button>
+      <button id="logoutBtn" type="button" class="icon-btn" title="Logout">↪</button>
+<button class="icon-btn" title="Chat" onclick="location.href='/chat'">💬</button>
     <button class="icon-btn" title="Music" onclick="location.href='/music'">🎵</button>
     <button class="icon-btn" title="Theme">◐</button>
     <button class="icon-btn" title="Notifications">🔔</button>
@@ -54,7 +197,7 @@
     <button onclick="location.href='/chat'">💬 Messages</button>
     <button onclick="location.href='/music'">🎵 Music</button>
     <button>🔔 Notifications</button>
-    <button id="profileBtn" type="button">⚙️ Edit Profile</button>
+    <button id="editProfileBtn" type="button">⚙️ Edit Profile</button>
     <button>🛡️ Privacy</button>
     <button class="accent">🤖 MILAN AI</button>
   </nav>
@@ -159,143 +302,6 @@
 </script>
 
 
-<div id="profileModal" class="profile-modal">
-  <div class="profile-modal-card">
-    <div class="profile-modal-head">
-      <div>
-        <h2>Edit Profile</h2>
-        <p>Manage your Milan profile</p>
-      </div>
-      <button type="button" class="profile-close" id="profileClose">✕</button>
-    </div>
-
-    <div class="profile-form">
-      <div class="profile-photo-row">
-        <div class="profile-edit-avatar" id="profileAvatarPreview">M</div>
-        <div>
-          <strong>Profile Photo</strong>
-          <p>Choose your profile picture</p>
-          <input type="file" id="profilePhoto" accept="image/*">
-        </div>
-      </div>
-
-      <label>Display Name
-        <input id="profileDisplayName" type="text" maxlength="80" placeholder="Your name">
-      </label>
-
-      <label>Username
-        <input id="profileUsername" type="text" maxlength="30" placeholder="@username">
-      </label>
-
-      <label>Bio
-        <textarea id="profileBio" maxlength="300" placeholder="Tell people about yourself..."></textarea>
-      </label>
-
-      <label>Location
-        <input id="profileLocation" type="text" maxlength="100" placeholder="City, Country">
-      </label>
-
-      <label>Website
-        <input id="profileWebsite" type="url" maxlength="200" placeholder="https://example.com">
-      </label>
-
-      <div class="profile-grid">
-        <label>Date of Birth
-          <input id="profileDob" type="date">
-        </label>
-
-        <label>Gender
-          <select id="profileGender">
-            <option value="">Prefer not to say</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="non_binary">Non-binary</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
-      </div>
-
-      <label>Pronouns
-        <input id="profilePronouns" type="text" maxlength="40" placeholder="e.g. he/him">
-      </label>
-
-      <label>Interests
-        <input id="profileInterests" type="text" maxlength="300" placeholder="Music, AI, Chess...">
-      </label>
-
-      <label>Profession
-        <input id="profileProfession" type="text" maxlength="100" placeholder="Your profession">
-      </label>
-
-      <label>Skills
-        <input id="profileSkills" type="text" maxlength="300" placeholder="Python, Django, AI...">
-      </label>
-
-      <label>Social Links
-        <input id="profileSocialLinks" type="text" maxlength="500" placeholder="LinkedIn, GitHub, X...">
-      </label>
-
-      <div class="profile-section-title">Privacy</div>
-
-      <label>Profile Visibility
-        <select id="profileVisibility">
-          <option value="public">Public</option>
-          <option value="private">Private</option>
-        </select>
-      </label>
-
-      <label>Who can message me
-        <select id="profileMessagePrivacy">
-          <option value="everyone">Everyone</option>
-          <option value="connections">Connections only</option>
-          <option value="nobody">Nobody</option>
-        </select>
-      </label>
-
-      <div class="profile-toggle-row">
-        <span>Show online status</span>
-        <input id="profileOnlineStatus" type="checkbox" checked>
-      </div>
-
-      <div class="profile-toggle-row">
-        <span>Show email publicly</span>
-        <input id="profileShowEmail" type="checkbox">
-      </div>
-
-      <div class="profile-section-title">Account</div>
-
-      <label>Email
-        <input id="profileEmail" type="email" readonly>
-      </label>
-
-      <label>DID
-        <input id="profileDid" type="text" readonly>
-      </label>
-    </div>
-
-    <div class="profile-modal-actions">
-      <button type="button" class="profile-cancel" id="profileCancel">Cancel</button>
-      <button type="button" class="profile-save" id="profileSave">Save Changes</button>
-    </div>
-  </div>
-</div>
-
-
-<dialog id="editProfileDialog">
-  <form method="dialog">
-    <h2>Edit Profile</h2>
-
-    <label for="bioInput">Bio</label>
-    <textarea id="bioInput" maxlength="300" rows="5"
-      placeholder="Tell people about yourself..."></textarea>
-
-    <div>
-      <button type="button" id="cancelBioBtn">Cancel</button>
-      <button type="button" id="saveBioBtn">Save</button>
-    </div>
-  </form>
-</dialog>
-
 <style>
   #editProfileDialog{
     width:min(500px,90vw);
@@ -353,6 +359,560 @@
     if (myBio) myBio.textContent = bioInput.value.trim();
     editProfileDialog.close();
   });
+</script>
+
+
+
+
+
+
+
+
+<dialog id="editProfileDialog" style="
+  width:min(560px,94vw);
+  padding:0;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(124,92,255,.18),transparent 34%),
+    radial-gradient(circle at 100% 100%,rgba(45,124,255,.14),transparent 38%),
+    #0b1220;
+  color:#fff;
+  box-shadow:0 40px 120px rgba(0,0,0,.68);
+  overflow:hidden;
+">
+
+  <form method="dialog" style="margin:0;">
+
+    <!-- HEADER -->
+    <div style="
+      padding:24px 26px 20px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+    ">
+      <div style="
+        color:#a99dff;
+        font-size:10px;
+        font-weight:900;
+        letter-spacing:.14em;
+        text-transform:uppercase;
+      ">MILAN PROFILE</div>
+
+      <h2 style="
+        margin:8px 0 5px;
+        font-size:25px;
+        line-height:1.1;
+      ">Edit Profile</h2>
+
+      <p style="
+        margin:0;
+        color:#8e9ab0;
+        font-size:12px;
+      ">Make your Milan profile look like you.</p>
+    </div>
+
+
+    <!-- BODY -->
+    <div style="
+      padding:24px 26px;
+      display:grid;
+      gap:18px;
+      max-height:64vh;
+      overflow:auto;
+    ">
+
+      <!-- PHOTO -->
+      <div style="
+        padding:18px;
+        border-radius:20px;
+        border:1px solid rgba(255,255,255,.08);
+        background:linear-gradient(
+          135deg,
+          rgba(124,92,255,.08),
+          rgba(45,124,255,.04)
+        );
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:18px;
+        ">
+
+          <label for="editProfilePhoto" style="
+            position:relative;
+            width:92px;
+            height:92px;
+            flex:0 0 92px;
+            cursor:pointer;
+          ">
+
+            <img
+              id="editProfilePhotoPreview"
+              src=""
+              alt="Profile photo"
+              style="
+                width:92px;
+                height:92px;
+                display:block;
+                object-fit:cover;
+                border-radius:26px;
+                border:2px solid rgba(255,255,255,.10);
+                box-shadow:0 12px 30px rgba(0,0,0,.35);
+              ;display:none;;display:none;"
+            >
+
+            <span style="
+              position:absolute;
+              right:-5px;
+              bottom:-5px;
+              width:32px;
+              height:32px;
+              display:grid;
+              place-items:center;
+              border-radius:11px;
+              border:2px solid #0b1220;
+              background:linear-gradient(135deg,#7c5cff,#2d7cff);
+              color:#fff;
+              font-size:14px;
+              box-shadow:0 8px 20px rgba(45,124,255,.30);
+            ">✎</span>
+
+            <input
+              id="editProfilePhoto"
+              type="file"
+              accept="image/*"
+              style="display:none;"
+            >
+          </label>
+
+          <div>
+            <div style="
+              font-size:15px;
+              font-weight:900;
+            ">Profile Photo</div>
+
+            <div style="
+              margin-top:5px;
+              color:#8e9ab0;
+              font-size:11px;
+              line-height:1.5;
+            ">
+              Choose a clear photo that represents you.
+            </div>
+
+            <label for="editProfilePhoto" style="
+              display:inline-block;
+              margin-top:10px;
+              padding:8px 12px;
+              border-radius:11px;
+              border:1px solid rgba(255,255,255,.10);
+              background:rgba(255,255,255,.05);
+              color:#e7edf7;
+              font-size:11px;
+              font-weight:800;
+              cursor:pointer;
+            ">Change Photo</label>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- BIO -->
+      <div>
+
+        <label for="editBio" style="
+          display:block;
+          margin-bottom:8px;
+          font-size:12px;
+          font-weight:900;
+          color:#e7edf7;
+        ">Bio</label>
+
+        <textarea
+          id="editBio"
+          maxlength="300"
+          rows="5"
+          placeholder="Tell people something about yourself..."
+          style="
+            width:100%;
+            min-height:120px;
+            padding:14px;
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,.10);
+            background:rgba(255,255,255,.035);
+            color:#fff;
+            outline:none;
+            resize:vertical;
+            font-size:13px;
+            line-height:1.55;
+          "
+        ></textarea>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          margin-top:6px;
+          color:#68758a;
+          font-size:10px;
+        ">
+          <span>Your bio appears on your profile.</span>
+          <span>300 characters</span>
+        </div>
+
+      </div>
+
+
+      <!-- WEBSITE -->
+      <div>
+
+        <label for="editWebsite" style="
+          display:block;
+          margin-bottom:8px;
+          font-size:12px;
+          font-weight:900;
+          color:#e7edf7;
+        ">Website</label>
+
+        <div style="position:relative;">
+
+          <span style="
+            position:absolute;
+            left:14px;
+            top:50%;
+            transform:translateY(-50%);
+            color:#77849a;
+            font-size:13px;
+          ">🌐</span>
+
+          <input
+            id="editWebsite"
+            type="url"
+            maxlength="200"
+            placeholder="https://yourwebsite.com"
+            style="
+              width:100%;
+              padding:13px 14px 13px 38px;
+              border-radius:15px;
+              border:1px solid rgba(255,255,255,.10);
+              background:rgba(255,255,255,.035);
+              color:#fff;
+              outline:none;
+              font-size:13px;
+            "
+          >
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+    <div style="
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      gap:10px;
+      padding:16px 26px 22px;
+      border-top:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.018);
+    ">
+
+      <button
+        type="button"
+        id="cancelEditProfile"
+        style="
+          padding:11px 17px;
+          border-radius:13px;
+          border:1px solid rgba(255,255,255,.10);
+          background:rgba(255,255,255,.04);
+          color:#dbe3ef;
+          font-weight:800;
+          cursor:pointer;
+        "
+      >Cancel</button>
+
+      <button
+        type="button"
+        id="saveEditProfile"
+        style="
+          min-width:150px;
+          padding:12px 20px;
+          border:0;
+          border-radius:13px;
+          background:linear-gradient(135deg,#7c5cff,#2d7cff);
+          color:#fff;
+          font-weight:900;
+          cursor:pointer;
+          box-shadow:0 10px 28px rgba(45,124,255,.24);
+        "
+      >Save Changes</button>
+
+    </div>
+
+  </form>
+</dialog>
+
+
+
+
+
+
+
+<script id="editProfileScript">
+(function(){
+  const btn = document.getElementById("editProfileBtn");
+  const dialog = document.getElementById("editProfileDialog");
+  const saveBtn = document.getElementById("saveEditProfile");
+  const cancelBtn = document.getElementById("cancelEditProfile");
+  const photoInput = document.getElementById("editProfilePhoto");
+  const photoPreview = document.getElementById("editProfilePhotoPreview");
+  const bioInput = document.getElementById("editBio");
+  const websiteInput = document.getElementById("editWebsite");
+
+  function getToken(){
+    return localStorage.getItem("milan_token") || "";
+  }
+
+  function avatarMarkup(avatar, name){
+    const fallback = (name || "M").trim().charAt(0).toUpperCase() || "M";
+
+    if (
+      avatar &&
+      (/^data:image\//.test(avatar) || /^https?:\/\//.test(avatar))
+    ) {
+      return '<img src="' + avatar.replace(/"/g, '&quot;') + '" alt="Profile">';
+    }
+
+    return fallback;
+  }
+
+  async function loadProfileIntoDialog(){
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch("/api/profile", {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      if (!response.ok) return;
+
+      const profile = await response.json();
+
+      bioInput.value = profile.bio || "";
+      websiteInput.value = profile.website || "";
+
+      if (profile.avatar) {
+        photoPreview.src = profile.avatar;
+        photoPreview.style.display = "block";
+      } else {
+        photoPreview.src = "";
+        photoPreview.style.display = "none";
+      }
+    } catch (error) {
+      console.error("Profile load failed:", error);
+    }
+  }
+
+  btn?.addEventListener("click", async function(){
+    await loadProfileIntoDialog();
+    dialog.showModal();
+  });
+
+  cancelBtn?.addEventListener("click", function(){
+    dialog.close();
+  });
+
+  photoInput?.addEventListener("change", function(){
+    const file = this.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      this.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+      photoPreview.src = e.target.result;
+      photoPreview.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  saveBtn?.addEventListener("click", async function(){
+    const token = getToken();
+    if (!token) return;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    try {
+      let avatar = "";
+
+      const currentAvatar = document.getElementById("editProfilePhotoPreview");
+      if (currentAvatar && currentAvatar.src) {
+        avatar = currentAvatar.src;
+      }
+
+      const selectedFile = photoInput?.files?.[0];
+
+      if (selectedFile) {
+        if (selectedFile.size > 900000) {
+          throw new Error("Use a profile picture under 900 KB.");
+        }
+
+        avatar = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
+        });
+      }
+
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          bio: bioInput.value.trim(),
+          website: websiteInput.value.trim(),
+          avatar: avatar
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "Profile update failed");
+      }
+
+      const profile = await response.json();
+      const name =
+        document.getElementById("myName")?.textContent?.trim() ||
+        "Milan User";
+
+      const avatarEl = document.getElementById("myAvatar");
+      const composerAvatar = document.getElementById("composerAvatar");
+
+      if (avatarEl && profile.avatar) {
+        avatarEl.textContent = "";
+        avatarEl.style.backgroundImage = 'url("' + profile.avatar + '")';
+        avatarEl.style.backgroundSize = "cover";
+        avatarEl.style.backgroundPosition = "center";
+        avatarEl.style.backgroundRepeat = "no-repeat";
+      }
+
+      if (composerAvatar && profile.avatar) {
+        composerAvatar.textContent = "";
+        composerAvatar.style.backgroundImage = 'url("' + profile.avatar + '")';
+        composerAvatar.style.backgroundSize = "cover";
+        composerAvatar.style.backgroundPosition = "center";
+        composerAvatar.style.backgroundRepeat = "no-repeat";
+      }
+
+      const myBio = document.getElementById("myBio");
+      if (myBio) {
+        myBio.textContent = profile.bio || "";
+      }
+
+      dialog.close();
+
+    } catch (error) {
+      alert(error.message || "Profile update failed");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Changes";
+    }
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  logoutBtn?.addEventListener("click", function(){
+    localStorage.removeItem("milan_token");
+    localStorage.removeItem("rememberedEmail");
+    sessionStorage.clear();
+    window.location.replace("/");
+  });
+})();
+</script>
+
+
+<script>
+(async function(){
+  try {
+    const token = localStorage.getItem("milan_token");
+    if (!token) return;
+
+    const response = await fetch("/api/profile", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    if (!response.ok) return;
+
+    const profile = await response.json();
+
+    const name =
+      profile.display_name ||
+      "Milan User";
+
+    const nameEl = document.getElementById("myName");
+    const profileNameEl = document.getElementById("profileDialogName");
+    const composerAvatar = document.getElementById("composerAvatar");
+
+    if (nameEl) nameEl.textContent = name;
+    if (profileNameEl) profileNameEl.textContent = name;
+
+    const initial = name.trim().charAt(0).toUpperCase();
+
+    const avatarEl = document.getElementById("myAvatar");
+
+    if (avatarEl) {
+      if (profile.avatar) {
+        avatarEl.textContent = "";
+        avatarEl.style.backgroundImage = 'url("' + profile.avatar + '")';
+        avatarEl.style.backgroundSize = "cover";
+        avatarEl.style.backgroundPosition = "center";
+        avatarEl.style.backgroundRepeat = "no-repeat";
+      } else {
+        avatarEl.style.backgroundImage = "";
+        avatarEl.textContent = initial;
+      }
+    }
+
+    if (composerAvatar) {
+      if (profile.avatar) {
+        composerAvatar.textContent = "";
+        composerAvatar.style.backgroundImage = 'url("' + profile.avatar + '")';
+        composerAvatar.style.backgroundSize = "cover";
+        composerAvatar.style.backgroundPosition = "center";
+        composerAvatar.style.backgroundRepeat = "no-repeat";
+      } else {
+        composerAvatar.style.backgroundImage = "";
+        composerAvatar.textContent = initial;
+      }
+    }
+
+  } catch (error) {
+    console.error("Profile load failed:", error);
+  }
+})();
 </script>
 
 </body>

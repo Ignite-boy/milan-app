@@ -312,6 +312,354 @@
   ],
   "e1d4ed1e-3cd5-48be-9961-864ef5ece8cd": [
     {
+      "id": "1787488578546-8c4f240bb9869",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:36:18.546Z"
+    },
+    {
+      "id": "1787488541519-de1ece118434e",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:35:41.519Z"
+    },
+    {
+      "id": "1787488224300-912cfc8aad87a",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:30:24.300Z"
+    },
+    {
+      "id": "1787488217959-3be9c5ae8ec9a8",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:30:17.959Z"
+    },
+    {
+      "id": "1787488162749-2bb25d192907b8",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:29:22.749Z"
+    },
+    {
+      "id": "1787487796927-b9122072c09d08",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:23:16.927Z"
+    },
+    {
+      "id": "1787487718431-8610557e3ba0c8",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:21:58.431Z"
+    },
+    {
+      "id": "1787487706235-74fd392cebf71",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:21:46.235Z"
+    },
+    {
+      "id": "1787487668207-844c15f293bee8",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:21:08.207Z"
+    },
+    {
+      "id": "1787487659641-7a45454afe3ed8",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:20:59.641Z"
+    },
+    {
+      "id": "1787487567836-1d20ac01271768",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:19:27.836Z"
+    },
+    {
+      "id": "1787487415735-48555f9d556508",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:16:55.735Z"
+    },
+    {
+      "id": "1787487378347-7a799b851d4438",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T12:16:18.347Z"
+    },
+    {
+      "id": "1787471970843-214a191c7655e",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T07:59:30.843Z"
+    },
+    {
+      "id": "1787469818832-4119a232cc1e08",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T07:23:38.832Z"
+    },
+    {
+      "id": "1787465720974-99fa12ac382708",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T06:15:20.974Z"
+    },
+    {
+      "id": "1787464717940-172c47b0c60218",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T05:58:37.940Z"
+    },
+    {
+      "id": "1787464544218-2562ba4d32b228",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T05:55:44.218Z"
+    },
+    {
+      "id": "1787463754380-248c01ffc9912",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T05:42:34.380Z"
+    },
+    {
+      "id": "1787463700305-75d419f37db1b8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T05:41:40.305Z"
+    },
+    {
+      "id": "1787459724257-44a7455551c5a8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T04:35:24.257Z"
+    },
+    {
+      "id": "1787425131028-97669aec4d1118",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T18:58:51.028Z"
+    },
+    {
+      "id": "1787423108563-6361ca14389da",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T18:25:08.563Z"
+    },
+    {
+      "id": "1787423065496-6277165003b168",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T18:24:25.496Z"
+    },
+    {
+      "id": "1787421799166-77099fe8e5b7f",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T18:03:19.166Z"
+    },
+    {
+      "id": "1787421740064-0f7944179e83f",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T18:02:20.064Z"
+    },
+    {
+      "id": "1787420126509-20cab40f0d99f",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::ffff:172.23.83.30",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T17:35:26.509Z"
+    },
+    {
+      "id": "1787416867624-d47e02b25f81b",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T16:41:07.624Z"
+    },
+    {
+      "id": "1787404255547-9e3b603d870c08",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-22T13:10:55.547Z"
+    },
+    {
+      "id": "1787403484789-e2d253a688aa18",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T12:58:04.789Z"
+    },
+    {
+      "id": "1787403341418-21009b8d938318",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-22T12:55:41.418Z"
+    },
+    {
+      "id": "1787402896969-9e980aa1244858",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T12:48:16.969Z"
+    },
+    {
+      "id": "1787402336158-29a616a59c0b8",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-22T12:38:56.158Z"
+    },
+    {
+      "id": "1787402311993-352b0719b763a8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T12:38:31.993Z"
+    },
+    {
+      "id": "1787401649153-03a2ceb2aec75",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-22T12:27:29.153Z"
+    },
+    {
+      "id": "1787398016341-4192b869930f98",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-22T11:26:56.341Z"
+    },
+    {
+      "id": "1787397944906-76b8b988d320d8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T11:25:44.906Z"
+    },
+    {
+      "id": "1787397753974-296ab8cbbcd81",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T11:22:33.974Z"
+    },
+    {
+      "id": "1787397370030-400ac967924ab8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T11:16:10.030Z"
+    },
+    {
+      "id": "1787397052035-fecd94bde51b6",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T11:10:52.035Z"
+    },
+    {
+      "id": "1787395279654-a8cb6719e3766",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T10:41:19.660Z"
+    },
+    {
+      "id": "1787394140307-e0d5a470ae6c7",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-22T10:22:20.307Z"
+    },
+    {
       "id": "1787392894399-30f9b21011de88",
       "action": "auth.login",
       "details": {
@@ -565,6 +913,136 @@
         "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
       },
       "at": "2026-08-21T11:19:30.877Z"
+    }
+  ],
+  "2411f2d3-2ce6-42d1-b6c3-9c9165063ba7": [
+    {
+      "id": "1787395176288-14ddcc6888bbe",
+      "action": "auth.login",
+      "details": {
+        "email": "test20000@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-22T10:39:36.288Z"
+    },
+    {
+      "id": "1787395168632-98843ca796022",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6MknWVDFgyhUujycGbGsvePHY5rZ6Wu3sCx9iZfsd25DekN",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc",
+        "remoteProvision": {
+          "ok": true,
+          "endpoint": "http://127.0.0.1:5000",
+          "response": {
+            "ok": true,
+            "accepted": true,
+            "embeddedDwnNode": true,
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "spaceId": "milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc",
+            "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc",
+            "manifest": {
+              "ok": true,
+              "app": "MILAN",
+              "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+              "version": "49.0.0",
+              "realDwnProtocol": true,
+              "sdkReady": true,
+              "embeddedDwnNode": true,
+              "userIsolation": "did-based-one-user-one-dwn-space",
+              "spaceId": "milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc",
+              "ownerDid": "did:key:z6MknWVDFgyhUujycGbGsvePHY5rZ6Wu3sCx9iZfsd25DekN",
+              "userId": "2411f2d3-2ce6-42d1-b6c3-9c9165063ba7",
+              "email": "test20000@gmail.com",
+              "profile": {
+                "display_name": "Nitesh",
+                "bio": "",
+                "website": "",
+                "avatar": "",
+                "updated_at": "2026-08-22T10:39:28.055Z"
+              },
+              "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc",
+              "recordsRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc\\records",
+              "mediaRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-2411f2d3-2ce6-42d1-b6c3-9c9165063ba7-9f3e9afc\\media",
+              "createdAt": "2026-08-22T10:39:27.335Z",
+              "updatedAt": "2026-08-22T10:39:28.075Z"
+            }
+          },
+          "provisionedAt": "2026-08-22T10:39:28.139Z"
+        }
+      },
+      "at": "2026-08-22T10:39:28.632Z"
+    }
+  ],
+  "094446e9-7a5d-4825-bee2-c17b64e82d92": [
+    {
+      "id": "1787485591896-fa0d04ed30f488",
+      "action": "auth.login",
+      "details": {
+        "email": "good@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T11:46:31.896Z"
+    },
+    {
+      "id": "1787485582044-edbabab9ea5f98",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6Mkj2YWAWaCJycdNWvb8AQTUhqFxRLupMZZmd3A5m9AponF",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c",
+        "remoteProvision": {
+          "ok": true,
+          "endpoint": "http://127.0.0.1:5000",
+          "response": {
+            "ok": true,
+            "accepted": true,
+            "embeddedDwnNode": true,
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "spaceId": "milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c",
+            "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c",
+            "manifest": {
+              "ok": true,
+              "app": "MILAN",
+              "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+              "version": "49.0.0",
+              "realDwnProtocol": true,
+              "sdkReady": true,
+              "embeddedDwnNode": true,
+              "userIsolation": "did-based-one-user-one-dwn-space",
+              "spaceId": "milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c",
+              "ownerDid": "did:key:z6Mkj2YWAWaCJycdNWvb8AQTUhqFxRLupMZZmd3A5m9AponF",
+              "userId": "094446e9-7a5d-4825-bee2-c17b64e82d92",
+              "email": "good@gmail.com",
+              "profile": {
+                "display_name": "Nitesh",
+                "bio": "",
+                "website": "",
+                "avatar": "",
+                "updated_at": "2026-08-23T11:46:21.602Z"
+              },
+              "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c",
+              "recordsRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c\\records",
+              "mediaRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-094446e9-7a5d-4825-bee2-c17b64e82d92-796cd71c\\media",
+              "createdAt": "2026-08-23T11:46:21.085Z",
+              "updatedAt": "2026-08-23T11:46:21.639Z"
+            }
+          },
+          "provisionedAt": "2026-08-23T11:46:21.665Z"
+        }
+      },
+      "at": "2026-08-23T11:46:22.044Z"
     }
   ]
 }

@@ -22,6 +22,5 @@
     a.innerHTML = '<span class="ic">🎵</span><span class="lbl">Music</span>';
     document.body.appendChild(a);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (window.__milanAppReady) boot(); else window.addEventListener('milan:app-ready', boot, {once:true});
 })();

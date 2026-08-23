@@ -97,7 +97,7 @@ router.get('/', auth, asyncRoute(async (req, res) => {
 router.put('/account', auth, asyncRoute(async (req, res) => {
   const { users, email, user } = locate(req);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  const { display_name, bio, website, avatar, cover, language, username } = req.body || {};
+  const { display_name, bio, website, avatar, cover, language, username, date_of_birth, interests } = req.body || {};
   user.profile = {
     ...(user.profile || {}),
     display_name: display_name != null ? String(display_name).trim().slice(0, 80) : (user.profile?.display_name || ''),
@@ -105,6 +105,10 @@ router.put('/account', auth, asyncRoute(async (req, res) => {
     website: website != null ? String(website).trim().slice(0, 200) : (user.profile?.website || ''),
     avatar: avatar != null ? String(avatar).trim() : (user.profile?.avatar || ''),
     cover: cover != null ? String(cover).trim() : (user.profile?.cover || ''),
+    date_of_birth: date_of_birth != null ? String(date_of_birth).trim().slice(0, 10) : (user.profile?.date_of_birth || ''),
+    interests: interests != null ? String(interests).trim().slice(0, 300) : (user.profile?.interests || ''),
+    date_of_birth: date_of_birth != null ? String(date_of_birth).trim().slice(0, 10) : (user.profile?.date_of_birth || ''),
+    interests: interests != null ? String(interests).trim().slice(0, 300) : (user.profile?.interests || ''),
     updated_at: new Date().toISOString()
   };
   if (username != null) {
