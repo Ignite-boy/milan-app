@@ -4,3 +4,12 @@ node_modules
 .git
 .vercel
 .env*
+RESOLVERCACHE/
+RESOLVERCACHE/
+backend/dwn/
+backend/real-dwn-engine/
+backend/node_modules/
+backend/**/DATASTORE/
+backend/**/LOCK
+*.log
+.env

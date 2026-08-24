@@ -312,6 +312,26 @@
   ],
   "e1d4ed1e-3cd5-48be-9961-864ef5ece8cd": [
     {
+      "id": "1787589903548-cead121ace716",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-24T16:45:03.548Z"
+    },
+    {
+      "id": "1787588855052-bbeb3061f49c3",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-24T16:27:35.052Z"
+    },
+    {
       "id": "1787581611100-679c9cb97c54a8",
       "action": "auth.login",
       "details": {

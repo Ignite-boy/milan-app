@@ -298,12 +298,22 @@
                 }
             });
 
-            // Do not render the uploaded image as a full-size page image.
-            // The profile photo is displayed only in myAvatar and composerAvatar.
+            // Update any .avatar, .mini-avatar in the feed
+            document.querySelectorAll('.avatar, .mini-avatar').forEach(el => {
+                if (el.id !== "myAvatar" && el.id !== "composerAvatar") {
+                    el.style.backgroundImage = 'url("' + dataUrl + '")';
+                    el.style.backgroundSize = "cover";
+                    el.style.backgroundPosition = "center";
+                    el.style.backgroundRepeat = "no-repeat";
+                    el.textContent = "";
+                }
+            });
+
+            // Update preview in dialog if it exists
             const preview = document.getElementById("editProfilePhotoPreview");
             if (preview) {
-                preview.src = "";
-                preview.style.display = "none";
+                preview.src = dataUrl;
+                preview.style.display = "block";
             }
 
             // Update global me object if exists
@@ -353,6 +363,15 @@
                 el.textContent = "";
             }
         });
+        document.querySelectorAll('.avatar, .mini-avatar').forEach(el => {
+            if (el.id !== "myAvatar" && el.id !== "composerAvatar") {
+                el.style.backgroundImage = 'url("' + saved + '")';
+                el.style.backgroundSize = "cover";
+                el.style.backgroundPosition = "center";
+                el.style.backgroundRepeat = "no-repeat";
+                el.textContent = "";
+            }
+        });
         if (window.me && window.me.profile) {
             window.me.profile.avatar = saved;
         }
@@ -365,34 +384,3 @@
 
 </body>
 </html>
-
-<style>
-.milan-avatar-upload {
-    position: relative !important;
-}
-
-.milan-avatar-upload .milan-avatar-upload-icon {
-    position: absolute !important;
-    bottom: 0 !important;
-    right: 0 !important;
-    z-index: 10 !important;
-    background: #6366f1 !important;
-    background-image: none !important;
-    overflow: hidden !important;
-}
-
-.milan-avatar-upload .milan-avatar-upload-icon img {
-    display: none !important;
-}
-</style>
-
-<script>
-(function () {
-    const icon = document.querySelector('.milan-avatar-upload-icon');
-
-    if (icon) {
-        icon.style.backgroundImage = 'none';
-        icon.textContent = '📷';
-    }
-})();
-</script>

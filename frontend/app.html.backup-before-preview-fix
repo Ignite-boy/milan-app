@@ -298,12 +298,11 @@
                 }
             });
 
-            // Do not render the uploaded image as a full-size page image.
-            // The profile photo is displayed only in myAvatar and composerAvatar.
+            // Update preview in dialog if it exists
             const preview = document.getElementById("editProfilePhotoPreview");
             if (preview) {
-                preview.src = "";
-                preview.style.display = "none";
+                preview.src = dataUrl;
+                preview.style.display = "block";
             }
 
             // Update global me object if exists

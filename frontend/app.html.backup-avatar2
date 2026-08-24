@@ -298,12 +298,11 @@
                 }
             });
 
-            // Do not render the uploaded image as a full-size page image.
-            // The profile photo is displayed only in myAvatar and composerAvatar.
+            // Update preview in dialog if it exists
             const preview = document.getElementById("editProfilePhotoPreview");
             if (preview) {
-                preview.src = "";
-                preview.style.display = "none";
+                preview.src = dataUrl;
+                preview.style.display = "block";
             }
 
             // Update global me object if exists
@@ -365,34 +364,3 @@
 
 </body>
 </html>
-
-<style>
-.milan-avatar-upload {
-    position: relative !important;
-}
-
-.milan-avatar-upload .milan-avatar-upload-icon {
-    position: absolute !important;
-    bottom: 0 !important;
-    right: 0 !important;
-    z-index: 10 !important;
-    background: #6366f1 !important;
-    background-image: none !important;
-    overflow: hidden !important;
-}
-
-.milan-avatar-upload .milan-avatar-upload-icon img {
-    display: none !important;
-}
-</style>
-
-<script>
-(function () {
-    const icon = document.querySelector('.milan-avatar-upload-icon');
-
-    if (icon) {
-        icon.style.backgroundImage = 'none';
-        icon.textContent = '📷';
-    }
-})();
-</script>
