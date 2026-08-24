@@ -312,6 +312,16 @@
   ],
   "e1d4ed1e-3cd5-48be-9961-864ef5ece8cd": [
     {
+      "id": "1787581611100-679c9cb97c54a8",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-24T14:26:51.100Z"
+    },
+    {
       "id": "1787553175399-90a02cbd44cda",
       "action": "auth.login",
       "details": {

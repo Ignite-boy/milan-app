@@ -4,144 +4,132 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Milan</title>
-  <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="stylesheet" href="/milan-core.css">
+  <link rel="stylesheet" href="/milan-ui.css">
+  <link rel="stylesheet" href="/premium.css">
 
-<style>
-.milan-profile-dialog{
-  width:min(720px,94vw);
-  max-width:720px;
-  padding:0;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:28px;
-  background:linear-gradient(180deg,#111a2d 0%,#090e18 100%);
-  color:#fff;
-  box-shadow:0 40px 120px rgba(0,0,0,.65);
-  overflow:hidden;
-}
+<style id="milan-fixed-layout">
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body { background: #0a0e1a; color: #e8edf5; font-family: Inter, system-ui, -apple-system, sans-serif; line-height:1.5; }
 
-.milan-profile-dialog::backdrop{
-  background:rgba(2,6,23,.75);
-  backdrop-filter:blur(10px);
-}
+ .app { min-height:100vh; display:flex; flex-direction:column; }
 
-.milan-profile-card{
-  margin:0;
-  padding:0;
-}
+  /* TOPBAR - DESKTOP FIX */
+ .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:12px 20px;
+    background: rgba(15,23,42,0.9); backdrop-filter: blur(12px);
+    border-bottom:1px solid #1e293b;
+    position:sticky; top:0; z-index:100;
+    flex-wrap: nowrap!important;
+  }
+ .brand{display:flex; align-items:center; gap:12px; flex-shrink:0}
+ .brand-logo img{display:block}
+ .brand-text strong{font-size:18px; line-height:1.1; display:block}
+ .brand-text span{font-size:12px; color:#94a3b8; display:block; white-space:nowrap!important;}
 
-.milan-profile-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:24px 26px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  background:linear-gradient(135deg,rgba(109,93,252,.18),rgba(45,124,255,.08));
-}
+ .search{flex:1 1 auto; max-width:480px; min-width:200px;}
+ .search input{
+    width:100%; background:#111827; border:1px solid #1e293b;
+    color:#e8edf5; padding:10px 16px; border-radius:999px; outline:none;
+  }
+ .top-actions{display:flex; gap:8px; flex-shrink:0; align-items:center;}
+ .icon-btn{
+    width:38px; height:38px; border-radius:50%; background:#1e293b;
+    border:1px solid #2a3a5a; color:#e8edf5; cursor:pointer;
+    display:grid; place-items:center; font-size:16px;
+  }
 
-.milan-profile-head h2{
-  margin:0;
-  font-size:24px;
-}
+  /* LAYOUT - MAIN FIX FOR DESKTOP VISIBILITY */
+ .layout {
+    display:grid;
+    grid-template-columns: 300px minmax(0, 1fr) 340px;
+    gap:20px;
+    width:100%;
+    max-width:1440px;
+    margin:0 auto;
+    padding:20px;
+    align-items:start;
+  }
+ .layout > section { min-width:0; } /* prevents overflow */
 
-.milan-profile-head p{
-  margin:5px 0 0;
-  color:#91a0b8;
-  font-size:12px;
-}
+ .card { background: #111827; border:1px solid #1e293b; border-radius:16px; padding:16px; margin-bottom:0; }
 
-.milan-profile-close{
-  width:40px;
-  height:40px;
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:12px;
-  background:rgba(255,255,255,.05);
-  color:#fff;
-  font-size:18px;
-  cursor:pointer;
-}
+  /* SIDEBAR */
+ .sidebar{position:sticky; top:78px; height:fit-content; display:flex; flex-direction:column; gap:16px;}
+ .profile{text-align:center}
+ .profile h2{margin:12px 0 4px; font-size:18px}
+ .profile p{margin:0; color:#94a3b8; font-size:13px}
+ .profile-stats{display:flex; justify-content:space-around; margin-top:16px; padding-top:16px; border-top:1px solid #1e293b;}
+ .profile-stat b{display:block; font-size:16px}.profile-stat span{font-size:11px; color:#94a3b8; text-transform:uppercase}
 
-.milan-profile-body{
-  display:grid;
-  gap:14px;
-  max-height:65vh;
-  overflow:auto;
-  padding:24px 26px;
-}
+ .nav{display:flex; flex-direction:column; gap:6px}
+ .nav button{
+    width:100%; text-align:left; background:transparent; border:none;
+    color:#94a3b8; padding:10px 12px; border-radius:10px; cursor:pointer; font-size:14px;
+  }
+ .nav button.active,.nav button:hover{background:#1e293b; color:#e8edf5}
+ .nav button.accent{background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white; margin-top:8px}
 
-.milan-field{
-  display:grid;
-  gap:7px;
-  color:#e7edf7;
-  font-size:12px;
-  font-weight:800;
-}
+  /* COMPOSER */
+ .composer-row{display:flex; gap:12px; align-items:flex-start;}
+ .composer textarea{
+    flex:1; width:100%!important; min-height:56px; resize:none;
+    background:#0a0e1a; border:1px solid #1e293b; border-radius:12px;
+    color:#e8edf5; padding:12px 14px; outline:none; font-family:inherit;
+  }
+ .composer-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid #1e293b;}
+ .composer-tools{display:flex; gap:8px}
+ .tool{width:32px; height:32px; border-radius:8px; background:#1e293b; border:none; cursor:pointer}
+ .publish{background:#6366f1; color:white; border:none; padding:8px 18px; border-radius:999px; font-weight:600; cursor:pointer}
 
-.milan-input{
-  width:100%;
-  padding:12px 13px;
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:14px;
-  background:rgba(255,255,255,.035);
-  color:#fff;
-  outline:none;
-}
+  /* RIGHTBAR */
+ .rightbar{display:flex; flex-direction:column; gap:20px; position:sticky; top:78px; height:fit-content}
+ .right-card h3{margin:0 0 14px; font-size:14px; letter-spacing:0.5px; text-transform:uppercase; color:#94a3b8}
+ .person{display:flex; align-items:center; gap:10px; flex-wrap:nowrap; margin-bottom:14px}
+ .person:last-child{margin-bottom:0}
+ .person-avatar{
+    width:40px; height:40px; border-radius:50%; background:#2a3a5a;
+    display:grid; place-items:center; flex-shrink:0; font-weight:600;
+  }
+ .person-info{flex:1; min-width:0; overflow:hidden}
+ .person-info b,.person-info span{display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2}
+ .person-info b{font-size:14px}.person-info span{font-size:12px; color:#94a3b8}
+ .follow{margin-left:auto; background:#1e293b; border:1px solid #2a3a5a; color:#e8edf5; padding:6px 14px; border-radius:999px; font-size:12px; cursor:pointer; flex-shrink:0}
 
-.milan-input:focus{
-  border-color:#6d5dfc;
-  box-shadow:0 0 0 3px rgba(109,93,252,.14);
-}
+  /* AVATAR - CORRECTED */
+ .avatar,.mini-avatar,.person-avatar, #myAvatar, #composerAvatar {
+    background-size: cover!important;
+    background-position: center!important;
+    background-repeat: no-repeat!important;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow:hidden;
+  }
+ .avatar,.mini-avatar,.person-avatar{width:48px; height:48px}
+  #myAvatar{width:72px; height:72px; margin:0 auto; display:grid; place-items:center; font-size:24px; background:#2a3a5a}
+  #composerAvatar{width:42px; height:42px; display:grid; place-items:center; background:#2a3a5a}
+ .milan-avatar-upload{position:relative; display:inline-block; cursor:pointer}
+ .milan-avatar-upload-icon{position:absolute; bottom:0; right:0; background:#6366f1; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:12px; border:2px solid #111827}
 
-.milan-textarea{
-  min-height:110px;
-  resize:vertical;
-}
-
-.milan-field-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.milan-profile-actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  padding:18px 26px 22px;
-  border-top:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.02);
-}
-
-.milan-profile-cancel,
-.milan-profile-save{
-  padding:11px 18px;
-  border-radius:12px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-.milan-profile-cancel{
-  border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.04);
-  color:#fff;
-}
-
-.milan-profile-save{
-  border:0;
-  background:linear-gradient(135deg,#6d5dfc,#2d7cff);
-  color:#fff;
-  box-shadow:0 10px 25px rgba(45,124,255,.2);
-}
-
-@media(max-width:600px){
-  .milan-profile-dialog{width:96vw;border-radius:22px}
-  .milan-profile-head,
-  .milan-profile-body,
-  .milan-profile-actions{padding-left:18px;padding-right:18px}
-  .milan-field-grid{grid-template-columns:1fr}
-}
+  /* MOBILE */
+ .mobile-nav { display: none; }
+  @media (max-width: 1100px) {
+   .layout{grid-template-columns: 280px 1fr; }
+   .rightbar{display:none}
+  }
+  @media (max-width: 768px) {
+   .layout{grid-template-columns:1fr; padding:12px; margin-bottom:70px}
+   .sidebar,.rightbar{position:static}
+   .topbar{flex-wrap:wrap!important}
+   .search{order:3; flex-basis:100%; max-width:100%}
+   .mobile-nav { display: flex; justify-content: space-around; background: #111827; border-top:1px solid #1e293b; padding:8px 0; position: fixed; bottom: 0; left: 0; right: 0; z-index:200 }
+   .mobile-nav a{color:#94a3b8; text-decoration:none; text-align:center; font-size:11px}
+   .mobile-nav a.active{color:#6366f1}
+  }
 </style>
-
-<link rel="stylesheet" href="/premium.css"></head>
+</head>
 
 <body>
 <div class="app">
@@ -149,13 +137,13 @@
 <header class="topbar">
   <div class="brand">
     <div class="brand-logo" style="background:transparent!important;box-shadow:none!important;">
-  <img src="/assets/milan-logo.png" style="width:44px;height:44px;object-fit:contain;">
-</div>
+      <img src="/assets/milan-logo.png" style="width:44px;height:44px;object-fit:contain;">
+    </div>
     <div class="brand-text">
       <div style="display:flex;align-items:center;gap:12px;">
         <div>
           <strong>Milan</strong>
-      <span>Your Space. Your People.</span>
+          <span>Your Space. Your People.</span>
         </div>
       </div>
     </div>
@@ -166,8 +154,8 @@
   </div>
 
   <div class="top-actions">
-      <button id="logoutBtn" type="button" class="icon-btn" title="Logout">↪</button>
-<button class="icon-btn" title="Chat" onclick="location.href='/chat'">💬</button>
+    <button id="logoutBtn" type="button" class="icon-btn" title="Logout">↪</button>
+    <button class="icon-btn" title="Chat" onclick="location.href='/chat'">💬</button>
     <button class="icon-btn" title="Music" onclick="location.href='/music'">🎵</button>
     <button class="icon-btn" title="Theme">◐</button>
     <button class="icon-btn" title="Notifications">🔔</button>
@@ -178,7 +166,12 @@
 
 <aside class="sidebar card">
   <div class="profile">
-    <label class="milan-avatar-upload" for="editProfilePhoto"><div class="avatar" id="myAvatar">M</div><span class="milan-avatar-upload-icon">📷</span><input id="editProfilePhoto" type="file" accept="image/*" hidden><img id="editProfilePhotoPreview" alt="Profile photo" style="display:none"></label>
+    <label class="milan-avatar-upload" for="editProfilePhoto">
+      <div class="avatar" id="myAvatar">M</div>
+      <span class="milan-avatar-upload-icon">📷</span>
+      <input id="editProfilePhoto" type="file" accept="image/*" hidden>
+      <img id="editProfilePhotoPreview" alt="Profile photo" style="display:none">
+    </label>
     <h2 id="myName">MILAN User</h2>
     <p id="myEmail">Welcome to Milan</p>
 
@@ -197,8 +190,8 @@
     <button onclick="location.href='/chat'">💬 Messages</button>
     <button onclick="location.href='/music'">🎵 Music</button>
     <button>🔔 Notifications</button>
-    <button id="editProfileBtn" type="button">⚙️ Edit Profile</button>
-    <button>🛡️ Privacy</button>
+    <button id="editProfileBtn" type="button">⚙ Edit Profile</button>
+    <button>🛡 Privacy</button>
     <button class="accent">🤖 MILAN AI</button>
   </nav>
 </aside>
@@ -209,10 +202,9 @@
       <div class="mini-avatar" id="composerAvatar">M</div>
       <textarea id="postText" placeholder="What's happening in your space?"></textarea>
     </div>
-
     <div class="composer-bottom">
       <div class="composer-tools">
-        <button class="tool">🖼️</button>
+        <button class="tool">🖼</button>
         <button class="tool">📎</button>
         <button class="tool">😊</button>
         <button class="tool">🔒</button>
@@ -220,52 +212,33 @@
       <button class="publish" id="publishBtn">Publish</button>
     </div>
   </div>
-  </section>
+</section>
 
 <aside class="rightbar">
-
   <div class="right-card card">
     <h3>People to connect</h3>
-
     <div class="person">
       <div class="person-avatar">A</div>
-      <div class="person-info">
-        <b>Alex</b>
-        <span>Developer</span>
-      </div>
+      <div class="person-info"><b>Alex</b><span>Developer</span></div>
       <button class="follow">Follow</button>
     </div>
-
     <div class="person">
       <div class="person-avatar">R</div>
-      <div class="person-info">
-        <b>Rahul</b>
-        <span>Designer</span>
-      </div>
+      <div class="person-info"><b>Rahul</b><span>Designer</span></div>
       <button class="follow">Follow</button>
     </div>
   </div>
-
   <div class="right-card card">
     <h3>Recent activity</h3>
-
     <div class="person">
       <div class="person-avatar">💬</div>
-      <div class="person-info">
-        <b>New message</b>
-        <span>2 minutes ago</span>
-      </div>
+      <div class="person-info"><b>New message</b><span>2 minutes ago</span></div>
     </div>
-
     <div class="person">
-      <div class="person-avatar">❤️</div>
-      <div class="person-info">
-        <b>Your post received a like</b>
-        <span>12 minutes ago</span>
-      </div>
+      <div class="person-avatar">❤</div>
+      <div class="person-info"><b>Your post received a like</b><span>12 minutes ago</span></div>
     </div>
   </div>
-
 </aside>
 
 </main>
@@ -280,373 +253,60 @@
 </nav>
 
 <script>
-  const token = localStorage.getItem("milan_token");
-
-  if (!token) {
-    window.location.href = "/";
-  }
-
-  const publishBtn = document.getElementById("publishBtn");
-  const postText = document.getElementById("postText");
-
-  publishBtn.addEventListener("click", () => {
-    const text = postText.value.trim();
-    if (!text) return;
-    alert("Post ready: " + text);
-    postText.value = "";
-  });
-
-  document.getElementById("globalSearch").addEventListener("input", function(){
-    console.log("Searching:", this.value);
-  });
-</script>
-
-
-<style>
-  #editProfileDialog{
-    width:min(500px,90vw);
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:18px;
-    padding:24px;
-    background:#0d1320;
-    color:#fff;
-  }
-
-  #editProfileDialog::backdrop{
-    background:rgba(0,0,0,.7);
-  }
-
-  #editProfileDialog h2{
-    margin-top:0;
-  }
-
-  #bioInput{
-    width:100%;
-    margin:10px 0 16px;
-    padding:12px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,.12);
-    background:#111827;
-    color:#fff;
-    resize:vertical;
-  }
-
-  #editProfileDialog div{
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-  }
-</style>
-
-<script>
-  const editProfileBtn = document.getElementById("editProfileBtn");
-  const editProfileDialog = document.getElementById("editProfileDialog");
-  const bioInput = document.getElementById("bioInput");
-  const cancelBioBtn = document.getElementById("cancelBioBtn");
-  const saveBioBtn = document.getElementById("saveBioBtn");
-  const myBio = document.getElementById("myBio");
-
-  editProfileBtn?.addEventListener("click", () => {
-    bioInput.value = myBio?.textContent?.trim() || "";
-    editProfileDialog.showModal();
-  });
-
-  cancelBioBtn.addEventListener("click", () => {
-    editProfileDialog.close();
-  });
-
-  saveBioBtn.addEventListener("click", () => {
-    if (myBio) myBio.textContent = bioInput.value.trim();
-    editProfileDialog.close();
-  });
-</script>
-
-
-
-
-
-
-
-
-<dialog id="editProfileDialog" class="milan-edit-dialog">
-<form method="dialog" class="milan-edit-form">
-<header class="milan-edit-head">
-<img src="/assets/milan-logo.png" class="milan-edit-logo" alt="Milan">
-<h2>Edit Profile</h2>
-</header>
-<div class="milan-edit-body">
-
-<div class="milan-bio-row"><label for="editBio">Bio</label><input id="editBio" type="text" maxlength="300" placeholder="Tell people something about yourself..."></div>
-
-<div class="milan-website-row"><label for="editWebsite">Website</label><input id="editWebsite" type="url" maxlength="200" placeholder="https://yourwebsite.com"></div>
-</div>
-
-<footer class="milan-edit-foot">
-<button type="button" id="cancelEditProfile">Cancel</button>
-<button type="button" id="saveEditProfile">Save Changes</button>
-</footer>
-</form>
-</dialog>
-
-
-
-
-
-
-
-<script id="editProfileScript">
+// Single optimized avatar logic
 (function(){
-  const btn = document.getElementById("editProfileBtn");
-  const dialog = document.getElementById("editProfileDialog");
-  const saveBtn = document.getElementById("saveEditProfile");
-  const cancelBtn = document.getElementById("cancelEditProfile");
-  const photoInput = document.getElementById("editProfilePhoto");
-  const photoPreview = document.getElementById("editProfilePhotoPreview");
-  const bioInput = document.getElementById("editBio");
-  const websiteInput = document.getElementById("editWebsite");
-
-  function getToken(){
-    return localStorage.getItem("milan_token") || "";
-  }
-
-  function avatarMarkup(avatar, name){
-    const fallback = (name || "M").trim().charAt(0).toUpperCase() || "M";
-
-    if (
-      avatar &&
-      (/^data:image\//.test(avatar) || /^https?:\/\//.test(avatar))
-    ) {
-      return '<img src="' + avatar.replace(/"/g, '&quot;') + '" alt="Profile">';
-    }
-
-    return fallback;
-  }
-
-  async function loadProfileIntoDialog(){
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const response = await fetch("/api/profile", {
-        headers: {
-          "Authorization": "Bearer " + token
-        }
-      });
-
-      if (!response.ok) return;
-
-      const profile = await response.json();
-
-      bioInput.value = profile.bio || "";
-      websiteInput.value = profile.website || "";
-
-      if (profile.avatar) {
-        photoPreview.src = profile.avatar;
-        photoPreview.style.display = "block";
-      } else {
-        photoPreview.src = "";
-        photoPreview.style.display = "none";
-      }
-    } catch (error) {
-      console.error("Profile load failed:", error);
-    }
-  }
-
-  btn?.addEventListener("click", async function(){
-    await loadProfileIntoDialog();
-    dialog.showModal();
-  });
-
-  cancelBtn?.addEventListener("click", function(){
-    dialog.close();
-  });
-
-  photoInput?.addEventListener("change", function(){
-    const file = this.files?.[0];
-    if (!file || !file.type.startsWith("image/")) { this.value = ""; return; }
-    const reader = new FileReader();
-    reader.onload = function(e){
-      const avatarEl = document.getElementById("myAvatar");
-      const preview = document.getElementById("editProfilePhotoPreview");
-      if (preview) preview.src = e.target.result;
-      if (avatarEl) { avatarEl.textContent = ""; avatarEl.style.backgroundImage = "url(\"" + e.target.result + "\")"; avatarEl.style.backgroundSize = "cover"; avatarEl.style.backgroundPosition = "center"; avatarEl.style.backgroundRepeat = "no-repeat"; }
-    };
-    reader.readAsDataURL(file);
-  });
-
-  saveBtn?.addEventListener("click", async function(){
-    const token = getToken();
-    if (!token) return;
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving...";
-
-    try {
-      let avatar = "";
-
-      const currentAvatar = document.getElementById("editProfilePhotoPreview");
-      if (currentAvatar && currentAvatar.src) {
-        avatar = currentAvatar.src;
-      }
-
-      const selectedFile = photoInput?.files?.[0];
-
-      if (selectedFile) {
-        if (selectedFile.size > 900000) {
-          throw new Error("Use a profile picture under 900 KB.");
-        }
-
-        avatar = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(selectedFile);
-        });
-      }
-
-      const response = await fetch("/api/profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({
-          bio: bioInput.value.trim(),
-          website: websiteInput.value.trim(),
-          avatar: avatar
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Profile update failed");
-      }
-
-      const profile = await response.json();
-      const name =
-        document.getElementById("myName")?.textContent?.trim() ||
-        "Milan User";
-
-      const avatarEl = document.getElementById("myAvatar");
-      const composerAvatar = document.getElementById("composerAvatar");
-
-      if (avatarEl && profile.avatar) {
-        avatarEl.textContent = "";
-        avatarEl.style.backgroundImage = 'url("' + profile.avatar + '")';
-        avatarEl.style.backgroundSize = "cover";
-        avatarEl.style.backgroundPosition = "center";
-        avatarEl.style.backgroundRepeat = "no-repeat";
-      }
-
-      if (composerAvatar && profile.avatar) {
-        composerAvatar.textContent = "";
-        composerAvatar.style.backgroundImage = 'url("' + profile.avatar + '")';
-        composerAvatar.style.backgroundSize = "cover";
-        composerAvatar.style.backgroundPosition = "center";
-        composerAvatar.style.backgroundRepeat = "no-repeat";
-      }
-
-      const myBio = document.getElementById("myBio");
-      if (myBio) {
-        myBio.textContent = profile.bio || "";
-      }
-
-      dialog.close();
-
-    } catch (error) {
-      alert(error.message || "Profile update failed");
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Save Changes";
-    }
-  });
-})();
-</script>
-
-
-<script>
-(function(){
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  logoutBtn?.addEventListener("click", function(){
-    localStorage.removeItem("milan_token");
-    localStorage.removeItem("rememberedEmail");
-    sessionStorage.clear();
-    window.location.replace("/");
-  });
-})();
-</script>
-
-
-<script>
-(async function(){
-  try {
-    const token = localStorage.getItem("milan_token");
-    if (!token) return;
-
-    const response = await fetch("/api/profile", {
-      headers: {
-        "Authorization": "Bearer " + token
-      }
+  const LS_KEY = "milanAvatar";
+  function applyAvatar(url){
+    if(!url) return;
+    document.querySelectorAll('#myAvatar, #composerAvatar').forEach(el=>{
+      el.textContent=''; el.style.backgroundImage=`url("${url}")`;
+      el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
     });
-
-    if (!response.ok) return;
-
-    const profile = await response.json();
-
-    const name =
-      profile.display_name ||
-      "Milan User";
-
-    const nameEl = document.getElementById("myName");
-    const profileNameEl = document.getElementById("profileDialogName");
-    const composerAvatar = document.getElementById("composerAvatar");
-
-    if (nameEl) nameEl.textContent = name;
-    if (profileNameEl) profileNameEl.textContent = name;
-
-    const initial = name.trim().charAt(0).toUpperCase();
-
-    const avatarEl = document.getElementById("myAvatar");
-
-    if (avatarEl) {
-      if (profile.avatar) {
-        avatarEl.textContent = "";
-        avatarEl.style.backgroundImage = 'url("' + profile.avatar + '")';
-        avatarEl.style.backgroundSize = "cover";
-        avatarEl.style.backgroundPosition = "center";
-        avatarEl.style.backgroundRepeat = "no-repeat";
-      } else {
-        avatarEl.style.backgroundImage = "";
-        avatarEl.textContent = initial;
-      }
-    }
-
-    if (composerAvatar) {
-      if (profile.avatar) {
-        composerAvatar.textContent = "";
-        composerAvatar.style.backgroundImage = 'url("' + profile.avatar + '")';
-        composerAvatar.style.backgroundSize = "cover";
-        composerAvatar.style.backgroundPosition = "center";
-        composerAvatar.style.backgroundRepeat = "no-repeat";
-      } else {
-        composerAvatar.style.backgroundImage = "";
-        composerAvatar.textContent = initial;
-      }
-    }
-
-  } catch (error) {
-    console.error("Profile load failed:", error);
+    // Only apply to generic avatars that are still default letters
+    document.querySelectorAll('.avatar:not(#myAvatar),.mini-avatar:not(#composerAvatar)').forEach(el=>{
+      const t = (el.textContent||'').trim();
+      if(t.length===1) { el.textContent=''; el.style.backgroundImage=`url("${url}")`; }
+    });
+    if(window.me?.profile) window.me.profile.avatar = url;
   }
+  function restore(){ const saved = localStorage.getItem(LS_KEY); if(saved) applyAvatar(saved); }
+
+  // Upload handler
+  const input = document.getElementById("editProfilePhoto");
+  if(input){
+    input.addEventListener("change", function(){
+      const file = this.files?.[0]; if(!file?.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target.result;
+        localStorage.setItem(LS_KEY, dataUrl);
+        applyAvatar(dataUrl);
+        const token = localStorage.getItem("milanToken");
+        if(token){
+          fetch("/api/profile",{method:"PUT",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({avatar:dataUrl})}).catch(()=>{});
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  restore();
+  document.addEventListener('DOMContentLoaded', restore);
+  window.addEventListener('load', restore);
+  new MutationObserver(restore).observe(document.body,{childList:true,subtree:true});
+
+  // avatarMarkup override
+  window.avatarMarkup = function(avatar, name){
+    const saved = localStorage.getItem(LS_KEY);
+    if(!avatar && saved) avatar = saved;
+    const fallback = (name||"M").trim().charAt(0).toUpperCase()||"M";
+    if(avatar && (/^data:image\//.test(avatar) || /^https?:\/\//.test(avatar))){
+      return `<img src="${avatar.replace(/"/g,'&quot;')}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    }
+    return fallback;
+  };
 })();
 </script>
 
-<script src="/milan-creative-mode.js"></script>
-<style>
-#editProfileDialog{backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.14)!important;background:linear-gradient(145deg,rgba(18,24,40,.97),rgba(9,14,27,.98))!important;box-shadow:0 35px 100px rgba(0,0,0,.7),0 0 60px rgba(124,92,255,.12)!important}
-#editProfileDialog input,#editProfileDialog textarea{box-sizing:border-box;transition:.2s;border-color:rgba(255,255,255,.09)!important;background:rgba(255,255,255,.045)!important}
-#editProfileDialog input:focus,#editProfileDialog textarea:focus{border-color:#7c5cff!important;box-shadow:0 0 0 3px rgba(124,92,255,.13)!important}
-#editProfileDialog button{transition:.2s}#saveEditProfile:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(45,124,255,.4)!important}
-#cancelEditProfile:hover{background:rgba(255,255,255,.08)!important}
-</style></body>
+</body>
 </html>
