@@ -746,7 +746,7 @@ app.get('*', (_req, res) => {
 const PORT = Number(process.env.PORT || 5000);
 
 function listenWithFallback(port, attempts = 0) {
-  const server = app.listen(port, () => {
+  const server = app.listen(port, "0.0.0.0", () => {
     console.log(`🚀 MILAN running at http://localhost:${port}`);
     console.log(`   Tagline: Your Space .Your People`);
   });

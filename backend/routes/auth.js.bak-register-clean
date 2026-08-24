@@ -125,64 +125,70 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   const name = String(req.body.name || '').trim();
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
-    return res.status(400).json({ error: 'Valid email required' });
-  }
-
-  if (password.length < 8) {
-    return res.status(400).json({
-      error: 'Password must be at least 8 characters for production use'
-    });
-  }
-
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters for production use' });
+  const users = readJson(global.usersFile, {});
+  // V33 repair: if a previous register wrote only to Render cache but DWN sync failed,
+  // allow the user to re-register the same email and overwrite the ghost cache entry.
+  if (users[email]) return res.status(400).json({ error: 'Email already exists' });
   const id = uuidv4();
   const did = `did:milan:${id}`;
-  const passwordHash = await bcrypt.hash(password, 10);
+  const rawSeedHex = '';
+  const mintedSpaceId = `milan-${id}`;
+  const realDid = false;
+  const assignedDwn = {
+    endpoint: '',
+    mode: 'real-dwn-post-registration',
+    realCloudConfigured: true,
+    assignedAt: new Date().toISOString(),
+    isolation: 'user',
+    spaceId: mintedSpaceId,
+    storageRoot: '',
+    policy: 'dwn-content-only'
+  };
+  users[email] = { id, email, password_hash: await bcrypt.hash(password, 10), did, raw_seed: rawSeedHex,
+    dwnEndpoint: assignedDwn.endpoint,
+    dwn: { endpoint: assignedDwn.endpoint, mode: assignedDwn.mode, realCloudConfigured: assignedDwn.realCloudConfigured, assignedAt: assignedDwn.assignedAt, didServiceId: '#dwn', isolation: assignedDwn.isolation, spaceId: assignedDwn.spaceId, storageRoot: assignedDwn.storageRoot, policy: assignedDwn.policy },
+    profile: { display_name: name || email.split('@')[0], bio: '', website: '', avatar: '', updated_at: new Date().toISOString() },
+    settings: { theme: 'dark', accent: 'blue', dwnMode: assignedDwn.mode, dwnEndpoint: assignedDwn.endpoint, realCloudDwnConfigured: true, dwnIsolation: assignedDwn.isolation, dwnSpaceId: assignedDwn.spaceId }, login_count: 0, created_at: new Date().toISOString() };
+  const remoteProvision = { ok: false, skipped: 'registration-does-not-depend-on-dwn' };
+  users[email].dwn.remoteProvision = remoteProvision;
+  users[email].dwn.realDwnDid = realDid;
+  users[email].settings.realDwnProtocol = remoteProvision.ok;
+  users[email].settings.realDwnDid = realDid;
+  // Email verification token (hash stored; raw token only travels in the email link).
+  const verifyTokenRaw = makeToken();
+  const verifyCode = sixDigit();
+  users[email].emailVerified = false;
+  users[email].emailVerification = { tokenHash: sha256(verifyTokenRaw), codeHash: sha256(verifyCode), expires: Date.now() + 24 * 60 * 60 * 1000 };
 
-  const { data: existingUser, error: lookupError } = await supabaseDb
-    .from('users')
-    .select('id')
-    .eq('email', email)
-    .maybeSingle();
-
-  if (lookupError) {
-    console.error('[auth] Supabase user lookup failed:', lookupError);
-    return res.status(500).json({ error: 'Account database unavailable' });
-  }
-
-  if (existingUser) {
-    return res.status(400).json({ error: 'Email already exists' });
-  }
-
-  const { error: insertError } = await supabaseDb
+  const { error: supabaseUserError } = await supabaseDb
     .from('users')
     .insert({
       id,
       email,
-      password_hash: passwordHash,
+      password_hash: users[email].password_hash,
       name: name || email.split('@')[0],
       did
     });
 
-  if (insertError) {
-    console.error('[auth] Supabase user insert failed:', insertError);
+  if (supabaseUserError) {
+    console.error('[auth] Supabase users insert failed:', supabaseUserError);
     return res.status(500).json({ error: 'Account database registration failed' });
   }
-
-  console.log('[auth] account created in Supabase:', email, id);
-
-  return res.status(201).json({
-    message: 'Registered successfully',
-    id,
-    email,
-    name: name || email.split('@')[0],
-    did
-  });
+  writeJson(global.usersFile, users);
+  addActivity(id, 'identity.created', { did, realDwnDid: realDid, dwnEndpoint: assignedDwn.endpoint, dwnMode: assignedDwn.mode, isolation: assignedDwn.isolation, spaceId: assignedDwn.spaceId, remoteProvision });
+  // Transactional email from support@milanlife.in — fire-and-forget so registration never fails on mail issues.
+  const displayName = name || email.split('@')[0];
+  const verifyUrl = `${APP_URL()}/verify-email?token=${verifyTokenRaw}&email=${encodeURIComponent(email)}`;
+  sendWelcomeEmail({ to: email, name: displayName, did })
+    .then(r => { if (r && r.ok) console.log('[MILAN mail] welcome sent to', email, 'via', r.provider); })
+    .catch(err => console.warn('[MILAN mail] welcome error:', err.message));
+  sendVerificationEmail({ to: email, name: displayName, verifyUrl, code: verifyCode })
+    .then(r => { if (r && r.ok) console.log('[MILAN mail] verification sent to', email, 'via', r.provider); })
+    .catch(err => console.warn('[MILAN mail] verification error:', err.message));
+  res.status(201).json({ message: 'Registered successfully', did, realDwnDid: realDid, dwn: getDwnInfo(users[email]), remoteProvision, emailVerificationSent: true });
 }));
 
 router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {

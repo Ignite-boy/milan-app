@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const realDwn = require('./realDwnNodeClient');
 const realDwnEngine = require('./realDwnEngine');
+const supabaseDatabase = require('../utils/supabaseDatabase');
 
 // MILAN V49 PRODUCTION DWN RULE:
 // 1 user = 1 DID = 1 isolated production DWN space.

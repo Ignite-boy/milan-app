@@ -312,6 +312,46 @@
   ],
   "e1d4ed1e-3cd5-48be-9961-864ef5ece8cd": [
     {
+      "id": "1787553175399-90a02cbd44cda",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-24T06:32:55.399Z"
+    },
+    {
+      "id": "1787552688191-8f22a41b3056d",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-24T06:24:48.191Z"
+    },
+    {
+      "id": "1787492587233-88a692dc4417d",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T13:43:07.233Z"
+    },
+    {
+      "id": "1787492042944-01467e2b5e89a",
+      "action": "auth.login",
+      "details": {
+        "email": "np7218468@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T13:34:02.944Z"
+    },
+    {
       "id": "1787488578546-8c4f240bb9869",
       "action": "profile.updated",
       "details": {},
@@ -1043,6 +1083,132 @@
         }
       },
       "at": "2026-08-23T11:46:22.044Z"
+    }
+  ],
+  "0fa97fc4-f382-4005-99a0-225d8caad83e": [
+    {
+      "id": "1787489019965-00113410a5e8c8",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6MkrBYJ4Z5VpPpRpDJKexpk2DnuCybmbi85788YacqnNPSW",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279",
+        "remoteProvision": {
+          "ok": true,
+          "endpoint": "http://127.0.0.1:5000",
+          "response": {
+            "ok": true,
+            "accepted": true,
+            "embeddedDwnNode": true,
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "spaceId": "milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279",
+            "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279",
+            "manifest": {
+              "ok": true,
+              "app": "MILAN",
+              "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+              "version": "49.0.0",
+              "realDwnProtocol": true,
+              "sdkReady": true,
+              "embeddedDwnNode": true,
+              "userIsolation": "did-based-one-user-one-dwn-space",
+              "spaceId": "milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279",
+              "ownerDid": "did:key:z6MkrBYJ4Z5VpPpRpDJKexpk2DnuCybmbi85788YacqnNPSW",
+              "userId": "0fa97fc4-f382-4005-99a0-225d8caad83e",
+              "email": "rohit@gmail.com",
+              "profile": {
+                "display_name": "rohit",
+                "bio": "",
+                "website": "",
+                "avatar": "",
+                "updated_at": "2026-08-23T12:43:39.286Z"
+              },
+              "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279",
+              "recordsRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279\\records",
+              "mediaRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-0fa97fc4-f382-4005-99a0-225d8caad83e-0fcc5279\\media",
+              "createdAt": "2026-08-23T12:43:38.895Z",
+              "updatedAt": "2026-08-23T12:43:39.326Z"
+            }
+          },
+          "provisionedAt": "2026-08-23T12:43:39.354Z"
+        }
+      },
+      "at": "2026-08-23T12:43:39.965Z"
+    }
+  ],
+  "1e31614a-c1cf-4c13-8cff-5d8207800f7b": [
+    {
+      "id": "1787489071102-5832228fc3342",
+      "action": "profile.updated",
+      "details": {},
+      "at": "2026-08-23T12:44:31.102Z"
+    },
+    {
+      "id": "1787489055337-87efc5caf6ce48",
+      "action": "auth.login",
+      "details": {
+        "email": "rohit1@gmail.com",
+        "ip": "::1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+      },
+      "at": "2026-08-23T12:44:15.337Z"
+    },
+    {
+      "id": "1787489046134-6efef8dadc4e6",
+      "action": "identity.created",
+      "details": {
+        "did": "did:key:z6Mkh2sxGMtdjtVd3Rqa7Vtzk7HpCgAqUZievxmo6MDVcpGt",
+        "realDwnDid": true,
+        "dwnEndpoint": "http://127.0.0.1:5000/api/isolated-dwn/milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c",
+        "dwnMode": "production-remote-dwn",
+        "isolation": "single-user",
+        "spaceId": "milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c",
+        "remoteProvision": {
+          "ok": true,
+          "endpoint": "http://127.0.0.1:5000",
+          "response": {
+            "ok": true,
+            "accepted": true,
+            "embeddedDwnNode": true,
+            "realDwnProtocol": true,
+            "sdkReady": true,
+            "spaceId": "milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c",
+            "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c",
+            "manifest": {
+              "ok": true,
+              "app": "MILAN",
+              "node": "MILAN_V49_EMBEDDED_PRODUCTION_DWN",
+              "version": "49.0.0",
+              "realDwnProtocol": true,
+              "sdkReady": true,
+              "embeddedDwnNode": true,
+              "userIsolation": "did-based-one-user-one-dwn-space",
+              "spaceId": "milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c",
+              "ownerDid": "did:key:z6Mkh2sxGMtdjtVd3Rqa7Vtzk7HpCgAqUZievxmo6MDVcpGt",
+              "userId": "1e31614a-c1cf-4c13-8cff-5d8207800f7b",
+              "email": "rohit1@gmail.com",
+              "profile": {
+                "display_name": "rohit",
+                "bio": "",
+                "website": "",
+                "avatar": "",
+                "updated_at": "2026-08-23T12:44:05.150Z"
+              },
+              "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c",
+              "recordsRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c\\records",
+              "mediaRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-1e31614a-c1cf-4c13-8cff-5d8207800f7b-bff6566c\\media",
+              "createdAt": "2026-08-23T12:44:04.592Z",
+              "updatedAt": "2026-08-23T12:44:05.165Z"
+            }
+          },
+          "provisionedAt": "2026-08-23T12:44:05.178Z"
+        }
+      },
+      "at": "2026-08-23T12:44:06.134Z"
     }
   ]
 }
