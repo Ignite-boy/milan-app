@@ -39,73 +39,41 @@ function makeDid() {
 async function readUsers() {
   const supabase = getSupabase();
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .download(AUTH_FILE);
+  const { data, error } = await supabase
+    .from('users')
+    .select('id,email,password_hash,name,did,created_at,updated_at');
 
-  if (error) {
-    const message = String(error.message || '');
-    if (/not found|404|no such/i.test(message)) return {};
-    throw error;
+  if (error) throw error;
+
+  const users = {};
+  for (const user of data || []) {
+    if (user.email) users[String(user.email).toLowerCase()] = user;
   }
 
-  const text = await data.text();
-  if (!text.trim()) return {};
-
-  const parsed = JSON.parse(text);
-  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  return users;
 }
+
 
 async function writeUsers(users) {
   const supabase = getSupabase();
 
-  const authBody = JSON.stringify(users, null, 2);
+  const rows = Object.values(users || {}).map((user) => ({
+    id: user.id,
+    email: user.email,
+    password_hash: user.password_hash,
+    name: user.name || user.email?.split('@')[0] || '',
+    did: user.did || null,
+  }));
 
-  let { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(AUTH_FILE, authBody, {
-      contentType: 'application/json',
-      upsert: true,
-    });
+  if (!rows.length) return;
 
-  if (error) throw error;
-
-  let mirror = {};
-  try {
-    const existing = await supabase.storage.from(BUCKET).download(USERS_FILE);
-    if (!existing.error && existing.data) {
-      const text = await existing.data.text();
-      if (text.trim()) mirror = JSON.parse(text) || {};
-    }
-  } catch (_) {}
-
-  for (const [email, user] of Object.entries(users)) {
-    const old = mirror[email] || {};
-    mirror[email] = {
-      ...old,
-      ...user,
-      profile: {
-        ...(old.profile || {}),
-        display_name: user.name,
-      },
-      settings: {
-        ...(old.settings || {}),
-      },
-      tokenVersion: Number(old.tokenVersion || 0),
-    };
-  }
-
-  const mirrorBody = JSON.stringify(mirror, null, 2);
-
-  ({ error } = await supabase.storage
-    .from(BUCKET)
-    .upload(USERS_FILE, mirrorBody, {
-      contentType: 'application/json',
-      upsert: true,
-    }));
+  const { error } = await supabase
+    .from('users')
+    .upsert(rows, { onConflict: 'id' });
 
   if (error) throw error;
 }
+
 
 function signToken(user) {
   if (!JWT) throw new Error('JWT_SECRET is not configured in production');

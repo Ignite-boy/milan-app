@@ -736,5 +736,63 @@
       "codeHash": "cd95159a4dbf8402f20a2136145190fed4a63d5e3048a68d7b2668beda015ec5",
       "expires": 1787644040046
     }
+  },
+  "aple@gmail.com": {
+    "id": "62bd10ba-0994-43f8-9c2d-25d9e660712a",
+    "email": "aple@gmail.com",
+    "password_hash": "$2a$10$vF4gSBBLa1m8T3T9Vz7bZuaDwbH0SLM0O92CY.ESW8iImNumR3nuK",
+    "did": "did:key:z6MkvmcbgfSzaAndrkTSWehWQTDDm48kUwQuyiZTAB8ysDXm",
+    "raw_seed": "446396667de7f2f60bb0f375dee5a3aca3cf95c90c4911b62dd46c67b33b96fc",
+    "dwnEndpoint": "https://dwn.milanlife.in/api/isolated-dwn/milan-62bd10ba-0994-43f8-9c2d-25d9e660712a-f6948a1b",
+    "dwn": {
+      "endpoint": "https://dwn.milanlife.in/api/isolated-dwn/milan-62bd10ba-0994-43f8-9c2d-25d9e660712a-f6948a1b",
+      "mode": "production-remote-dwn",
+      "realCloudConfigured": true,
+      "assignedAt": "2026-08-24T10:23:34.463Z",
+      "didServiceId": "#dwn",
+      "isolation": "single-user",
+      "spaceId": "milan-62bd10ba-0994-43f8-9c2d-25d9e660712a-f6948a1b",
+      "storageRoot": "D:\\milan-app\\backend\\dwn\\isolated-users\\milan-62bd10ba-0994-43f8-9c2d-25d9e660712a-f6948a1b",
+      "policy": {
+        "ownerOnlyByDefault": true,
+        "sharingRequiresExplicitDIDPermission": true,
+        "adminCanSeePrivatePayloads": false,
+        "isolatedPerUser": true,
+        "cloudAuthoritative": true
+      },
+      "remoteProvision": {
+        "ok": false,
+        "endpoint": "https://dwn.milanlife.in",
+        "error": "Production DWN node request failed: 530 on /api/dwn/users/provision",
+        "provisionedAt": "2026-08-24T10:23:34.931Z"
+      },
+      "realDwnDid": true
+    },
+    "profile": {
+      "display_name": "hjjf",
+      "bio": "",
+      "website": "",
+      "avatar": "",
+      "updated_at": "2026-08-24T10:23:34.578Z"
+    },
+    "settings": {
+      "theme": "dark",
+      "accent": "blue",
+      "dwnMode": "production-remote-dwn",
+      "dwnEndpoint": "https://dwn.milanlife.in/api/isolated-dwn/milan-62bd10ba-0994-43f8-9c2d-25d9e660712a-f6948a1b",
+      "realCloudDwnConfigured": true,
+      "dwnIsolation": "single-user",
+      "dwnSpaceId": "milan-62bd10ba-0994-43f8-9c2d-25d9e660712a-f6948a1b",
+      "realDwnProtocol": false,
+      "realDwnDid": true
+    },
+    "login_count": 0,
+    "created_at": "2026-08-24T10:23:34.578Z",
+    "emailVerified": false,
+    "emailVerification": {
+      "tokenHash": "8e9d3ef7c6b8c0e735cdf601b77a94b5f56ee01408554d2c52c77613eff0060b",
+      "codeHash": "e0adaf16f6becedcc1f7d2927f3439a7b3a3f4e89b5b5678f5e0df0d879028a1",
+      "expires": 1787653414931
+    }
   }
 }
