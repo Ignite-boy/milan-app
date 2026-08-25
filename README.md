@@ -1,146 +1,242 @@
-# MILAN App — V3 Engagement Engine
+# MILAN
 
-> **MILAN V3 — 500 Techniques Upgrade** | Your Space. Your People.
+> **Your Space. Your People.**
+>
+> A privacy-first social platform built around user-owned identity, DID-based access, and DWN-backed data persistence.
 
-## 🚀 What's New in V3 (500 Techniques Engagement System)
+[![Production](https://img.shields.io/badge/production-milanlife.in-111827?style=flat-square)](https://milanlife.in)
+[![DWN](https://img.shields.io/badge/storage-Mini--DWN-4f46e5?style=flat-square)](https://dwn.milanlife.in)
+[![Node.js](https://img.shields.io/badge/backend-Node.js-16a34a?style=flat-square)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-2563eb?style=flat-square)](https://www.postgresql.org/)
 
-### ✦ Avatar Jaadu (Techniques #1–100)
-- **Story-ring gradient border** around all profile avatars (rotating MILAN-gradient conic animation)
-- **Breathing neon border** on every avatar (pulse animation with brand colors)
-- **3D hover rotation** on profile pictures (CSS perspective transform on hover)
-- **Bouncy pop animation** on avatar upload/tap (spring physics keyframe)
-- **Mini confetti burst** on avatar long-press or tap (canvas particle system anchored to element)
-- **Neon drop-shadow glow** on chat thumbnail avatars
-- **Glassmorphism hover-card** on all profile cards
+## Overview
 
-### ✦ UI/UX Jaadu (Techniques #101–200)
-- **MILAN gradient** applied to empty states, CTA buttons, bottom nav active states
-- **Lottie-style logo animation** on brand logo (glow pulse)
-- **Dynamic dark mode neon accents** (text-shadow glow on headings in dark mode)
-- **120Hz smooth transitions** on all cards, posts, people rows
-- **Time-of-day background gradient** (dawn/morning/day/evening/night ambients)
-- **MILAN gradient bottom nav** active indicator
+MILAN is a modern social platform designed around a simple principle:
 
-### ✦ Gamification & Retention (Techniques #201–300)
-- **RPG Level Badge** (Lv.1–∞) shown in sidebar with level-up animation
-- **XP Bar** with animated MILAN gradient fill (200 XP per level)
-- **Daily Login Streak Calendar** (7-day grid, fire indicator for active days)
-- **Badge Wall** (8 badges: Hot Streak, Diamond, Explorer, Connected, Creator, Champion + locked)
-- **Mystery Reward Popup** (animated reveal modal with confetti on claim)
-- **Streak milestones** (confetti + reward at 3, 7, 14, 30, 60, 100 days)
-- **Milestone detection** at 10, 50, 100, 500, 1000, 5000 connections
-- **"You're on a roll!"** ambient encouragement toast every 5 actions
-- **Exclusive Avatar Frames** (gold conic, diamond rainbow CSS frames)
-- **Animated Leaderboard** rows with rank styling (🥇🥈🥉)
+> **One User = One DID = One Isolated DWN Space**
 
-### ✦ Advanced AI & Personalization (Techniques #301–400)
-- **AI Chips** on composer: Smart Caption, Style Filter, Best Time to Post, Auto-Translate, Target Audience
-- **Typing indicator** component (`milanShowTyping()`) for comments/chat
+The application combines a polished social experience with an ownership-oriented data model. Identity is DID-based, user profile data is persisted through the production DWN node, and Mini-DWN uses PostgreSQL for durable record storage.
 
-### ✦ Frontend & Backend Architecture (Techniques #401–500)
-- **Live indicator badge** in feed header (WebSocket-style green dot)
-- **V3 Backend XP routes**: `GET /api/v3/xp/:userId`, `POST /api/v3/xp/:userId/award`
-- **V3 Streak routes**: `POST /api/v3/streak/:userId` (tracks streak server-side)
-- **V3 Badge routes**: `GET /api/v3/badges/:userId`
-- **V3 Leaderboard**: `GET /api/v3/leaderboard` (top 10 by XP)
-- **Haptic feedback** on all primary button interactions (`navigator.vibrate`)
+### Production
 
----
+- **Web:** https://milanlife.in
+- **DWN node:** https://dwn.milanlife.in
+- **DWN health:** `GET /health`
+- **DWN protocol gateway:** `POST /json-rpc`
 
-# MILAN App - One User, One Isolated DWN
+## Core Architecture
 
-This build implements the required MILAN architecture:
+```text
+┌───────────────────────────────┐
+│          MILAN Web App        │
+│   Social UI • Profiles • Feed │
+└───────────────┬───────────────┘
+                │ HTTPS
+                ▼
+┌───────────────────────────────┐
+│      MILAN Backend / API      │
+│ Auth • Profiles • Social APIs │
+└───────────────┬───────────────┘
+                │ JSON-RPC
+                ▼
+┌───────────────────────────────┐
+│        Mini-DWN Node          │
+│ Records • DID-scoped storage  │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│          PostgreSQL           │
+│ Durable DWN record persistence│
+└───────────────────────────────┘
+```
 
-> One User = One DID = One Isolated DWN Space
+The application keeps the authoritative profile record on the production DWN node rather than depending solely on browser-local state. This includes profile pictures: upload, read-back, logout, and login restore all use the persisted DWN record path.
 
-Every user gets a separate DWN endpoint identity and a separate storage root under `backend/dwn-data/isolated-users/`. User records and media are written into that user's own isolated storage directory. Other users can only read records when the owner explicitly shares the record with their DID.
+## Identity & Data Ownership
 
-## What is included
+MILAN is built around DID-based identity and isolated user storage.
 
-- MILAN web app and backend.
-- Per-user isolated DWN provisioning on registration/login.
-- DID-based user identity.
-- Owner-only default storage policy.
-- `private`, `public`, and `shared_did` access modes.
-- Explicit DID sharing and access request approval.
-- Reels-style media viewing and streaming uploads.
-- Docker local DID-DHT gateway files included in the complete stack.
-- DWN CLI installer included and patched to use local DID-DHT gateway.
+- One registered user receives one DID-backed identity.
+- Profile records are addressed using the user's DID.
+- Profile media is stored as a DWN record and read back from the DWN node.
+- Access control supports private, public, and DID-based sharing models.
+- The architecture is designed so storage infrastructure can evolve without rewriting the frontend permission model.
 
-## Run MILAN App
+### Profile picture persistence
 
-```cmd
-cd milan-app\backend
+Profile pictures are stored as a dedicated DWN record:
+
+```text
+profile-picture:<user DID>
+```
+
+The live profile flow is:
+
+```text
+Upload
+  ↓
+MILAN API
+  ↓
+Mini-DWN JSON-RPC
+  ↓
+PostgreSQL-backed DWN storage
+  ↓
+Read after logout/login
+  ↓
+Profile restored
+```
+
+## Product Surface
+
+MILAN includes a social product layer with:
+
+- Home, public, friends, and personal feeds
+- Profile editing and persistent avatars
+- DID-based people discovery and friend requests
+- Reactions, comments, notifications, and messaging
+- Image, video, and text publishing
+- Privacy modes for private, public, and shared-DID content
+- Media upload and streaming workflows
+- Dark-mode friendly premium UI with motion and interaction polish
+
+## Engagement & Experience Layer
+
+The current product also includes an extended engagement system covering:
+
+- Animated profile/avatar treatments
+- Gradient and motion-based UI accents
+- XP and level progression
+- Daily streaks and milestone rewards
+- Badge and leaderboard concepts
+- Smart composer/AI interaction chips
+- Live activity indicators
+- Haptic feedback on supported devices
+
+These features are designed as product-layer enhancements on top of the identity and data architecture rather than as replacements for it.
+
+## Local Development
+
+### Backend
+
+```bash
+cd backend
 npm install
 npm start
 ```
 
-Open:
+Local application endpoint:
 
-```txt
+```text
 http://localhost:5000
 ```
 
-## Per-user isolated DWN model
+### Local Mini-DWN
 
-For every registered user, the backend creates:
-
-```txt
-backend/dwn-data/isolated-users/<spaceId>/manifest.json
-backend/dwn-data/isolated-users/<spaceId>/records/
-backend/dwn-data/isolated-users/<spaceId>/media/
-backend/dwn-data/isolated-users/<spaceId>/audit/
+```bash
+cd mini-dwn
+sudo docker compose -f docker/docker-compose.yml up -d
 ```
 
-The DID document exposes the user's own DWN service endpoint.
+Verify the node:
 
-## Start local DID-DHT Gateway
-
-From the complete stack root:
-
-```cmd
-start-did-dht-gateway.bat
+```bash
+curl -sS http://localhost:3000/health
 ```
 
-Keep the gateway window open while creating `did:dht` identifiers.
+Expected shape:
 
-## Create DID through DWN CLI
-
-```cmd
-cd dwn-cli-installer\dwn-cli-sample
-node .\bin\run.js create-did --password "YourStrongPasswordHere"
+```json
+{
+  "database": true,
+  "ok": true,
+  "service": "mini-dwn",
+  "storage": "postgresql"
+}
 ```
 
-## Stop Docker after work
+### Local JSON-RPC
 
-```cmd
-stop-docker-after-work.bat
+Mini-DWN exposes the DWN protocol gateway at:
+
+```text
+POST http://localhost:3000/json-rpc
 ```
 
-## Production notes
+## Production Deployment
 
-For production, move isolated DWN spaces from local folders into managed isolated containers/VPS instances per user or per tenant. The app is now structured around the isolation model, so the storage backend can be upgraded without changing the frontend permission logic.
+The production application is deployed on Vercel, while the authoritative Mini-DWN node is exposed through the production DWN endpoint.
 
+Production environment configuration should use:
 
-## MILAN Social Boom Upgrade
+```text
+MINI_DWN_ENDPOINT=https://dwn.milanlife.in
+```
 
-This build adds a Milan-style social layer while keeping the original privacy promise:
+Verify the production node before testing profile persistence:
 
-- Home feed, public feed, friends feed, and my posts.
-- People discovery and DID-based friend requests.
-- Reactions, comments, notifications, and profile editing.
-- Image/video/text posts with privacy modes: private, public, shared DID.
-- Every record remains stored under the owner's isolated DWN-backed space.
-- Other users only see a record if its owner selected public or granted DID-level permission.
+```bash
+curl -sS https://dwn.milanlife.in/health
+```
 
-Run order:
-1. start-docker-engine.bat
-2. start-did-dht-gateway.bat
-3. start-milan-app.bat
-4. Open http://localhost:5000
+And verify the protocol endpoint:
 
-Recommended quick test:
-1. Register User A and create a private post.
-2. Register User B and confirm User A private post is hidden.
-3. User A creates public post and confirm it appears in public feed.
-4. User A shares a private post with User B DID and confirm only User B can see it.
+```bash
+curl -sS -X POST https://dwn.milanlife.in/json-rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"dwn.processMessage","params":{"target":"did:milan:test","message":{"descriptor":{"interface":"Records","method":"Query"},"authorization":{"payload":"e30","signatures":[]}}}}'
+```
+
+## Repository Structure
+
+```text
+milan-app/
+├── frontend/          # Web application and static assets
+├── backend/           # Node.js API, auth, profile and social services
+├── mini-dwn/          # Mini-DWN node and PostgreSQL-backed storage
+├── api/                # Deployment/serverless entry points when applicable
+├── vercel.json         # Production routing/configuration
+└── README.md           # Project documentation
+```
+
+## Security & Reliability Principles
+
+MILAN's infrastructure is built with a few non-negotiable principles:
+
+1. **Persist before trusting the UI.** Client-side cache is treated as convenience, not authoritative storage.
+2. **DID-scoped records.** User-owned records are addressed and isolated by DID.
+3. **HTTPS in production.** Production services communicate over the public HTTPS DWN endpoint.
+4. **Resilient upstream calls.** Transient Mini-DWN failures such as rate limiting or gateway errors should be handled with bounded retry/backoff rather than immediately surfacing as permanent profile failures.
+5. **Stable fixes stay stable.** Changes should be narrowly scoped and should preserve already-verified functionality.
+
+## Quick Verification Checklist
+
+After a production deployment:
+
+```text
+[ ] https://milanlife.in loads
+[ ] https://dwn.milanlife.in/health returns 200
+[ ] /json-rpc returns JSON
+[ ] Login succeeds with a fresh token
+[ ] Profile read returns avatarRecordId when a DP exists
+[ ] DP upload succeeds
+[ ] Logout succeeds
+[ ] Login restores the persisted DP
+```
+
+## Roadmap
+
+MILAN is structured to continue evolving across three layers:
+
+- **Product:** better discovery, communication, creation, and engagement
+- **Identity:** stronger DID lifecycle and user-controlled permissions
+- **Infrastructure:** more resilient DWN hosting, observability, backups, and scalable isolated storage
+
+## License
+
+This repository is maintained as the MILAN application codebase. Licensing and contribution terms should be confirmed from the repository owner's current policy before redistribution.
+
+---
+
+**MILAN**  
+*Your Space. Your People.*
