@@ -573,3 +573,143 @@
     // Public helper for future UI refreshes.
     window.milanRefreshHomeFeed = loadMilanHomeFeed;
 })();
+
+/* =========================================================
+   MILAN — FINAL PUBLISH → DWN → FEED SYNC
+   Guarantees the composer publish button refreshes the
+   live Home Feed after a successful DWN record write.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    function bindFinalPublisher() {
+        const oldButton = document.getElementById("publishBtn");
+        if (!oldButton || oldButton.dataset.finalDwnPublisher === "1") return;
+
+        // Clone removes every previous click listener without touching the UI.
+        const button = oldButton.cloneNode(true);
+        oldButton.replaceWith(button);
+        button.dataset.finalDwnPublisher = "1";
+
+        button.addEventListener("click", async function () {
+            const textarea = document.getElementById("postText");
+            const token =
+                localStorage.getItem("milan_token") ||
+                localStorage.getItem("milanToken") ||
+                "";
+
+            const text = String(textarea?.value || "").trim();
+
+            if (!text) {
+                alert("Write something first.");
+                textarea?.focus();
+                return;
+            }
+
+            if (!token) {
+                alert("Please login again.");
+                return;
+            }
+
+            const privacyTool =
+                document.querySelector(".composer-tools .tool:last-child");
+
+            const accessMode =
+                privacyTool?.dataset?.privacy === "public"
+                    ? "public"
+                    : "private";
+
+            const originalText = button.textContent;
+
+            try {
+                button.disabled = true;
+                button.textContent = "Saving…";
+
+                const response = await fetch("/api/records", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token,
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        title: "MILAN Quote",
+                        data: {
+                            kind: "quote",
+                            text,
+                            createdAt: new Date().toISOString()
+                        },
+                        dataFormat: "application/json",
+                        accessMode,
+                        sharedWithDids: [],
+                        tags: ["quote"]
+                    })
+                });
+
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        result.detail ||
+                        ("DWN save failed: HTTP " + response.status)
+                    );
+                }
+
+                // Clear composer only after successful DWN write.
+                textarea.value = "";
+
+                button.textContent = "Saved ✓";
+
+                console.log("[MILAN] Quote saved successfully:", result);
+
+                // Refresh live Home Feed from DWN/API.
+                if (typeof window.milanRefreshHomeFeed === "function") {
+                    await window.milanRefreshHomeFeed();
+                } else {
+                    // Fallback: trigger a normal page-level feed event.
+                    window.dispatchEvent(
+                        new CustomEvent("milan:dwn-record-created", {
+                            detail: result
+                        })
+                    );
+                }
+
+                // Scroll the newly updated feed into view.
+                const feed = document.getElementById("milanHomeFeed");
+                if (feed) {
+                    setTimeout(() => {
+                        feed.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                    }, 100);
+                }
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 1000);
+
+            } catch (error) {
+                console.error("[MILAN] Publish → DWN → Feed failed:", error);
+
+                button.textContent = originalText;
+                button.disabled = false;
+
+                alert(
+                    "Post could not be saved.\n\n" +
+                    (error.message || "Unknown error")
+                );
+            }
+        });
+
+        console.log("[MILAN] Final DWN publish/feed sync active.");
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindFinalPublisher);
+    } else {
+        bindFinalPublisher();
+    }
+})();
