@@ -296,7 +296,13 @@ router.put('/', auth, async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const { display_name, bio, website, avatar } = req.body || {};
+  const {
+    display_name,
+    username,
+    bio,
+    website,
+    avatar
+  } = req.body || {};
 
   try {
     let dwnPicture = null;
@@ -307,14 +313,48 @@ router.put('/', auth, async (req, res) => {
       dwnPicture = await readProfilePicture(found.user.did);
     }
 
+    const cleanName = String(display_name || '').trim().slice(0, 80);
+    const cleanUsername = String(username || '')
+      .trim()
+      .replace(/^@+/, '')
+      .toLowerCase()
+      .slice(0, 30);
+
+    if (
+      cleanUsername &&
+      !/^[a-z0-9._]{3,30}$/.test(cleanUsername)
+    ) {
+      return res.status(400).json({
+        error: 'Username must be 3–30 characters using letters, numbers, dot or underscore.'
+      });
+    }
+
     found.user.profile = {
-      display_name: String(display_name || '').trim(),
-      bio: String(bio || '').trim(),
-      website: String(website || '').trim(),
+      ...(found.user.profile || {}),
+      display_name: cleanName,
+      username: cleanUsername,
+      bio: String(bio || '').trim().slice(0, 500),
+      website: String(website || '').trim().slice(0, 200),
       avatar: dwnPicture?.avatar || '',
-      avatarRecordId: dwnPicture?.recordId || profileRecordId(found.user.did),
+      avatarRecordId:
+        dwnPicture?.recordId ||
+        profileRecordId(found.user.did),
       updated_at: new Date().toISOString()
     };
+
+    if (found.user.id && cleanName) {
+      const { error: nameError } = await supabaseDb
+        .from('users')
+        .update({ name: cleanName })
+        .eq('id', found.user.id);
+
+      if (nameError) {
+        throw new Error(
+          'Profile name database update failed: ' +
+          nameError.message
+        );
+      }
+    }
 
     users[found.email] = found.user;
     writeJson(global.usersFile, users);

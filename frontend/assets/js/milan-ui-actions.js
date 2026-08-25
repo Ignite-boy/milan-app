@@ -228,7 +228,7 @@
         const editProfile = $("editProfileBtn");
 
         if (editProfile) {
-            editProfile.onclick = () => go("/settings");
+            editProfile.onclick = () => openEditProfileModal();
         }
 
         if (navButtons[8]) {
@@ -281,6 +281,718 @@
                 go("/app?view=notifications");
         }
     }
+
+
+    /* =========================================================
+       EDIT PROFILE — SAME PAGE LIVE MODAL
+       ========================================================= */
+
+    let editProfileBackdrop = null;
+
+    function editProfileCss() {
+        if ($("milan-edit-profile-css")) return;
+
+        const style = document.createElement("style");
+        style.id = "milan-edit-profile-css";
+
+        style.textContent = `
+            #milanEditProfileBackdrop{
+                position:fixed;
+                inset:0;
+                z-index:9999;
+                display:grid;
+                place-items:center;
+                padding:20px;
+                background:rgba(2,6,23,.72);
+                backdrop-filter:blur(12px);
+            }
+
+            #milanEditProfileModal{
+                width:min(560px,100%);
+                max-height:min(88vh,760px);
+                overflow:auto;
+                background:#0f172a;
+                color:#e8edf5;
+                border:1px solid #263551;
+                border-radius:22px;
+                box-shadow:0 28px 80px rgba(0,0,0,.48);
+            }
+
+            .milan-edit-head{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                padding:20px 22px;
+                border-bottom:1px solid #1e293b;
+            }
+
+            .milan-edit-head h2{
+                margin:0;
+                font-size:20px;
+            }
+
+            .milan-edit-head span{
+                display:block;
+                margin-top:3px;
+                color:#94a3b8;
+                font-size:12px;
+            }
+
+            .milan-edit-close{
+                width:36px;
+                height:36px;
+                border:0;
+                border-radius:50%;
+                background:#1e293b;
+                color:#e8edf5;
+                cursor:pointer;
+                font-size:20px;
+            }
+
+            .milan-edit-body{
+                padding:22px;
+            }
+
+            .milan-edit-photo-row{
+                display:flex;
+                align-items:center;
+                gap:16px;
+                margin-bottom:22px;
+            }
+
+            .milan-edit-photo{
+                width:76px;
+                height:76px;
+                border-radius:50%;
+                overflow:hidden;
+                background:#263551;
+                background-size:cover;
+                background-position:center;
+                display:grid;
+                place-items:center;
+                font-size:24px;
+                flex:none;
+            }
+
+            .milan-edit-photo-actions button{
+                border:1px solid #334155;
+                background:#1e293b;
+                color:#e8edf5;
+                border-radius:10px;
+                padding:8px 12px;
+                cursor:pointer;
+            }
+
+            .milan-edit-field{
+                margin-bottom:16px;
+            }
+
+            .milan-edit-field label{
+                display:block;
+                margin-bottom:7px;
+                font-size:12px;
+                font-weight:700;
+                color:#cbd5e1;
+            }
+
+            .milan-edit-field input,
+            .milan-edit-field textarea{
+                width:100%;
+                border:1px solid #293851;
+                background:#0a0e1a;
+                color:#e8edf5;
+                border-radius:12px;
+                padding:11px 13px;
+                outline:none;
+                font:inherit;
+            }
+
+            .milan-edit-field textarea{
+                min-height:110px;
+                resize:vertical;
+            }
+
+            .milan-edit-field input:focus,
+            .milan-edit-field textarea:focus{
+                border-color:#6366f1;
+                box-shadow:0 0 0 3px rgba(99,102,241,.14);
+            }
+
+            .milan-edit-username-wrap{
+                position:relative;
+            }
+
+            .milan-edit-username-wrap span{
+                position:absolute;
+                left:13px;
+                top:11px;
+                color:#64748b;
+                pointer-events:none;
+            }
+
+            .milan-edit-username-wrap input{
+                padding-left:28px;
+            }
+
+            .milan-edit-footer{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+                padding:16px 22px;
+                border-top:1px solid #1e293b;
+            }
+
+            .milan-edit-status{
+                min-height:18px;
+                font-size:12px;
+                color:#94a3b8;
+            }
+
+            .milan-edit-actions{
+                display:flex;
+                gap:8px;
+            }
+
+            .milan-edit-actions button{
+                border:0;
+                border-radius:999px;
+                padding:9px 17px;
+                cursor:pointer;
+                font-weight:700;
+            }
+
+            .milan-edit-cancel{
+                background:#1e293b;
+                color:#cbd5e1;
+            }
+
+            .milan-edit-save{
+                background:#6366f1;
+                color:#fff;
+            }
+
+            .milan-edit-save:disabled{
+                opacity:.6;
+                cursor:wait;
+            }
+        `;
+
+        document.head.appendChild(style);
+    }
+
+    function closeEditProfileModal() {
+        editProfileBackdrop?.remove();
+        editProfileBackdrop = null;
+        document.body.style.overflow = "";
+    }
+
+    async function openEditProfileModal() {
+        if (editProfileBackdrop) return;
+
+        const token = getToken();
+
+        if (!token) {
+            return;
+        }
+
+        editProfileCss();
+
+        editProfileBackdrop =
+            document.createElement("div");
+
+        editProfileBackdrop.id =
+            "milanEditProfileBackdrop";
+
+        editProfileBackdrop.innerHTML = `
+            <div id="milanEditProfileModal" role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="milanEditProfileTitle">
+
+                <div class="milan-edit-head">
+                    <div>
+                        <h2 id="milanEditProfileTitle">
+                            Edit Profile
+                        </h2>
+                        <span>
+                            Keep your MILAN identity up to date.
+                        </span>
+                    </div>
+
+                    <button type="button"
+                            class="milan-edit-close"
+                            aria-label="Close">
+                        ×
+                    </button>
+                </div>
+
+                <div class="milan-edit-body">
+
+                    <div class="milan-edit-photo-row">
+                        <div id="milanEditPhoto"
+                             class="milan-edit-photo">
+                            M
+                        </div>
+
+                        <div class="milan-edit-photo-actions">
+                            <button type="button"
+                                    id="milanEditPhotoBtn">
+                                Change photo
+                            </button>
+                            <input id="milanEditPhotoInput"
+                                   type="file"
+                                   accept="image/*"
+                                   hidden>
+                        </div>
+                    </div>
+
+                    <div class="milan-edit-field">
+                        <label for="milanEditName">
+                            Full Name
+                        </label>
+                        <input id="milanEditName"
+                               maxlength="80"
+                               autocomplete="name">
+                    </div>
+
+                    <div class="milan-edit-field">
+                        <label for="milanEditUsername">
+                            Username
+                        </label>
+
+                        <div class="milan-edit-username-wrap">
+                            <span>@</span>
+                            <input id="milanEditUsername"
+                                   maxlength="30"
+                                   autocomplete="username"
+                                   placeholder="yourname">
+                        </div>
+                    </div>
+
+                    <div class="milan-edit-field">
+                        <label for="milanEditBio">
+                            Bio
+                        </label>
+                        <textarea id="milanEditBio"
+                                  maxlength="500"
+                                  placeholder="Tell people a little about yourself..."></textarea>
+                    </div>
+
+                    <div class="milan-edit-field">
+                        <label for="milanEditWebsite">
+                            Website
+                        </label>
+                        <input id="milanEditWebsite"
+                               maxlength="200"
+                               type="url"
+                               placeholder="https://...">
+                    </div>
+
+                </div>
+
+                <div class="milan-edit-footer">
+                    <div id="milanEditStatus"
+                         class="milan-edit-status"></div>
+
+                    <div class="milan-edit-actions">
+                        <button type="button"
+                                class="milan-edit-cancel">
+                            Cancel
+                        </button>
+
+                        <button type="button"
+                                class="milan-edit-save"
+                                id="milanEditSave">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(
+            editProfileBackdrop
+        );
+
+        document.body.style.overflow =
+            "hidden";
+
+        const modal =
+            $("milanEditProfileModal");
+
+        const status =
+            $("milanEditStatus");
+
+        const close =
+            () => closeEditProfileModal();
+
+        modal
+            ?.querySelector(".milan-edit-close")
+            ?.addEventListener("click", close);
+
+        modal
+            ?.querySelector(".milan-edit-cancel")
+            ?.addEventListener("click", close);
+
+        editProfileBackdrop.addEventListener(
+            "click",
+            (event) => {
+                if (event.target === editProfileBackdrop) {
+                    close();
+                }
+            }
+        );
+
+        try {
+            status.textContent =
+                "Loading your saved profile…";
+
+            const profile =
+                await fetch("/api/profile", {
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token,
+                        "Accept":
+                            "application/json"
+                    },
+                    cache: "no-store"
+                }).then(
+                    async (response) => {
+                        const data =
+                            await response
+                                .json()
+                                .catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(
+                                data.error ||
+                                "Could not load profile."
+                            );
+                        }
+
+                        return data;
+                    }
+                );
+
+            $("milanEditName").value =
+                profile.display_name ||
+                "";
+
+            $("milanEditUsername").value =
+                profile.username ||
+                "";
+
+            $("milanEditBio").value =
+                profile.bio ||
+                "";
+
+            $("milanEditWebsite").value =
+                profile.website ||
+                "";
+
+            const savedAvatar =
+                profile.avatar ||
+                localStorage.getItem(
+                    "milanAvatar"
+                ) ||
+                "";
+
+            const photo =
+                $("milanEditPhoto");
+
+            if (savedAvatar) {
+                photo.style.backgroundImage =
+                    `url("${savedAvatar}")`;
+
+                photo.textContent = "";
+            }
+
+            status.textContent = "";
+
+            const photoBtn =
+                $("milanEditPhotoBtn");
+
+            const photoInput =
+                $("milanEditPhotoInput");
+
+            photoBtn.onclick =
+                () => photoInput.click();
+
+            photoInput.onchange =
+                () => {
+                    const file =
+                        photoInput.files?.[0];
+
+                    if (!file) return;
+
+                    const reader =
+                        new FileReader();
+
+                    reader.onload =
+                        () => {
+                            photo.style.backgroundImage =
+                                `url("${reader.result}")`;
+
+                            photo.textContent = "";
+                        };
+
+                    reader.readAsDataURL(file);
+                };
+
+        } catch (error) {
+            status.textContent =
+                error.message ||
+                "Could not load profile.";
+
+            status.style.color =
+                "#fca5a5";
+
+            return;
+        }
+
+        $("milanEditSave").onclick =
+            async () => {
+                const save =
+                    $("milanEditSave");
+
+                const name =
+                    $("milanEditName")
+                        .value
+                        .trim();
+
+                const username =
+                    $("milanEditUsername")
+                        .value
+                        .trim()
+                        .replace(/^@+/, "")
+                        .toLowerCase();
+
+                const bio =
+                    $("milanEditBio")
+                        .value
+                        .trim();
+
+                const website =
+                    $("milanEditWebsite")
+                        .value
+                        .trim();
+
+                if (!name) {
+                    status.textContent =
+                        "Full Name cannot be empty.";
+
+                    status.style.color =
+                        "#fca5a5";
+
+                    return;
+                }
+
+                if (
+                    username &&
+                    !/^[a-z0-9._]{3,30}$/.test(
+                        username
+                    )
+                ) {
+                    status.textContent =
+                        "Username must be 3–30 characters using letters, numbers, dot or underscore.";
+
+                    status.style.color =
+                        "#fca5a5";
+
+                    return;
+                }
+
+                try {
+                    save.disabled = true;
+                    save.textContent =
+                        "Saving…";
+
+                    status.textContent =
+                        "Updating your profile…";
+
+                    status.style.color =
+                        "#94a3b8";
+
+                    const payload = {
+                        display_name: name,
+                        username,
+                        bio,
+                        website
+                    };
+
+                    const photoInput =
+                        $("milanEditPhotoInput");
+
+                    const file =
+                        photoInput.files?.[0];
+
+                    if (file) {
+                        const avatar =
+                            await new Promise(
+                                (resolve, reject) => {
+                                    const reader =
+                                        new FileReader();
+
+                                    reader.onload =
+                                        () =>
+                                            resolve(
+                                                reader.result
+                                            );
+
+                                    reader.onerror =
+                                        () =>
+                                            reject(
+                                                new Error(
+                                                    "Could not read profile photo."
+                                                )
+                                            );
+
+                                    reader.readAsDataURL(
+                                        file
+                                    );
+                                }
+                            );
+
+                        payload.avatar =
+                            avatar;
+                    }
+
+                    const response =
+                        await fetch(
+                            "/api/profile",
+                            {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                    "Authorization":
+                                        "Bearer " +
+                                        token,
+                                    "Accept":
+                                        "application/json"
+                                },
+                                body:
+                                    JSON.stringify(
+                                        payload
+                                    )
+                            }
+                        );
+
+                    const saved =
+                        await response
+                            .json()
+                            .catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw new Error(
+                            saved.error ||
+                            saved.detail ||
+                            "Profile update failed."
+                        );
+                    }
+
+                    /*
+                     * Live Home update — no page reload.
+                     */
+                    const nameEl =
+                        $("myName");
+
+                    const emailEl =
+                        $("myEmail");
+
+                    if (nameEl) {
+                        nameEl.textContent =
+                            saved.display_name ||
+                            name;
+                    }
+
+                    if (emailEl && token) {
+                        // Email remains unchanged.
+                    }
+
+                    const profileName =
+                        saved.display_name ||
+                        name;
+
+                    document
+                        .querySelectorAll(
+                            ".milan-feed-name"
+                        )
+                        .forEach((el) => {
+                            el.textContent =
+                                profileName;
+                        });
+
+                    if (window.me) {
+                        window.me.profile = {
+                            ...(window.me.profile || {}),
+                            ...saved
+                        };
+
+                        window.me.name =
+                            profileName;
+                    }
+
+                    if (saved.avatar) {
+                        localStorage.setItem(
+                            "milanAvatar",
+                            saved.avatar
+                        );
+
+                        [
+                            "myAvatar",
+                            "composerAvatar"
+                        ].forEach((id) => {
+                            const el = $(id);
+
+                            if (!el) return;
+
+                            el.style.backgroundImage =
+                                `url("${saved.avatar}")`;
+
+                            el.style.backgroundSize =
+                                "cover";
+
+                            el.style.backgroundPosition =
+                                "center";
+
+                            el.textContent = "";
+                        });
+                    }
+
+                    status.textContent =
+                        "Profile updated ✓";
+
+                    status.style.color =
+                        "#86efac";
+
+                    setTimeout(
+                        close,
+                        550
+                    );
+
+                } catch (error) {
+                    console.error(
+                        "[MILAN] Edit Profile save failed:",
+                        error
+                    );
+
+                    status.textContent =
+                        error.message ||
+                        "Profile update failed.";
+
+                    status.style.color =
+                        "#fca5a5";
+
+                    save.disabled =
+                        false;
+
+                    save.textContent =
+                        "Save Changes";
+                }
+            };
+    }
+
 
     /* =========================================================
        COMPOSER TOOLS
