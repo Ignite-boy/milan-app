@@ -713,3 +713,381 @@
         bindFinalPublisher();
     }
 })();
+
+/* =========================================================
+   MILAN — AUTHORITATIVE PUBLISHER
+   FINAL: Composer -> DWN -> Immediate Home Feed
+   ========================================================= */
+(function () {
+    "use strict";
+
+    function token() {
+        return (
+            localStorage.getItem("milan_token") ||
+            localStorage.getItem("milanToken") ||
+            ""
+        );
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (m) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[m]);
+    }
+
+    function extractText(record) {
+        return String(
+            record?.data?.text ||
+            record?.text ||
+            record?.data?.caption ||
+            record?.caption ||
+            ""
+        ).trim();
+    }
+
+    function extractDate(record) {
+        return (
+            record?.dateCreated ||
+            record?.createdAt ||
+            record?.dateModified ||
+            new Date().toISOString()
+        );
+    }
+
+    function makeFeedCard(record, fallbackText = "") {
+        const text = extractText(record) || fallbackText;
+        const recordId =
+            record?.id ||
+            record?.recordId ||
+            record?.dwnRecordId ||
+            ("local-" + Date.now());
+
+        const title =
+            record?.title ||
+            record?.data?.title ||
+            "MILAN Quote";
+
+        const date = new Date(extractDate(record));
+        const when = Number.isNaN(date.getTime())
+            ? "Just now"
+            : date.toLocaleString([], {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+        return `
+            <article class="milan-feed-card" data-record-id="${escapeHtml(recordId)}">
+                <div class="milan-feed-card-head">
+                    <div class="milan-feed-avatar">M</div>
+                    <div class="milan-feed-meta">
+                        <strong class="milan-feed-name">
+                            ${escapeHtml(
+                                document.getElementById("myName")?.textContent?.trim() ||
+                                "Milan User"
+                            )}
+                        </strong>
+                        <span>${escapeHtml(when)}</span>
+                    </div>
+                </div>
+
+                <div class="milan-feed-body">
+                    <h3>${escapeHtml(title)}</h3>
+                    <p>${escapeHtml(text).replace(/\n/g, "<br>")}</p>
+                </div>
+
+                <div class="milan-feed-actions">
+                    <button type="button" data-action="like">♡ Like</button>
+                    <button type="button" data-action="comment">💬 Comment</button>
+                    <button type="button" data-action="share">↗ Share</button>
+                    <button type="button" data-action="save">🔖 Save</button>
+                </div>
+            </article>
+        `;
+    }
+
+    function bindFeedButtons(root) {
+        root.querySelectorAll(".milan-feed-card").forEach((card) => {
+            card.querySelectorAll("[data-action]").forEach((button) => {
+                button.onclick = () => {
+                    const action = button.dataset.action;
+
+                    if (action === "like") {
+                        button.classList.toggle("active");
+                        button.textContent =
+                            button.classList.contains("active")
+                                ? "♥ Liked"
+                                : "♡ Like";
+                    }
+
+                    if (action === "comment") {
+                        const value = prompt("Write a comment");
+                        if (value && value.trim()) {
+                            button.textContent = "💬 Commented";
+                        }
+                    }
+
+                    if (action === "share") {
+                        const shareUrl = window.location.origin + "/app";
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(shareUrl).then(() => {
+                                button.textContent = "✓ Copied";
+                                setTimeout(() => {
+                                    button.textContent = "↗ Share";
+                                }, 1200);
+                            });
+                        }
+                    }
+
+                    if (action === "save") {
+                        button.classList.toggle("active");
+                        button.textContent =
+                            button.classList.contains("active")
+                                ? "✓ Saved"
+                                : "🔖 Save";
+                    }
+                };
+            });
+        });
+    }
+
+    function prependFeedRecord(record, text) {
+        const list = document.getElementById("milanFeedList");
+        if (!list) return;
+
+        const empty = list.querySelector(".milan-feed-empty");
+        if (empty) empty.remove();
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = makeFeedCard(record, text);
+
+        const card = wrapper.firstElementChild;
+        if (!card) return;
+
+        list.prepend(card);
+        bindFeedButtons(list);
+
+        const feed = document.getElementById("milanHomeFeed");
+        if (feed) {
+            setTimeout(() => {
+                feed.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }, 80);
+        }
+    }
+
+    async function loadFeedFromServer() {
+        const list = document.getElementById("milanFeedList");
+        const auth = token();
+
+        if (!list || !auth) return;
+
+        try {
+            const response = await fetch("/api/records", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + auth,
+                    "Accept": "application/json"
+                },
+                cache: "no-store"
+            });
+
+            const payload = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    payload.error ||
+                    payload.detail ||
+                    ("Feed failed: HTTP " + response.status)
+                );
+            }
+
+            const records =
+                Array.isArray(payload)
+                    ? payload
+                    : Array.isArray(payload.records)
+                    ? payload.records
+                    : Array.isArray(payload.items)
+                    ? payload.items
+                    : Array.isArray(payload.entries)
+                    ? payload.entries
+                    : Array.isArray(payload.data)
+                    ? payload.data
+                    : [];
+
+            const valid = records
+                .filter((r) => extractText(r) || r?.title)
+                .sort(
+                    (a, b) =>
+                        new Date(extractDate(b)) -
+                        new Date(extractDate(a))
+                );
+
+            if (!valid.length) {
+                list.innerHTML = `
+                    <div class="milan-feed-empty">
+                        No posts yet. Write your first quote above.
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = valid.map((r) => makeFeedCard(r)).join("");
+            bindFeedButtons(list);
+
+        } catch (error) {
+            console.error("[MILAN] DWN feed read failed:", error);
+        }
+    }
+
+    function installPublisher() {
+        const existing = document.getElementById("publishBtn");
+        if (!existing || existing.dataset.milanAuthoritative === "1") {
+            return;
+        }
+
+        const button = existing.cloneNode(true);
+        existing.replaceWith(button);
+
+        button.dataset.milanAuthoritative = "1";
+
+        button.addEventListener(
+            "click",
+            async function () {
+                const textarea = document.getElementById("postText");
+                const text = String(textarea?.value || "").trim();
+
+                if (!text) {
+                    alert("Write something first.");
+                    textarea?.focus();
+                    return;
+                }
+
+                const auth = token();
+
+                if (!auth) {
+                    alert("Please login again.");
+                    return;
+                }
+
+                const privacyTool =
+                    document.querySelector(
+                        ".composer-tools .tool:last-child"
+                    );
+
+                const accessMode =
+                    privacyTool?.dataset?.privacy === "public"
+                        ? "public"
+                        : "private";
+
+                const original = button.textContent;
+
+                try {
+                    button.disabled = true;
+                    button.textContent = "Saving…";
+
+                    const createdAt = new Date().toISOString();
+
+                    const response = await fetch("/api/records", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + auth,
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            title: "MILAN Quote",
+                            data: {
+                                kind: "quote",
+                                text,
+                                createdAt
+                            },
+                            dataFormat: "application/json",
+                            accessMode,
+                            sharedWithDids: [],
+                            tags: ["quote"]
+                        })
+                    });
+
+                    const saved = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw new Error(
+                            saved.error ||
+                            saved.detail ||
+                            ("DWN write failed: HTTP " + response.status)
+                        );
+                    }
+
+                    console.log("[MILAN] REAL DWN record created:", saved);
+
+                    // Only clear AFTER the DWN write succeeded.
+                    textarea.value = "";
+
+                    // Immediate UI update from the actual returned record.
+                    prependFeedRecord(saved, text);
+
+                    button.textContent = "Saved ✓";
+
+                    // Background consistency check with authoritative DWN/API feed.
+                    setTimeout(() => {
+                        loadFeedFromServer();
+                    }, 1200);
+
+                    setTimeout(() => {
+                        button.textContent = original;
+                        button.disabled = false;
+                    }, 1200);
+
+                } catch (error) {
+                    console.error(
+                        "[MILAN] Publish -> DWN -> Feed failed:",
+                        error
+                    );
+
+                    button.textContent = original;
+                    button.disabled = false;
+
+                    alert(
+                        "Post could not be saved to DWN.\n\n" +
+                        (error.message || "Unknown error")
+                    );
+                }
+            },
+            true
+        );
+
+        console.log("[MILAN] AUTHORITATIVE DWN publisher installed.");
+    }
+
+    function start() {
+        installPublisher();
+
+        const observer = new MutationObserver(() => {
+            const btn = document.getElementById("publishBtn");
+            if (btn && btn.dataset.milanAuthoritative !== "1") {
+                installPublisher();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        loadFeedFromServer();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start);
+    } else {
+        start();
+    }
+})();
