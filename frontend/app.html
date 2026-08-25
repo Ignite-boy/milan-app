@@ -65,7 +65,7 @@
 <div class="app">
 <header class="topbar">
   <div class="brand">
-    <div class="brand-logo" style="background:transparent!important;box-shadow:none!important;"><img src="/assets/milan-logo-circle.png" style="width:44px;height:44px;object-fit:contain;"></div>
+    <div class="brand-logo" role="link" tabindex="0" title="Home" onclick="window.location.href='/app'" onkeydown="if(event.key==='Enter'||event.key===' ') window.location.href='/app'" style="background:transparent!important;box-shadow:none!important;cursor:pointer;"><img src="/assets/milan-logo-circle.png" alt="Milan Home" style="width:44px;height:44px;object-fit:contain;"></div>
     <div class="brand-text"><div style="display:flex;align-items:center;gap:12px;"><div><strong>Milan</strong><span>Your Space. Your People.</span></div></div></div>
   </div>
   <div class="search"><input id="globalSearch" type="search" placeholder="Search people, posts, tags..."></div>
@@ -146,8 +146,6 @@
                 image.src = dataUrl;
             });
 
-            // Resize profile photos so production/Vercel never receives a huge
-            // base64 payload. Keep the final binary comfortably below 900 KB.
             const maxSide = 640;
             const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
             const width = Math.max(1, Math.round(img.width * scale));
@@ -172,7 +170,6 @@
 
             let blob = await blobFromCanvas(0.82);
 
-            // Further reduce quality until safely below backend's 900 KB limit.
             for (let quality = 0.76; blob.size > 820000 && quality >= 0.45; quality -= 0.08) {
                 blob = await blobFromCanvas(quality);
             }
@@ -220,18 +217,22 @@
             const verified = await verifiedResponse.json().catch(() => ({}));
 
             if (!verifiedResponse.ok || !verified.avatar) {
-                throw new Error(
-                    verified.detail ||
-                    verified.error ||
-                    "DP was not verified after DWN save"
-                );
+                throw new Error(verified.detail || "DP was not verified after DWN save");
+            }
+
+            console.log("[MILAN] DP verified from server/DWN");
+
+            if (window.me) {
+                window.me.profile = {
+                    ...(window.me.profile || {}),
+                    ...verified
+                };
             }
 
             localStorage.setItem("milanAvatar", verified.avatar);
 
             ["myAvatar", "composerAvatar"].forEach(id => {
                 const el = document.getElementById(id);
-
                 if (el) {
                     el.style.backgroundImage = 'url("' + verified.avatar + '")';
                     el.style.backgroundSize = "cover";
@@ -241,14 +242,17 @@
                 }
             });
 
-            console.log("[MILAN] DP upload + DWN verification SUCCESS");
-
+            const preview = document.getElementById("editProfilePhotoPreview");
+            if (preview) {
+                preview.src = "";
+                preview.style.display = "none";
+            }
         } catch (err) {
-            console.error("[MILAN] DP upload FAILED:", err);
-            alert("Profile picture upload failed: " + (err.message || "Unknown error"));
+            console.error("[MILAN] DP save/verify failed:", err);
+            alert("Profile picture could not be saved to DWN.");
+        } finally {
+            this.value = "";
         }
-
-        this.value = "";
     }
 
     if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initUpload); else initUpload();
@@ -264,134 +268,5 @@
     restoreAvatar(); document.addEventListener("DOMContentLoaded",restoreAvatar);
 })();
 </script>
-<style>
-.milan-avatar-upload{position:relative!important}.milan-avatar-upload .milan-avatar-upload-icon{position:absolute!important;bottom:0!important;right:0!important;z-index:10!important;background:#6366f1!important;background-image:none!important;overflow:hidden!important}.milan-avatar-upload .milan-avatar-upload-icon img{display:none!important}
-</style>
-<script>
-(function(){const icon=document.querySelector('.milan-avatar-upload-icon'); if(icon){icon.style.backgroundImage='none'; icon.textContent='📷';}})();
-</script>
-<script>
-(function () {
-  function MilanLogout(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }
-
-    try {
-      localStorage.removeItem("milan_token");
-      localStorage.removeItem("milanAvatar");
-      sessionStorage.clear();
-    } catch (e) {
-      console.warn("MILAN logout storage cleanup failed:", e);
-    }
-
-    // Prevent the current page from being restored from browser history.
-    window.location.replace("/?logged_out=" + Date.now());
-  }
-
-  window.MilanLogout = MilanLogout;
-
-  function bindLogout() {
-    const oldBtn = document.getElementById("logoutBtn");
-    if (!oldBtn) return;
-
-    // Clone removes every previously attached click listener.
-    const btn = oldBtn.cloneNode(true);
-    oldBtn.replaceWith(btn);
-
-    btn.type = "button";
-    btn.removeAttribute("onclick");
-    btn.addEventListener("click", MilanLogout, true);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bindLogout, { once: true });
-  } else {
-    bindLogout();
-  }
-})();
-</script>
-
-<script>
-(function () {
-  async function restoreMilanSession() {
-    const token = localStorage.getItem("milan_token");
-    if (!token) return;
-
-    try {
-      const res = await fetch("/api/auth/me", {
-        headers: {
-          "Authorization": "Bearer " + token
-        },
-        cache: "no-store"
-      });
-
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          localStorage.removeItem("milan_token");
-          localStorage.removeItem("milanAvatar");
-          return;
-        }
-        throw new Error("auth/me failed: " + res.status);
-      }
-
-      const me = await res.json();
-      let profile = me.profile || {};
-
-      // Always verify profile directly from the authoritative backend/DWN path.
-      try {
-        const pr = await fetch("/api/profile", {
-          headers: {
-            "Authorization": "Bearer " + token
-          },
-          cache: "no-store"
-        });
-
-        if (pr.ok) {
-          const savedProfile = await pr.json();
-          profile = { ...profile, ...savedProfile };
-        }
-      } catch (e) {
-        console.warn("[MILAN] profile restore failed:", e.message);
-      }
-
-      if (profile.avatar) {
-        localStorage.setItem("milanAvatar", profile.avatar);
-
-        ["myAvatar", "composerAvatar"].forEach(function (id) {
-          const el = document.getElementById(id);
-          if (!el) return;
-
-          el.style.backgroundImage = 'url("' + profile.avatar + '")';
-          el.style.backgroundSize = "cover";
-          el.style.backgroundPosition = "center";
-          el.style.backgroundRepeat = "no-repeat";
-          el.textContent = "";
-        });
-
-        console.log("[MILAN] DP restored from authoritative profile/DWN");
-      }
-
-      const name = profile.display_name || me.name || me.email?.split("@")[0] || "MILAN User";
-      const nameEl = document.getElementById("myName");
-      const emailEl = document.getElementById("myEmail");
-
-      if (nameEl) nameEl.textContent = name;
-      if (emailEl) emailEl.textContent = me.email || "";
-
-    } catch (e) {
-      console.error("[MILAN] session restore failed:", e);
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", restoreMilanSession, { once: true });
-  } else {
-    restoreMilanSession();
-  }
-})();
-</script>
-
 </body>
 </html>
