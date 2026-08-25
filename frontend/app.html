@@ -117,85 +117,138 @@
     }
     async function handleUpload(e) {
         const file = this.files?.[0];
+
         if (!file || !file.type.startsWith("image/")) {
             this.value = "";
             return;
         }
 
-        const reader = new FileReader();
+        const token = localStorage.getItem("milan_token") || "";
 
-        reader.onload = async function(e) {
-            const dataUrl = e.target.result;
-            const token = localStorage.getItem("milan_token") || "";
+        if (!token) {
+            console.error("[MILAN] DP upload aborted: no milan_token");
+            alert("Please login again before changing your profile picture.");
+            return;
+        }
 
-            if (!token) {
-                console.error("[MILAN] DP upload aborted: no milan_token");
-                return;
+        try {
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("Could not read image"));
+                reader.readAsDataURL(file);
+            });
+
+            const img = await new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error("Could not decode image"));
+                image.src = dataUrl;
+            });
+
+            // Resize profile photos so production/Vercel never receives a huge
+            // base64 payload. Keep the final binary comfortably below 900 KB.
+            const maxSide = 640;
+            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+            const width = Math.max(1, Math.round(img.width * scale));
+            const height = Math.max(1, Math.round(img.height * scale));
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) throw new Error("Canvas is unavailable");
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const blobFromCanvas = quality => new Promise((resolve, reject) => {
+                canvas.toBlob(
+                    blob => blob ? resolve(blob) : reject(new Error("Image compression failed")),
+                    "image/jpeg",
+                    quality
+                );
+            });
+
+            let blob = await blobFromCanvas(0.82);
+
+            // Further reduce quality until safely below backend's 900 KB limit.
+            for (let quality = 0.76; blob.size > 820000 && quality >= 0.45; quality -= 0.08) {
+                blob = await blobFromCanvas(quality);
             }
 
-            try {
-                const response = await fetch("/api/profile", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + token
-                    },
-                    body: JSON.stringify({ avatar: dataUrl })
-                });
-
-                const saved = await response.json().catch(() => ({}));
-
-                if (!response.ok) {
-                    throw new Error(saved.error || "Profile save failed: " + response.status);
-                }
-
-                const verifiedResponse = await fetch("/api/profile", {
-                    headers: {
-                        "Authorization": "Bearer " + token
-                    }
-                });
-
-                const verified = await verifiedResponse.json();
-
-                if (!verifiedResponse.ok || !verified.avatar) {
-                    throw new Error("DP was not verified after DWN save");
-                }
-
-                console.log("[MILAN] DP verified from server/DWN");
-
-                if (window.me) {
-                    window.me.profile = {
-                        ...(window.me.profile || {}),
-                        ...verified
-                    };
-                }
-
-                localStorage.setItem("milanAvatar", verified.avatar);
-
-                ["myAvatar", "composerAvatar"].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.style.backgroundImage = 'url("' + verified.avatar + '")';
-                        el.style.backgroundSize = "cover";
-                        el.style.backgroundPosition = "center";
-                        el.style.backgroundRepeat = "no-repeat";
-                        el.textContent = "";
-                    }
-                });
-
-                const preview = document.getElementById("editProfilePhotoPreview");
-                if (preview) {
-                    preview.src = "";
-                    preview.style.display = "none";
-                }
-
-            } catch (err) {
-                console.error("[MILAN] DP save/verify failed:", err);
-                alert("Profile picture could not be saved to DWN.");
+            if (blob.size > 820000) {
+                throw new Error("Image is still too large after compression.");
             }
-        };
 
-        reader.readAsDataURL(file);
+            const optimizedDataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("Could not encode image"));
+                reader.readAsDataURL(blob);
+            });
+
+            console.log("[MILAN] DP optimized:", {
+                originalBytes: file.size,
+                optimizedBytes: blob.size,
+                width,
+                height
+            });
+
+            const response = await fetch("/api/profile", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ avatar: optimizedDataUrl })
+            });
+
+            const saved = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(saved.detail || saved.error || ("Profile save failed: " + response.status));
+            }
+
+            const verifiedResponse = await fetch("/api/profile", {
+                headers: {
+                    "Authorization": "Bearer " + token
+                },
+                cache: "no-store"
+            });
+
+            const verified = await verifiedResponse.json().catch(() => ({}));
+
+            if (!verifiedResponse.ok || !verified.avatar) {
+                throw new Error(
+                    verified.detail ||
+                    verified.error ||
+                    "DP was not verified after DWN save"
+                );
+            }
+
+            localStorage.setItem("milanAvatar", verified.avatar);
+
+            ["myAvatar", "composerAvatar"].forEach(id => {
+                const el = document.getElementById(id);
+
+                if (el) {
+                    el.style.backgroundImage = 'url("' + verified.avatar + '")';
+                    el.style.backgroundSize = "cover";
+                    el.style.backgroundPosition = "center";
+                    el.style.backgroundRepeat = "no-repeat";
+                    el.textContent = "";
+                }
+            });
+
+            console.log("[MILAN] DP upload + DWN verification SUCCESS");
+
+        } catch (err) {
+            console.error("[MILAN] DP upload FAILED:", err);
+            alert("Profile picture upload failed: " + (err.message || "Unknown error"));
+        }
+
+        this.value = "";
     }
 
     if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initUpload); else initUpload();
