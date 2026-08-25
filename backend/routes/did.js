@@ -1,28 +1,757 @@
+'use strict';
+
 const express = require('express');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+
+process.env.CBOR_NATIVE_ACCELERATION_DISABLED =
+  process.env.CBOR_NATIVE_ACCELERATION_DISABLED || 'true';
+
+const {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
+} = require('@simplewebauthn/server');
+
 const auth = require('../middleware/auth');
-const { readJson, writeJson, findUserById } = require('../utils/store');
-const { ensureUserDwn, makeDidDwnService, getDwnInfo } = require('../services/cloudDwnRegistry');
+const {
+  readJson,
+  writeJson,
+  findUserById
+} = require('../utils/store');
+
+const {
+  ensureUserDwn,
+  makeDidDwnService,
+  getDwnInfo
+} = require('../services/cloudDwnRegistry');
+
+const { createClient } = require('@supabase/supabase-js');
+const JWT_SECRET = require('../utils/jwtSecret');
+
+const supabaseDb = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
 const router = express.Router();
 
+const RP_NAME = 'MILAN';
+
+function webauthnConfig(req) {
+  const production =
+    process.env.VERCEL ||
+    process.env.NODE_ENV === 'production';
+
+  let origin =
+    process.env.WEBAUTHN_ORIGIN ||
+    process.env.PUBLIC_BASE_URL ||
+    process.env.APP_PUBLIC_URL ||
+    '';
+
+  if (!origin && production) {
+    origin = 'https://milanlife.in';
+  }
+
+  if (!origin) {
+    const proto =
+      String(req.headers['x-forwarded-proto'] || 'http')
+        .split(',')[0]
+        .trim();
+
+    const host =
+      req.headers.host ||
+      'localhost:5000';
+
+    origin = `${proto}://${host}`;
+  }
+
+  origin = String(origin).replace(/\/+$/, '');
+
+  let hostname;
+
+  try {
+    hostname = new URL(origin).hostname;
+  } catch {
+    hostname = 'milanlife.in';
+    origin = 'https://milanlife.in';
+  }
+
+  const rpID =
+    process.env.WEBAUTHN_RP_ID ||
+    hostname;
+
+  return {
+    rpName: RP_NAME,
+    rpID,
+    origin
+  };
+}
+
+function webAuthnUserId(userId) {
+  const hex =
+    String(userId || '')
+      .replace(/-/g, '')
+      .trim();
+
+  if (/^[0-9a-f]{32}$/i.test(hex)) {
+    return Buffer.from(hex, 'hex');
+  }
+
+  return Buffer.from(
+    crypto
+      .createHash('sha256')
+      .update(String(userId || ''))
+      .digest()
+  );
+}
+
+function webAuthnUserIdStored(userId) {
+  return webAuthnUserId(userId).toString('base64url');
+}
+
+function challengeExpiresAt() {
+  return new Date(
+    Date.now() + 2 * 60 * 1000
+  ).toISOString();
+}
+
+function issueJwt(user) {
+  return jwt.sign(
+    {
+      userId: user.id,
+      email: user.email
+    },
+    JWT_SECRET,
+    {
+      expiresIn:
+        process.env.JWT_EXPIRES_IN || '7d'
+    }
+  );
+}
+
+/* =========================================================
+   Existing DID endpoints
+   ========================================================= */
+
 router.get('/current', auth, (req, res) => {
-  const users = readJson(global.usersFile, {});
-  const found = findUserById(users, req.userId);
-  if (!found) return res.status(404).json({ error:'User not found'});
-  ensureUserDwn(found.user, found.email); users[found.email] = found.user; writeJson(global.usersFile, users);
-  res.json({ did: found.user.did, email: found.email, dwn: getDwnInfo(found.user), created_at: found.user.created_at });
+  const users =
+    readJson(global.usersFile, {});
+
+  const found =
+    findUserById(users, req.userId);
+
+  if (!found) {
+    return res.status(404).json({
+      error: 'User not found'
+    });
+  }
+
+  ensureUserDwn(
+    found.user,
+    found.email
+  );
+
+  users[found.email] = found.user;
+  writeJson(global.usersFile, users);
+
+  res.json({
+    did: found.user.did,
+    email: found.email,
+    dwn: getDwnInfo(found.user),
+    created_at: found.user.created_at
+  });
 });
 
 router.get('/document', auth, (req, res) => {
-  const users = readJson(global.usersFile, {});
-  const found = findUserById(users, req.userId);
-  if (!found) return res.status(404).json({ error:'User not found'});
-  ensureUserDwn(found.user, found.email); users[found.email] = found.user; writeJson(global.usersFile, users);
+  const users =
+    readJson(global.usersFile, {});
+
+  const found =
+    findUserById(users, req.userId);
+
+  if (!found) {
+    return res.status(404).json({
+      error: 'User not found'
+    });
+  }
+
+  ensureUserDwn(
+    found.user,
+    found.email
+  );
+
+  users[found.email] = found.user;
+  writeJson(global.usersFile, users);
+
   res.json({
-    '@context':['https://www.w3.org/ns/did/v1'],
-    id:found.user.did,
-    verificationMethod:[{id:`${found.user.did}#keys-1`, type:'JsonWebKey2020', controller:found.user.did, publicKeyJwk:{kty:'OKP', crv:'Ed25519', x: found.user.raw_seed?.slice(0,43) || 'demo'}}],
-    authentication:[`${found.user.did}#keys-1`],
-    service:[makeDidDwnService(found.user)]
+    '@context': [
+      'https://www.w3.org/ns/did/v1'
+    ],
+    id: found.user.did,
+    verificationMethod: [{
+      id: `${found.user.did}#keys-1`,
+      type: 'JsonWebKey2020',
+      controller: found.user.did,
+      publicKeyJwk: {
+        kty: 'OKP',
+        crv: 'Ed25519',
+        x:
+          found.user.raw_seed?.slice(0, 43) ||
+          'demo'
+      }
+    }],
+    authentication: [
+      `${found.user.did}#keys-1`
+    ],
+    service: [
+      makeDidDwnService(found.user)
+    ]
   });
 });
+
+/* =========================================================
+   ID3 / Passkey status
+   ========================================================= */
+
+router.get(
+  '/passkey/status',
+  auth,
+  async (req, res) => {
+    const { count, error } =
+      await supabaseDb
+        .from('webauthn_credentials')
+        .select('id', {
+          count: 'exact',
+          head: true
+        })
+        .eq('user_id', req.userId);
+
+    if (error) {
+      return res.status(500).json({
+        error:
+          'WebAuthn credential lookup failed'
+      });
+    }
+
+    res.json({
+      registered: Number(count || 0) > 0,
+      count: Number(count || 0)
+    });
+  }
+);
+
+/* =========================================================
+   ID3 / Passkey registration
+   Called after normal password login.
+   ========================================================= */
+
+router.get(
+  '/passkey/register/options',
+  auth,
+  async (req, res) => {
+    const { data: user, error } =
+      await supabaseDb
+        .from('users')
+        .select('id,email,name,did')
+        .eq('id', req.userId)
+        .maybeSingle();
+
+    if (error) {
+      return res.status(500).json({
+        error:
+          'Account database unavailable'
+      });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    const { rpName, rpID } =
+      webauthnConfig(req);
+
+    const { data: existing, error: credError } =
+      await supabaseDb
+        .from('webauthn_credentials')
+        .select(
+          'credential_id,transports'
+        )
+        .eq('user_id', user.id);
+
+    if (credError) {
+      return res.status(500).json({
+        error:
+          'WebAuthn credential lookup failed'
+      });
+    }
+
+    const options =
+      await generateRegistrationOptions({
+        rpName,
+        rpID,
+        userName: user.email,
+        userDisplayName:
+          user.name || user.email,
+        userID:
+          webAuthnUserId(user.id),
+        attestationType: 'none',
+        excludeCredentials:
+          (existing || []).map(
+            credential => ({
+              id: credential.credential_id,
+              transports:
+                credential.transports || []
+            })
+          ),
+        authenticatorSelection: {
+          residentKey: 'required',
+          userVerification: 'required'
+        }
+      });
+
+    const { error: challengeError } =
+      await supabaseDb
+        .from('webauthn_challenges')
+        .insert({
+          user_id: user.id,
+          challenge: options.challenge,
+          purpose: 'registration',
+          expires_at:
+            challengeExpiresAt()
+        });
+
+    if (challengeError) {
+      return res.status(500).json({
+        error:
+          'Could not store WebAuthn challenge'
+      });
+    }
+
+    res.setHeader(
+      'Cache-Control',
+      'no-store'
+    );
+
+    return res.json(options);
+  }
+);
+
+router.post(
+  '/passkey/register/verify',
+  auth,
+  async (req, res) => {
+    const body = req.body || {};
+
+    const { data: user, error: userError } =
+      await supabaseDb
+        .from('users')
+        .select('id,email,name,did')
+        .eq('id', req.userId)
+        .maybeSingle();
+
+    if (userError) {
+      return res.status(500).json({
+        error:
+          'Account database unavailable'
+      });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    const { data: challengeRow, error: challengeError } =
+      await supabaseDb
+        .from('webauthn_challenges')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('purpose', 'registration')
+        .is('used_at', null)
+        .gt(
+          'expires_at',
+          new Date().toISOString()
+        )
+        .order('created_at', {
+          ascending: false
+        })
+        .limit(1)
+        .maybeSingle();
+
+    if (challengeError || !challengeRow) {
+      return res.status(400).json({
+        error:
+          'WebAuthn registration challenge expired. Start again.'
+      });
+    }
+
+    await supabaseDb
+      .from('webauthn_challenges')
+      .update({
+        used_at: new Date().toISOString()
+      })
+      .eq('id', challengeRow.id);
+
+    const { rpID, origin } =
+      webauthnConfig(req);
+
+    let verification;
+
+    try {
+      verification =
+        await verifyRegistrationResponse({
+          response: body,
+          expectedChallenge:
+            challengeRow.challenge,
+          expectedOrigin: origin,
+          expectedRPID: rpID,
+          requireUserVerification: true
+        });
+    } catch (error) {
+      console.error(
+        '[ID3] registration verification failed:',
+        error.message
+      );
+
+      return res.status(400).json({
+        error:
+          error.message ||
+          'ID3 registration verification failed'
+      });
+    }
+
+    if (!verification.verified ||
+        !verification.registrationInfo) {
+      return res.status(400).json({
+        error:
+          'ID3 registration was not verified'
+      });
+    }
+
+    const {
+      credential,
+      credentialDeviceType,
+      credentialBackedUp
+    } = verification.registrationInfo;
+
+    const publicKey =
+      Buffer
+        .from(credential.publicKey)
+        .toString('base64url');
+
+    const webAuthnId =
+      webAuthnUserIdStored(user.id);
+
+    const { error: insertError } =
+      await supabaseDb
+        .from('webauthn_credentials')
+        .insert({
+          user_id: user.id,
+          did: user.did,
+          credential_id:
+            credential.id,
+          webauthn_user_id:
+            webAuthnId,
+          public_key:
+            publicKey,
+          counter:
+            Number(credential.counter || 0),
+          transports:
+            credential.transports || [],
+          device_type:
+            credentialDeviceType || null,
+          backed_up:
+            Boolean(credentialBackedUp)
+        });
+
+    if (insertError) {
+      if (insertError.code === '23505') {
+        return res.status(409).json({
+          error:
+            'This ID3 credential is already registered.'
+        });
+      }
+
+      console.error(
+        '[ID3] credential insert failed:',
+        insertError
+      );
+
+      return res.status(500).json({
+        error:
+          'Could not save ID3 credential'
+      });
+    }
+
+    res.json({
+      verified: true,
+      did: user.did,
+      email: user.email,
+      name: user.name
+    });
+  }
+);
+
+/* =========================================================
+   ID3 / Passkey login options
+   Discoverable credential login: no email required.
+   ========================================================= */
+
+router.get(
+  '/passkey/login/options',
+  async (_req, res) => {
+    const { count, error } =
+      await supabaseDb
+        .from('webauthn_credentials')
+        .select('id', {
+          count: 'exact',
+          head: true
+        });
+
+    if (error) {
+      return res.status(500).json({
+        error:
+          'ID3 authentication database unavailable'
+      });
+    }
+
+    if (!Number(count || 0)) {
+      return res.status(409).json({
+        error:
+          'ID3 is not enabled on this device yet. Sign in once with your password and enable ID3.'
+      });
+    }
+
+    const { rpID } =
+      webauthnConfig(_req);
+
+    const options =
+      await generateAuthenticationOptions({
+        rpID,
+        userVerification: 'required',
+        timeout: 60000
+      });
+
+    const { error: challengeError } =
+      await supabaseDb
+        .from('webauthn_challenges')
+        .insert({
+          user_id: null,
+          challenge: options.challenge,
+          purpose: 'authentication',
+          expires_at:
+            challengeExpiresAt()
+        });
+
+    if (challengeError) {
+      return res.status(500).json({
+        error:
+          'Could not store ID3 authentication challenge'
+      });
+    }
+
+    res.setHeader(
+      'Cache-Control',
+      'no-store'
+    );
+
+    res.json(options);
+  }
+);
+
+router.post(
+  '/passkey/login/verify',
+  async (req, res) => {
+    const body = req.body || {};
+    const credentialId =
+      String(body.id || '');
+
+    if (!credentialId) {
+      return res.status(400).json({
+        error:
+          'ID3 credential is missing'
+      });
+    }
+
+    const {
+      data: storedCredential,
+      error: credentialError
+    } = await supabaseDb
+      .from('webauthn_credentials')
+      .select('*')
+      .eq(
+        'credential_id',
+        credentialId
+      )
+      .maybeSingle();
+
+    if (credentialError) {
+      return res.status(500).json({
+        error:
+          'ID3 credential lookup failed'
+      });
+    }
+
+    if (!storedCredential) {
+      return res.status(401).json({
+        error:
+          'This ID3 credential is not registered with MILAN.'
+      });
+    }
+
+    const {
+      data: challengeRow,
+      error: challengeError
+    } = await supabaseDb
+      .from('webauthn_challenges')
+      .select('*')
+      .eq('purpose', 'authentication')
+      .is('used_at', null)
+      .gt(
+        'expires_at',
+        new Date().toISOString()
+      )
+      .order('created_at', {
+        ascending: false
+      })
+      .limit(1)
+      .maybeSingle();
+
+    if (challengeError ||
+        !challengeRow) {
+      return res.status(400).json({
+        error:
+          'ID3 authentication challenge expired. Try again.'
+      });
+    }
+
+    await supabaseDb
+      .from('webauthn_challenges')
+      .update({
+        used_at:
+          new Date().toISOString()
+      })
+      .eq('id', challengeRow.id);
+
+    const { rpID, origin } =
+      webauthnConfig(req);
+
+    let verification;
+
+    try {
+      verification =
+        await verifyAuthenticationResponse({
+          response: body,
+          expectedChallenge:
+            challengeRow.challenge,
+          expectedOrigin: origin,
+          expectedRPID: rpID,
+          credential: {
+            id:
+              storedCredential.credential_id,
+            publicKey:
+              new Uint8Array(
+                Buffer.from(
+                  storedCredential.public_key,
+                  'base64url'
+                )
+              ),
+            counter:
+              Number(
+                storedCredential.counter || 0
+              ),
+            transports:
+              storedCredential.transports ||
+              []
+          },
+          requireUserVerification: true
+        });
+    } catch (error) {
+      console.error(
+        '[ID3] authentication verification failed:',
+        error.message
+      );
+
+      return res.status(401).json({
+        error:
+          'ID3 authentication failed'
+      });
+    }
+
+    if (!verification.verified) {
+      return res.status(401).json({
+        error:
+          'ID3 authentication was not verified'
+      });
+    }
+
+    const newCounter =
+      Number(
+        verification.authenticationInfo
+          ?.newCounter ??
+        storedCredential.counter ??
+        0
+      );
+
+    await supabaseDb
+      .from('webauthn_credentials')
+      .update({
+        counter: newCounter,
+        updated_at:
+          new Date().toISOString()
+      })
+      .eq(
+        'id',
+        storedCredential.id
+      );
+
+    const {
+      data: user,
+      error: userError
+    } = await supabaseDb
+      .from('users')
+      .select('id,email,name,did')
+      .eq(
+        'id',
+        storedCredential.user_id
+      )
+      .maybeSingle();
+
+    if (userError || !user) {
+      return res.status(401).json({
+        error:
+          'ID3 account could not be resolved'
+      });
+    }
+
+    const token =
+      issueJwt(user);
+
+    console.log(
+      '[ID3] login successful:',
+      user.email,
+      user.id,
+      user.did
+    );
+
+    return res.json({
+      token,
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      did: user.did,
+      profile: {},
+      settings: {},
+      emailVerified: true,
+      twoFactorEnabled: false,
+      id3: true
+    });
+  }
+);
+
 module.exports = router;
