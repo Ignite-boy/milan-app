@@ -143,9 +143,7 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   const id = uuidv4();
   const did = `did:milan:${id}`;
   const passwordHash = await bcrypt.hash(password, 10);
-  const displayName = name || email.split('@')[0];
 
-  // Supabase PostgreSQL is the authoritative account store.
   const { data: existingUser, error: lookupError } = await supabaseDb
     .from('users')
     .select('id')
@@ -154,11 +152,7 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
 
   if (lookupError) {
     console.error('[auth] Supabase user lookup failed:', lookupError);
-    return res.status(500).json({
-      error: 'Account database unavailable',
-      details: lookupError.message,
-      code: lookupError.code
-    });
+    return res.status(500).json({ error: 'Account database unavailable' });
   }
 
   if (existingUser) {
@@ -171,17 +165,13 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
       id,
       email,
       password_hash: passwordHash,
-      name: displayName,
+      name: name || email.split('@')[0],
       did
     });
 
   if (insertError) {
-    console.error('[auth] Supabase users insert failed:', insertError);
-    return res.status(500).json({
-      error: 'Account database registration failed',
-      details: insertError.message,
-      code: insertError.code
-    });
+    console.error('[auth] Supabase user insert failed:', insertError);
+    return res.status(500).json({ error: 'Account database registration failed' });
   }
 
   console.log('[auth] account created in Supabase:', email, id);
@@ -190,7 +180,7 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
     message: 'Registered successfully',
     id,
     email,
-    name: displayName,
+    name: name || email.split('@')[0],
     did
   });
 }));
@@ -198,68 +188,54 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
 router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
+  // DWN node is authoritative. Hydrate it first; if a legacy/ghost cache exists, use it only as repair input.
+  const remoteState = await loadUsersFromDwnDetailed();
+  let users = remoteState.users || {};
+  let user = users[email];
+  const localUsers = cleanUsersDb(readJson(global.usersFile, {}));
+  if (!user && localUsers[email]) {
+    user = localUsers[email];
+    users[email] = user;
   }
-
-  // Supabase PostgreSQL is the authoritative account store.
-  const { data: user, error: lookupError } = await supabaseDb
-    .from('users')
-    .select('id,email,password_hash,name,did')
-    .eq('email', email)
-    .maybeSingle();
-
-  if (lookupError) {
-    console.error('[auth] Supabase login lookup failed:', lookupError);
-    return res.status(500).json({
-      error: 'Account database unavailable',
-      details: lookupError.message,
-      code: lookupError.code
-    });
-  }
-
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  if (!user.password_hash) {
-    console.error('[auth] User has no password_hash:', email);
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  const passwordOk = await bcrypt.compare(password, user.password_hash);
-
-  if (!passwordOk) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  const token = jwt.sign(
-    {
-      userId: user.id,
-      email: user.email
-    },
-    secret(),
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) return res.status(401).json({ error: 'Invalid credentials' });
+  // Two-factor (TOTP) challenge — only when the user has enabled 2FA.
+  if (user.security && user.security.twoFactorEnabled) {
+    const code = String(req.body.code || req.body.totp || '').trim();
+    const recoveryCode = String(req.body.recoveryCode || '').trim();
+    let passed = false;
+    if (code) passed = totp.verify(code, user.security.twoFactorSecret);
+    if (!passed && recoveryCode && Array.isArray(user.security.recoveryHashes)) {
+      const h = sha256(recoveryCode);
+      const idx = user.security.recoveryHashes.indexOf(h);
+      if (idx >= 0) { passed = true; user.security.recoveryHashes.splice(idx, 1); } // burn used recovery code
     }
-  );
-
-  console.log('[auth] login successful:', email, user.id);
-
-  return res.json({
-    token,
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    did: user.did,
-    profile: {},
-    settings: {},
-    emailVerified: true,
-    twoFactorEnabled: false
-  });
+    if (!passed) {
+      if (!code && !recoveryCode) return res.status(401).json({ error: 'Two-factor code required', twoFactorRequired: true });
+      return res.status(401).json({ error: 'Invalid two-factor code', twoFactorRequired: true });
+    }
+  }
+  ensureUserDwn(user, email);
+  if (!user.dwn?.remoteProvision?.ok) user.dwn.remoteProvision = await provisionRemoteUserDwn(user);
+  // Reactivate a deactivated account on successful sign-in (Facebook-style).
+  if (user.status === 'deactivated') { user.status = 'active'; delete user.deactivatedAt; addActivity(user.id, 'account.reactivated', { email }); }
+  user.last_login_at = new Date().toISOString(); user.login_count = Number(user.login_count || 0) + 1; users[email] = user;
+  const ip = clientIp(req);
+  const userAgent = String(req.headers['user-agent'] || 'unknown').slice(0, 220);
+  const token = jwt.sign({ userId: user.id, email, tv: user.tokenVersion || 0 }, secret(), { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+  // Respond immediately. The authoritative DWN write is a remote round-trip, so we
+  // run it in the background (fire-and-forget) rather than blocking the sign-in on it.
+  res.json({ token, did: user.did, dwn: getDwnInfo(user), profile: user.profile, settings: user.settings, emailVerified: user.emailVerified !== false, twoFactorEnabled: !!(user.security && user.security.twoFactorEnabled) });
+  // ── background: activity log, new-sign-in alert email, and authoritative DWN sync ──
+  addActivity(user.id, 'auth.login', { email, ip, userAgent });
+  // New sign-in security alert (fire-and-forget). Respects per-user preference, then env kill-switch.
+  const wantsLoginAlerts = user.settings?.notifications?.emailLoginAlerts !== false;
+  if (wantsLoginAlerts && String(process.env.MAIL_LOGIN_ALERTS || 'true') !== 'false') {
+    sendLoginAlertEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], ip, userAgent })
+      .catch(err => console.warn('[MILAN mail] login alert error:', err.message));
+  }
+  // Persists login_count / last_login_at (and any burned 2FA recovery code) to the DWN.
+  persistUsersAuthoritatively(users).catch(err => console.warn('[login] bg DWN sync failed:', err.message));
 }));
-
 
 router.get('/me', auth, asyncRoute(async (req, res) => {
   // Hot path: serve from the local cache. No repair and no remote write on the

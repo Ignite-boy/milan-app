@@ -151,27 +151,43 @@
 </script>
 <script>
 (function () {
-  function logout() {
+  function MilanLogout(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+
     try {
-      localStorage.removeItem("milanToken");
+      localStorage.removeItem("milan_token");
       localStorage.removeItem("milanAvatar");
-      sessionStorage.removeItem("milanToken");
+      sessionStorage.clear();
     } catch (e) {
       console.warn("MILAN logout storage cleanup failed:", e);
     }
-    // Replace the current app URL so browser Back does not immediately reopen it.
-    window.location.replace("/");
+
+    // Prevent the current page from being restored from browser history.
+    window.location.replace("/?logged_out=" + Date.now());
   }
-  function initLogout() {
-    const btn = document.getElementById("logoutBtn");
-    if (!btn || btn.dataset.logoutBound === "1") return;
-    btn.dataset.logoutBound = "1";
-    btn.addEventListener("click", logout);
+
+  window.MilanLogout = MilanLogout;
+
+  function bindLogout() {
+    const oldBtn = document.getElementById("logoutBtn");
+    if (!oldBtn) return;
+
+    // Clone removes every previously attached click listener.
+    const btn = oldBtn.cloneNode(true);
+    oldBtn.replaceWith(btn);
+
+    btn.type = "button";
+    btn.removeAttribute("onclick");
+    btn.addEventListener("click", MilanLogout, true);
   }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initLogout);
+    document.addEventListener("DOMContentLoaded", bindLogout, { once: true });
   } else {
-    initLogout();
+    bindLogout();
   }
 })();
 </script>
