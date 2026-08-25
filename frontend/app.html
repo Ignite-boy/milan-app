@@ -397,6 +397,43 @@
 
 <script src="/assets/js/milan-ui-actions.js?v=1" defer></script>
 
+
+<script id="MILAN-LOGOUT-FINAL-FIX">
+(function () {
+    function installFinalLogout() {
+        const current = document.getElementById("logoutBtn");
+        if (!current) return;
+
+        const button = current.cloneNode(true);
+        current.replaceWith(button);
+
+        button.addEventListener("click", function () {
+            try {
+                localStorage.removeItem("milan_token");
+                localStorage.removeItem("milanToken");
+                localStorage.removeItem("milanBootCache");
+                localStorage.removeItem("milanAvatar");
+                sessionStorage.clear();
+            } finally {
+                window.location.replace("/");
+            }
+        });
+
+        console.log("[MILAN] Final logout handler active.");
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            installFinalLogout,
+            { once: true }
+        );
+    } else {
+        installFinalLogout();
+    }
+})();
+</script>
+
 </body>
 </html>
 
