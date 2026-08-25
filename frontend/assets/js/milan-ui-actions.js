@@ -1716,11 +1716,6 @@
                 button.textContent = "Saved ✓";
                 showPublishStatus("Saved to DWN ✓");
 
-                // Re-sync from server shortly after the immediate render.
-                setTimeout(() => {
-                    window.milanRefreshHomeFeed?.();
-                }, 1000);
-
                 setTimeout(() => {
                     button.textContent = original;
                     button.disabled = false;
