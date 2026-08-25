@@ -2,7 +2,10 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const { readJson, writeJson, findUserById, addActivity } = require('../utils/store');
-const MINI_DWN_ENDPOINT = process.env.MINI_DWN_ENDPOINT || 'http://127.0.0.1:3000';
+const MINI_DWN_ENDPOINT = (
+  process.env.MINI_DWN_ENDPOINT ||
+  (process.env.VERCEL ? 'https://dwn.milanlife.in' : 'http://127.0.0.1:3000')
+).replace(/\/$/, '');
 
 const router = express.Router();
 
@@ -82,44 +85,104 @@ function dataUrlToDwn(dataUrl) {
 }
 
 async function miniDwnProcess(target, message, encodedData) {
-  const response = await fetch(`${MINI_DWN_ENDPOINT}/json-rpc`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: Date.now().toString(),
-      method: 'dwn.processMessage',
-      params: {
-        target,
-        message,
-        ...(encodedData ? { encodedData } : {})
+  const maxAttempts = 4;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch(`${MINI_DWN_ENDPOINT}/json-rpc`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: `${Date.now()}-${attempt}`,
+          method: 'dwn.processMessage',
+          params: {
+            target,
+            message,
+            ...(encodedData ? { encodedData } : {})
+          }
+        })
+      });
+
+      const contentType = String(
+        response.headers.get('content-type') || ''
+      ).toLowerCase();
+
+      const raw = await response.text();
+
+      let body;
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        const preview = raw.replace(/\s+/g, ' ').slice(0, 220);
+        throw new Error(
+          `Mini-DWN returned non-JSON (${response.status}, ${contentType || 'no content-type'}): ${preview}`
+        );
       }
-    })
-  });
 
-  const contentType = String(response.headers.get('content-type') || '').toLowerCase();
-  const raw = await response.text();
+      const reply = body?.result?.reply;
+      const status = reply?.status?.code;
 
-  let body;
-  try {
-    body = JSON.parse(raw);
-  } catch (err) {
-    const preview = raw.replace(/\s+/g, ' ').slice(0, 220);
-    throw new Error(`Mini-DWN returned non-JSON (${response.status}, ${contentType || 'no content-type'}): ${preview}`);
+      // Retry only transient upstream failures.
+      if ([408, 425, 429, 500, 502, 503, 504, 530].includes(response.status)) {
+        if (attempt < maxAttempts) {
+          const retryAfterHeader = response.headers.get('retry-after');
+          const retryAfterSeconds = Number(retryAfterHeader);
+
+          const waitMs =
+            Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+              ? Math.min(retryAfterSeconds * 1000, 10000)
+              : Math.min(500 * (2 ** (attempt - 1)), 4000);
+
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+          continue;
+        }
+
+        throw new Error(
+          `Mini-DWN HTTP ${response.status} after ${maxAttempts} attempts`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(`Mini-DWN HTTP ${response.status}`);
+      }
+
+      if (status >= 400) {
+        throw new Error(
+          reply?.status?.detail || `Mini-DWN status ${status}`
+        );
+      }
+
+      return reply || {};
+    } catch (err) {
+      lastError = err;
+
+      const messageText = String(err?.message || err);
+
+      const transient =
+        /Mini-DWN HTTP (408|425|429|500|502|503|504|530)/.test(messageText) ||
+        /timed out|aborted|ECONNRESET|ECONNREFUSED|ENOTFOUND|fetch failed/i.test(messageText);
+
+      if (!transient || attempt >= maxAttempts) {
+        throw err;
+      }
+
+      const waitMs = Math.min(500 * (2 ** (attempt - 1)), 4000);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  const reply = body?.result?.reply;
-  const status = reply?.status?.code;
-
-  if (!response.ok) {
-    throw new Error(`Mini-DWN HTTP ${response.status}`);
-  }
-
-  if (status >= 400) {
-    throw new Error(reply?.status?.detail || `Mini-DWN status ${status}`);
-  }
-
-  return reply || {};
+  throw lastError || new Error('Mini-DWN request failed');
 }
 
 async function writeProfilePicture(did, dataUrl) {
