@@ -308,3 +308,268 @@
         bindQuotePublisher();
     }
 })();
+
+/* =========================================================
+   MILAN — LIVE HOME FEED
+   Reads persistent records and renders them below composer.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    const token = () =>
+        localStorage.getItem("milan_token") ||
+        localStorage.getItem("milanToken") ||
+        "";
+
+    const esc = (value) =>
+        String(value ?? "").replace(/[&<>"']/g, (m) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[m]);
+
+    function getRecordText(record) {
+        const data = record?.data || {};
+
+        return String(
+            data.text ||
+            data.caption ||
+            record?.text ||
+            record?.caption ||
+            ""
+        ).trim();
+    }
+
+    function getRecordTitle(record) {
+        return String(
+            record?.title ||
+            record?.data?.title ||
+            "MILAN Post"
+        ).trim();
+    }
+
+    function getCreatedAt(record) {
+        return (
+            record?.dateCreated ||
+            record?.createdAt ||
+            record?.dateModified ||
+            new Date().toISOString()
+        );
+    }
+
+    function formatDate(value) {
+        const d = new Date(value);
+
+        if (Number.isNaN(d.getTime())) return "";
+
+        return d.toLocaleString([], {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    function normalizeRecords(payload) {
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload?.records)) return payload.records;
+        if (Array.isArray(payload?.items)) return payload.items;
+        if (Array.isArray(payload?.entries)) return payload.entries;
+        if (Array.isArray(payload?.result?.entries)) return payload.result.entries;
+        if (Array.isArray(payload?.data)) return payload.data;
+        return [];
+    }
+
+    function recordCard(record) {
+        const id = esc(
+            record?.id ||
+            record?.recordId ||
+            record?.data?.recordId ||
+            ""
+        );
+
+        const title = esc(getRecordTitle(record));
+        const text = esc(getRecordText(record));
+        const when = esc(formatDate(getCreatedAt(record)));
+
+        return `
+          <article class="milan-feed-card" data-record-id="${id}">
+            <div class="milan-feed-card-head">
+              <div class="milan-feed-avatar" id="feed-avatar-${id}">M</div>
+              <div class="milan-feed-meta">
+                <strong class="milan-feed-name">Milan User</strong>
+                <span>${when}</span>
+              </div>
+            </div>
+
+            <div class="milan-feed-body">
+              <h3>${title}</h3>
+              ${text ? `<p>${text.replace(/\n/g, "<br>")}</p>` : ""}
+            </div>
+
+            <div class="milan-feed-actions">
+              <button type="button" data-action="like">♡ Like</button>
+              <button type="button" data-action="comment">💬 Comment</button>
+              <button type="button" data-action="share">↗ Share</button>
+              <button type="button" data-action="save">🔖 Save</button>
+            </div>
+          </article>
+        `;
+    }
+
+    function bindFeedActions() {
+        document.querySelectorAll(".milan-feed-card").forEach((card) => {
+            card.querySelectorAll("[data-action]").forEach((button) => {
+                button.onclick = () => {
+                    const action = button.dataset.action;
+
+                    if (action === "like") {
+                        button.classList.toggle("active");
+                        button.textContent =
+                            button.classList.contains("active")
+                                ? "♥ Liked"
+                                : "♡ Like";
+                    }
+
+                    if (action === "comment") {
+                        const text = prompt("Write a comment");
+                        if (text?.trim()) {
+                            button.textContent = "💬 Commented";
+                        }
+                    }
+
+                    if (action === "share") {
+                        const url = window.location.origin + "/app";
+                        navigator.clipboard?.writeText(url).then(
+                            () => {
+                                button.textContent = "✓ Copied";
+                                setTimeout(() => {
+                                    button.textContent = "↗ Share";
+                                }, 1200);
+                            },
+                            () => {
+                                button.textContent = "↗ Share";
+                            }
+                        );
+                    }
+
+                    if (action === "save") {
+                        button.classList.toggle("active");
+                        button.textContent =
+                            button.classList.contains("active")
+                                ? "✓ Saved"
+                                : "🔖 Save";
+                    }
+                };
+            });
+        });
+    }
+
+    async function loadMilanHomeFeed() {
+        const list = document.getElementById("milanFeedList");
+        if (!list) return;
+
+        const auth = token();
+
+        if (!auth) {
+            list.innerHTML = `
+              <div class="milan-feed-empty">
+                Login required to load your DWN feed.
+              </div>`;
+            return;
+        }
+
+        list.innerHTML = `
+          <div class="milan-feed-loading">
+            Loading your DWN posts…
+          </div>`;
+
+        try {
+            const response = await fetch("/api/records", {
+                headers: {
+                    "Authorization": "Bearer " + auth,
+                    "Accept": "application/json"
+                },
+                cache: "no-store"
+            });
+
+            const payload = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    payload.error ||
+                    payload.detail ||
+                    `Feed failed: ${response.status}`
+                );
+            }
+
+            const records = normalizeRecords(payload)
+                .filter((record) => getRecordText(record) || record?.title)
+                .sort((a, b) =>
+                    new Date(getCreatedAt(b)) -
+                    new Date(getCreatedAt(a))
+                );
+
+            if (!records.length) {
+                list.innerHTML = `
+                  <div class="milan-feed-empty">
+                    No posts yet. Write your first quote above.
+                  </div>`;
+                return;
+            }
+
+            list.innerHTML = records.map(recordCard).join("");
+            bindFeedActions();
+
+        } catch (error) {
+            console.error("[MILAN] Home DWN feed failed:", error);
+
+            list.innerHTML = `
+              <div class="milan-feed-empty milan-feed-error">
+                Could not load your DWN feed.
+                <button type="button" id="milanFeedRetry">Retry</button>
+              </div>`;
+
+            document.getElementById("milanFeedRetry")?.addEventListener(
+                "click",
+                loadMilanHomeFeed
+            );
+        }
+    }
+
+    // Override only the UI publisher completion so the newly-created
+    // DWN record appears immediately below the composer.
+    const originalPublishQuote = window.publishQuoteToDwn;
+
+    window.publishQuoteToDwn = async function () {
+        if (typeof originalPublishQuote === "function") {
+            await originalPublishQuote();
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        await loadMilanHomeFeed();
+    };
+
+    function bindFeedRefresh() {
+        document
+            .getElementById("milanFeedRefresh")
+            ?.addEventListener("click", loadMilanHomeFeed);
+    }
+
+    function init() {
+        bindFeedRefresh();
+        loadMilanHomeFeed();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+
+    // Public helper for future UI refreshes.
+    window.milanRefreshHomeFeed = loadMilanHomeFeed;
+})();

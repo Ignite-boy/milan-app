@@ -99,6 +99,17 @@
     <div class="composer-row"><div class="mini-avatar" id="composerAvatar">M</div><textarea id="postText" placeholder="What's happening in your space?"></textarea></div>
     <div class="composer-bottom"><div class="composer-tools"><button class="tool">🖼</button><button class="tool">📎</button><button class="tool">😊</button><button class="tool">🔒</button></div><button class="publish" id="publishBtn">Publish</button></div>
   </div>
+
+  <section id="milanHomeFeed" class="milan-home-feed" aria-live="polite">
+    <div class="milan-feed-header">
+      <div>
+        <strong>Home Feed</strong>
+        <span>Your latest posts</span>
+      </div>
+      <button id="milanFeedRefresh" type="button">↻ Refresh</button>
+    </div>
+    <div id="milanFeedList"></div>
+  </section>
 </section>
 <aside class="rightbar">
   <div class="right-card card"><h3>People to connect</h3><div class="person"><div class="person-avatar">A</div><div class="person-info"><b>Alex</b><span>Developer</span></div><button class="follow">Follow</button></div><div class="person"><div class="person-avatar">R</div><div class="person-info"><b>Rahul</b><span>Designer</span></div><button class="follow">Follow</button></div></div>
@@ -388,3 +399,33 @@
 
 </body>
 </html>
+
+<style id="milan-home-feed-ui">
+.milan-home-feed{margin-top:18px}
+.milan-feed-header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;padding:0 4px}
+.milan-feed-header strong{display:block;font-size:17px}
+.milan-feed-header span{display:block;font-size:12px;color:#94a3b8}
+#milanFeedRefresh{border:1px solid #2a3a5a;background:#111827;color:#e8edf5;
+  border-radius:999px;padding:7px 12px;cursor:pointer}
+.milan-feed-loading,.milan-feed-empty{background:#111827;border:1px solid #1e293b;
+  border-radius:16px;padding:26px;text-align:center;color:#94a3b8}
+.milan-feed-card{background:#111827;border:1px solid #1e293b;border-radius:16px;
+  padding:16px;margin-bottom:14px}
+.milan-feed-card-head{display:flex;align-items:center;gap:10px}
+.milan-feed-avatar{width:42px;height:42px;border-radius:50%;background:#2a3a5a;
+  display:grid;place-items:center;overflow:hidden;background-size:cover;background-position:center}
+.milan-feed-meta strong{display:block;font-size:14px}
+.milan-feed-meta span{display:block;font-size:11px;color:#94a3b8}
+.milan-feed-body{padding:14px 0}
+.milan-feed-body h3{margin:0 0 7px;font-size:16px}
+.milan-feed-body p{margin:0;color:#d7deeb;line-height:1.6;word-break:break-word}
+.milan-feed-actions{display:flex;gap:8px;border-top:1px solid #1e293b;padding-top:12px;flex-wrap:wrap}
+.milan-feed-actions button{border:0;background:#1b2538;color:#cbd5e1;border-radius:999px;
+  padding:7px 12px;cursor:pointer;font-size:12px}
+.milan-feed-actions button:hover,
+.milan-feed-actions button.active{background:#283650;color:#fff}
+.milan-feed-error{color:#fca5a5}
+.milan-feed-error button{margin-left:8px;border:0;background:#6366f1;color:#fff;
+  border-radius:999px;padding:6px 12px;cursor:pointer}
+</style>
