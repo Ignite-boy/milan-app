@@ -5,6 +5,12 @@ const path = require('path');
 const auth = require('../middleware/auth');
 const { readJson, findUserById, findUserByDid, addActivity } = require('../utils/store');
 const dwnStore = require('../services/dwnService');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseDb = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 const realDwn = require('../services/realDwnNodeClient');
 const { Readable } = require('stream');
 const crypto = require('crypto');
@@ -12,8 +18,34 @@ const { detectMimeFromFile } = require('../utils/mediaCompat');
 
 const router = express.Router();
 
-function current(req) {
+function localCurrent(req) {
   return findUserById(readJson(global.usersFile, {}), req.userId);
+}
+
+async function current(req) {
+  const local = localCurrent(req);
+  if (local?.user?.did) return local;
+
+  const { data, error } = await supabaseDb
+    .from('users')
+    .select('id,email,name,did')
+    .eq('id', req.userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    email: data.email,
+    user: {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      did: data.did,
+      profile: {
+        display_name: data.name || ''
+      }
+    }
+  };
 }
 
 function handleError(res, err) {
@@ -311,7 +343,7 @@ router.delete('/media/chunk/:uploadId', auth, (req, res) => {
 
 router.get('/', auth, async (req, res) => {
   try {
-    const u = current(req);
+    const u = await current(req);
     if (!u) return res.status(404).json({ error: 'User not found' });
     res.json(await dwnStore.listVisibleRecords(u.user.did, req.query));
   } catch (err) { handleError(res, err); }
@@ -588,7 +620,7 @@ router.get('/:id', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const u = current(req);
+    const u = await current(req);
     if (!u) return res.status(404).json({ error: 'User not found' });
     const record = await dwnStore.createRecord(req.userId, u.user.did, req.body);
     addActivity(req.userId, 'record.created.in.dwn', { title: record.title, accessMode: record.accessMode, dwnRecordId: record.dwnRecordId });
