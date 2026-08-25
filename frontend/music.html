@@ -6,13 +6,13 @@
 <title>Free Music Player — Listen to Bollywood, Hollywood & Millions of Songs Free | MILAN</title>
 <meta name="description" content="Free music player — search and play millions of songs online free: Bollywood, Hollywood, Punjabi, lo-fi and more. No signup, no ads. Listen now on MILAN.">
 <meta name="theme-color" content="#070a16">
-<link rel="icon" href="/assets/milan-logo.png" sizes="any">
-<link rel="icon" type="image/svg+xml" href="/assets/milan-logo.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/milan-logo.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/milan-logo.png">
-<link rel="icon" type="image/png" sizes="96x96" href="/assets/milan-logo.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/assets/milan-logo.png">
-<link rel="apple-touch-icon" href="/assets/milan-logo.png">
+<link rel="icon" href="/assets/milan-logo-circle.png" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/assets/milan-logo-circle.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/milan-logo-circle.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/milan-logo-circle.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/assets/milan-logo-circle.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/milan-logo-circle.png">
+<link rel="apple-touch-icon" href="/assets/milan-logo-circle.png">
 <link rel="manifest" href="/manifest.json">
 <link rel="stylesheet" href="/assets/css/music.css">
 <link rel="stylesheet" href="/milan-core.css?v=20260627">
@@ -57,7 +57,7 @@
 <body>
 <h1 class="sr-only">MILAN Music player</h1>
 <header class="mz-top">
-  <a class="mz-brand" href="/app" title="Back to MILAN"><img class="mz-logo" src="/assets/milan-logo.png" alt="MILAN" style="object-fit:cover"><span>MILAN <b>Music</b></span></a>
+  <a class="mz-brand" href="/app" title="Back to MILAN"><img class="mz-logo" src="/assets/milan-logo-circle.png" alt="MILAN" style="object-fit:cover"><span>MILAN <b>Music</b></span></a>
   <div class="mz-search"><span class="ic">🔍</span>
     <input id="q" type="search" placeholder="Search any song or artist…" autocomplete="off" aria-label="Search music"><div id="mzsug" class="mz-sug"></div></div>
   <a class="mz-home" href="/app" title="Back to app" aria-label="Back to app">←</a>
@@ -184,7 +184,7 @@
     if(!("mediaSession" in navigator))return;
     try{
       navigator.mediaSession.metadata=new MediaMetadata({title:t.title||"MILAN Music",artist:t.artist||"",album:"MILAN Music",
-        artwork: t.thumb ? [{src:t.thumb,sizes:"480x480",type:"image/jpeg"},{src:t.thumb,sizes:"96x96",type:"image/jpeg"}] : [{src:"/assets/milan-logo.png",sizes:"192x192",type:"image/png"}]});
+        artwork: t.thumb ? [{src:t.thumb,sizes:"480x480",type:"image/jpeg"},{src:t.thumb,sizes:"96x96",type:"image/jpeg"}] : [{src:"/assets/milan-logo-circle.png",sizes:"192x192",type:"image/png"}]});
       navigator.mediaSession.playbackState="playing";
     }catch(e){}
   }
