@@ -1136,3 +1136,431 @@
         bindPublishTest();
     }
 })();
+
+/* =========================================================
+   MILAN — LIVE FEED + IDENTITY STABILITY FIX
+   1. Never show a false/blank profile identity during reload.
+   2. Use the existing production social-feed endpoint first.
+   3. Fall back to /api/records only when necessary.
+   4. Retry transient feed failures instead of showing a
+      permanent "Could not load your DWN feed" message.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    const getToken = () =>
+        localStorage.getItem("milan_token") ||
+        localStorage.getItem("milanToken") ||
+        "";
+
+    /* ---------- Profile identity anti-flicker ---------- */
+    function installIdentityGuard() {
+        const styleId = "milan-identity-guard-style";
+
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement("style");
+            style.id = styleId;
+            style.textContent = `
+                #myName,
+                #myEmail {
+                    visibility: hidden;
+                    opacity: 0;
+                    transition: opacity .16s ease;
+                }
+
+                #myName.milan-identity-ready,
+                #myEmail.milan-identity-ready {
+                    visibility: visible;
+                    opacity: 1;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const nameEl = document.getElementById("myName");
+        const emailEl = document.getElementById("myEmail");
+
+        if (!nameEl || !emailEl) return;
+
+        nameEl.classList.remove("milan-identity-ready");
+        emailEl.classList.remove("milan-identity-ready");
+
+        const reveal = () => {
+            const name = String(nameEl.textContent || "").trim();
+            const email = String(emailEl.textContent || "").trim();
+
+            if (
+                name &&
+                name !== "MILAN User" &&
+                email &&
+                email !== "Welcome to Milan"
+            ) {
+                nameEl.classList.add("milan-identity-ready");
+                emailEl.classList.add("milan-identity-ready");
+                return true;
+            }
+
+            return false;
+        };
+
+        if (reveal()) return;
+
+        const observer = new MutationObserver(() => {
+            if (reveal()) observer.disconnect();
+        });
+
+        observer.observe(nameEl, {
+            childList: true,
+            characterData: true,
+            subtree: true
+        });
+
+        observer.observe(emailEl, {
+            childList: true,
+            characterData: true,
+            subtree: true
+        });
+
+        // Authoritative identity fetch so the name does not depend only
+        // on another script finishing at exactly the right moment.
+        const auth = getToken();
+
+        if (auth) {
+            fetch("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + auth,
+                    "Accept": "application/json"
+                },
+                cache: "no-store"
+            })
+                .then(async (response) => {
+                    if (!response.ok) return null;
+                    return response.json();
+                })
+                .then((me) => {
+                    if (!me) return;
+
+                    const profile = me.profile || {};
+                    const name =
+                        profile.display_name ||
+                        profile.name ||
+                        me.name ||
+                        me.email?.split("@")[0] ||
+                        "";
+
+                    const email = me.email || "";
+
+                    if (name) nameEl.textContent = name;
+                    if (email) emailEl.textContent = email;
+
+                    reveal();
+                })
+                .catch(() => {
+                    // Existing boot/auth system remains authoritative.
+                });
+        }
+    }
+
+    /* ---------- Robust Home Feed ---------- */
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (m) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[m]);
+    }
+
+    function getRecordText(record) {
+        const data = record?.data || {};
+
+        return String(
+            data.text ||
+            data.caption ||
+            record?.text ||
+            record?.caption ||
+            ""
+        ).trim();
+    }
+
+    function getRecordDate(record) {
+        return (
+            record?.dateModified ||
+            record?.dateCreated ||
+            record?.createdAt ||
+            new Date().toISOString()
+        );
+    }
+
+    function normalizeFeedPayload(payload) {
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload?.records)) return payload.records;
+        if (Array.isArray(payload?.items)) return payload.items;
+        if (Array.isArray(payload?.entries)) return payload.entries;
+        if (Array.isArray(payload?.data)) return payload.data;
+        if (Array.isArray(payload?.feed)) return payload.feed;
+        return [];
+    }
+
+    async function fetchJsonWithRetry(url, options = {}, attempts = 3) {
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    cache: "no-store"
+                });
+
+                const body = await response.json().catch(() => ({}));
+
+                if (response.ok) {
+                    return body;
+                }
+
+                const error = new Error(
+                    body?.error ||
+                    body?.detail ||
+                    `HTTP ${response.status}`
+                );
+
+                error.status = response.status;
+
+                // Retry only transient failures.
+                if (
+                    ![408, 425, 429, 500, 502, 503, 504, 530].includes(
+                        response.status
+                    )
+                ) {
+                    throw error;
+                }
+
+                lastError = error;
+            } catch (error) {
+                lastError = error;
+            }
+
+            if (attempt < attempts) {
+                await new Promise((resolve) =>
+                    setTimeout(resolve, 500 * attempt)
+                );
+            }
+        }
+
+        throw lastError || new Error("Feed request failed");
+    }
+
+    function renderStableFeed(records) {
+        const list = document.getElementById("milanFeedList");
+        if (!list) return;
+
+        const clean = records
+            .filter((record) =>
+                getRecordText(record) || record?.title
+            )
+            .sort(
+                (a, b) =>
+                    new Date(getRecordDate(b)) -
+                    new Date(getRecordDate(a))
+            );
+
+        if (!clean.length) {
+            list.innerHTML = `
+                <div class="milan-feed-empty">
+                    No posts yet. Write your first quote above.
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = clean.map((record) => {
+            const text = escapeHtml(getRecordText(record))
+                .replace(/\n/g, "<br>");
+
+            const title = escapeHtml(
+                record?.title || "MILAN Quote"
+            );
+
+            const date = new Date(getRecordDate(record));
+            const when = Number.isNaN(date.getTime())
+                ? "Just now"
+                : date.toLocaleString([], {
+                    day: "2-digit",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+
+            const id = escapeHtml(
+                record?.id ||
+                record?.recordId ||
+                record?.dwnRecordId ||
+                ""
+            );
+
+            return `
+                <article class="milan-feed-card" data-record-id="${id}">
+                    <div class="milan-feed-card-head">
+                        <div class="milan-feed-avatar">M</div>
+                        <div class="milan-feed-meta">
+                            <strong class="milan-feed-name">
+                                ${escapeHtml(
+                                    document.getElementById("myName")
+                                        ?.textContent?.trim() ||
+                                    "MILAN User"
+                                )}
+                            </strong>
+                            <span>${escapeHtml(when)}</span>
+                        </div>
+                    </div>
+
+                    <div class="milan-feed-body">
+                        <h3>${title}</h3>
+                        <p>${text}</p>
+                    </div>
+
+                    <div class="milan-feed-actions">
+                        <button type="button">♡ Like</button>
+                        <button type="button">💬 Comment</button>
+                        <button type="button">↗ Share</button>
+                        <button type="button">🔖 Save</button>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
+    async function loadStableHomeFeed() {
+        const list = document.getElementById("milanFeedList");
+        const auth = getToken();
+
+        if (!list) return;
+
+        if (!auth) {
+            list.innerHTML = `
+                <div class="milan-feed-empty">
+                    Login required to load your feed.
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = `
+            <div class="milan-feed-loading">
+                Loading your MILAN feed…
+            </div>
+        `;
+
+        const headers = {
+            "Authorization": "Bearer " + auth,
+            "Accept": "application/json"
+        };
+
+        let records = [];
+
+        try {
+            /*
+             * PRIMARY PATH:
+             * This is the same production feed path already used by
+             * MILAN's main boot/loadFeed() system.
+             */
+            const payload = await fetchJsonWithRetry(
+                "/api/social/feed?scope=all",
+                { headers },
+                3
+            );
+
+            records = normalizeFeedPayload(payload);
+
+        } catch (primaryError) {
+            console.warn(
+                "[MILAN] /social/feed failed, trying DWN records fallback:",
+                primaryError.message
+            );
+
+            try {
+                /*
+                 * FALLBACK PATH:
+                 * Direct DWN record listing.
+                 */
+                const payload = await fetchJsonWithRetry(
+                    "/api/records",
+                    { headers },
+                    3
+                );
+
+                records = normalizeFeedPayload(payload);
+
+            } catch (fallbackError) {
+                console.error(
+                    "[MILAN] Both feed paths failed:",
+                    fallbackError
+                );
+
+                /*
+                 * Never replace a working feed with a scary permanent
+                 * error message. Keep the retry control lightweight.
+                 */
+                list.innerHTML = `
+                    <div class="milan-feed-empty">
+                        Feed is reconnecting…
+                        <button type="button"
+                                id="milanFeedRetryStable">
+                            Retry
+                        </button>
+                    </div>
+                `;
+
+                document
+                    .getElementById("milanFeedRetryStable")
+                    ?.addEventListener(
+                        "click",
+                        loadStableHomeFeed,
+                        { once: true }
+                    );
+
+                return;
+            }
+        }
+
+        renderStableFeed(records);
+    }
+
+    function installFeedFix() {
+        const list = document.getElementById("milanFeedList");
+
+        if (!list) return;
+
+        // Replace the old error-prone loader exposed globally.
+        window.milanRefreshHomeFeed = loadStableHomeFeed;
+
+        const refresh = document.getElementById("milanFeedRefresh");
+
+        if (
+            refresh &&
+            refresh.dataset.stableFeedBound !== "1"
+        ) {
+            refresh.dataset.stableFeedBound = "1";
+            refresh.addEventListener(
+                "click",
+                loadStableHomeFeed
+            );
+        }
+
+        loadStableHomeFeed();
+    }
+
+    function start() {
+        installIdentityGuard();
+        installFeedFix();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start);
+    } else {
+        start();
+    }
+})();
