@@ -183,3 +183,128 @@
 
     console.log("[MILAN] All primary UI controls activated.");
 })();
+
+/* =========================================================
+   MILAN — DWN TEXT / QUOTE PERSISTENCE
+   Every published composer text becomes a persistent
+   private DWN record for the authenticated user.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    function getMilanToken() {
+        return (
+            localStorage.getItem("milan_token") ||
+            localStorage.getItem("milanToken") ||
+            ""
+        );
+    }
+
+    async function publishQuoteToDwn() {
+        const textarea = document.getElementById("postText");
+        const button = document.getElementById("publishBtn");
+
+        if (!textarea || !button) return;
+
+        const text = String(textarea.value || "").trim();
+
+        if (!text) {
+            alert("Write something first.");
+            textarea.focus();
+            return;
+        }
+
+        const token = getMilanToken();
+
+        if (!token) {
+            alert("Your login session is missing. Please login again.");
+            return;
+        }
+
+        const privacyTool = document.querySelector(".composer-tools .tool:last-child");
+        const accessMode =
+            privacyTool?.dataset?.privacy === "public"
+                ? "public"
+                : "private";
+
+        const oldText = button.textContent;
+
+        try {
+            button.disabled = true;
+            button.textContent = "Saving…";
+
+            const response = await fetch("/api/records", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token,
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    title: "MILAN Quote",
+                    data: {
+                        kind: "quote",
+                        text,
+                        createdAt: new Date().toISOString()
+                    },
+                    dataFormat: "application/json",
+                    accessMode,
+                    sharedWithDids: [],
+                    tags: ["quote"]
+                })
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    result.detail ||
+                    "Quote could not be stored on DWN."
+                );
+            }
+
+            textarea.value = "";
+
+            button.textContent = "Saved ✓";
+
+            console.log("[MILAN] Quote stored on DWN:", {
+                recordId: result.id || result.recordId || null,
+                accessMode
+            });
+
+            setTimeout(() => {
+                button.textContent = oldText;
+                button.disabled = false;
+            }, 1200);
+
+        } catch (error) {
+            console.error("[MILAN] DWN quote save failed:", error);
+
+            button.textContent = oldText;
+            button.disabled = false;
+
+            alert(
+                "Quote could not be saved to DWN.\n\n" +
+                (error.message || "Unknown error")
+            );
+        }
+    }
+
+    function bindQuotePublisher() {
+        const button = document.getElementById("publishBtn");
+
+        if (!button || button.dataset.dwnQuoteBound === "1") return;
+
+        button.dataset.dwnQuoteBound = "1";
+        button.addEventListener("click", publishQuoteToDwn);
+
+        console.log("[MILAN] DWN quote publisher active.");
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindQuotePublisher);
+    } else {
+        bindQuotePublisher();
+    }
+})();
