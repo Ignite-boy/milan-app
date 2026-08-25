@@ -1091,3 +1091,48 @@
         start();
     }
 })();
+
+/* =========================================================
+   MILAN — PUBLISH BUTTON TEST
+   Shows exactly what the user typed before DWN integration.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    function bindPublishTest() {
+        const oldBtn = document.getElementById("publishBtn");
+        const textarea = document.getElementById("postText");
+
+        if (!oldBtn || !textarea || oldBtn.dataset.publishTestBound === "1") {
+            return;
+        }
+
+        const btn = oldBtn.cloneNode(true);
+        oldBtn.replaceWith(btn);
+        btn.dataset.publishTestBound = "1";
+
+        btn.addEventListener("click", function () {
+            const text = String(textarea.value || "").trim();
+
+            if (!text) {
+                alert("Please write something first.");
+                textarea.focus();
+                return;
+            }
+
+            alert(
+                "MILAN Publish\n\n" +
+                "Your text:\n\n" +
+                text
+            );
+        });
+
+        console.log("[MILAN] Publish button test handler active.");
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindPublishTest);
+    } else {
+        bindPublishTest();
+    }
+})();
