@@ -187,6 +187,23 @@
        NAVIGATION
        ========================================================= */
 
+    function initLogout() {
+        const button = document.getElementById("logoutBtn");
+        if (!button) return;
+
+        const cleanButton = button.cloneNode(true);
+        button.replaceWith(cleanButton);
+
+        cleanButton.addEventListener("click", () => {
+            localStorage.removeItem("milan_token");
+            localStorage.removeItem("milanToken");
+            localStorage.removeItem("milanBootCache");
+            sessionStorage.clear();
+
+            window.location.replace("/");
+        });
+    }
+
     function initNavigation() {
         const navButtons = Array.from(
             document.querySelectorAll(".nav button")
@@ -904,6 +921,7 @@
 
     function init() {
         initIdentityGuard();
+        initLogout();
         initNavigation();
         initComposerTools();
         initPublish();
