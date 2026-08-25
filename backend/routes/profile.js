@@ -1,9 +1,62 @@
 const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const { readJson, writeJson, findUserById, addActivity } = require('../utils/store');
 const realDwn = require('../services/realDwnNodeClient');
+const MINI_DWN_ENDPOINT = process.env.MINI_DWN_ENDPOINT || 'http://127.0.0.1:3000';
 
 const router = express.Router();
+
+const supabaseDb = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
+async function resolveAccount(req, users) {
+  // Supabase is the authoritative account identity store.
+  const byId = await supabaseDb
+    .from('users')
+    .select('id,email,name,did')
+    .eq('id', req.userId)
+    .maybeSingle();
+
+  if (!byId.error && byId.data) {
+    return {
+      email: byId.data.email,
+      user: {
+        ...(users[byId.data.email] || {}),
+        id: byId.data.id,
+        email: byId.data.email,
+        name: byId.data.name,
+        did: byId.data.did
+      }
+    };
+  }
+
+  const email = String(req.userEmail || '').trim().toLowerCase();
+  if (email) {
+    const byEmail = await supabaseDb
+      .from('users')
+      .select('id,email,name,did')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (!byEmail.error && byEmail.data) {
+      return {
+        email: byEmail.data.email,
+        user: {
+          ...(users[byEmail.data.email] || {}),
+          id: byEmail.data.id,
+          email: byEmail.data.email,
+          name: byEmail.data.name,
+          did: byEmail.data.did
+        }
+      };
+    }
+  }
+
+  return null;
+}
 
 function profileRecordId(did) {
   return `profile-picture:${did}`;
@@ -30,75 +83,101 @@ function dataUrlToDwn(dataUrl) {
   return { mime, bytes, encodedData };
 }
 
+async function miniDwnProcess(target, message, encodedData) {
+  const response = await fetch(`${MINI_DWN_ENDPOINT}/json-rpc`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: Date.now().toString(),
+      method: 'dwn.processMessage',
+      params: {
+        target,
+        message,
+        ...(encodedData ? { encodedData } : {})
+      }
+    })
+  });
+
+  const body = await response.json();
+  const reply = body?.result?.reply;
+  const status = reply?.status?.code;
+
+  if (!response.ok) {
+    throw new Error(`Mini-DWN HTTP ${response.status}`);
+  }
+
+  if (status >= 400) {
+    throw new Error(reply?.status?.detail || `Mini-DWN status ${status}`);
+  }
+
+  return reply || {};
+}
+
 async function writeProfilePicture(did, dataUrl) {
   const parsed = dataUrlToDwn(dataUrl);
   if (!parsed) return null;
 
   const recordId = profileRecordId(did);
 
-  const payload = {
-    jsonrpc: '2.0',
-    id: Date.now(),
-    method: 'dwn.processMessage',
-    params: {
-      target: did,
-      message: {
-        descriptor: {
-          interface: 'Records',
-          method: 'Write',
-          recordId,
-          dataFormat: parsed.mime
-        }
-      },
-      encodedData: parsed.encodedData
+  const message = {
+    descriptor: {
+      interface: 'Records',
+      method: 'Write',
+      recordId,
+      dataFormat: parsed.mime,
+      dateCreated: new Date().toISOString(),
+      dateModified: new Date().toISOString()
+    },
+    authorization: {
+      payload: 'e30',
+      signatures: []
     }
   };
 
-  const response = await realDwn.postJson('/json-rpc', payload);
-  const statusCode = response?.result?.reply?.status?.code;
+  const reply = await miniDwnProcess(did, message, parsed.encodedData);
 
-  if (statusCode !== 202) {
-    const detail = response?.result?.reply?.status?.detail || 'DWN profile-picture write failed';
-    throw new Error(detail);
+  if (reply.status?.code !== 202) {
+    throw new Error(reply.status?.detail || 'Mini-DWN profile write failed');
   }
 
   return {
     recordId,
     mime: parsed.mime,
-    dataCid: response?.result?.reply?.dataCid || '',
-    dataSize: response?.result?.reply?.dataSize || parsed.bytes.length
+    dataSize: parsed.bytes.length,
+    avatar: dataUrl
   };
 }
 
 async function readProfilePicture(did) {
   const recordId = profileRecordId(did);
 
-  const payload = {
-    jsonrpc: '2.0',
-    id: Date.now(),
-    method: 'dwn.processMessage',
-    params: {
-      target: did,
-      message: {
-        descriptor: {
-          interface: 'Records',
-          method: 'Read',
-          recordId
-        }
-      }
+  const message = {
+    descriptor: {
+      interface: 'Records',
+      method: 'Read',
+      recordId
+    },
+    authorization: {
+      payload: 'e30',
+      signatures: []
     }
   };
 
-  const response = await realDwn.postJson('/json-rpc', payload);
-  const reply = response?.result?.reply || {};
-  const encodedData = reply.encodedData;
+  const reply = await miniDwnProcess(did, message);
 
+  if (reply.status?.code === 404) {
+    return null;
+  }
+
+  if (reply.status?.code !== 200) {
+    throw new Error(reply.status?.detail || 'Mini-DWN profile read failed');
+  }
+
+  const encodedData = reply.encodedData;
   if (!encodedData) return null;
 
-  const mime =
-    reply?.record?.dataFormat ||
-    reply?.result?.dataFormat ||
-    'image/jpeg';
+  const mime = reply.record?.dataFormat || 'image/jpeg';
 
   const base64 = String(encodedData)
     .replace(/-/g, '+')
@@ -113,7 +192,7 @@ async function readProfilePicture(did) {
 
 router.get('/', auth, async (req, res) => {
   const users = readJson(global.usersFile, {});
-  const found = findUserById(users, req.userId);
+  const found = await resolveAccount(req, users);
 
   if (!found) {
     return res.status(404).json({ error: 'User not found' });
@@ -140,7 +219,7 @@ router.get('/', auth, async (req, res) => {
 
 router.put('/', auth, async (req, res) => {
   const users = readJson(global.usersFile, {});
-  const found = findUserById(users, req.userId);
+  const found = await resolveAccount(req, users);
 
   if (!found) {
     return res.status(404).json({ error: 'User not found' });
@@ -152,7 +231,7 @@ router.put('/', auth, async (req, res) => {
     let dwnPicture = null;
 
     if (avatar && String(avatar).startsWith('data:image/')) {
-      dwnPicture = await writeProfilePicture(found.user.did, avatar);
+      dwnPicture = await writeProfilePicture(found.user.did, avatar, found.user.id, found.email);
     } else {
       dwnPicture = await readProfilePicture(found.user.did);
     }

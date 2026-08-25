@@ -115,21 +115,89 @@
         photoInput.removeEventListener("change", handleUpload);
         photoInput.addEventListener("change", handleUpload);
     }
-    function handleUpload(e) {
+    async function handleUpload(e) {
         const file = this.files?.[0];
-        if (!file || !file.type.startsWith("image/")) { this.value = ""; return; }
+        if (!file || !file.type.startsWith("image/")) {
+            this.value = "";
+            return;
+        }
+
         const reader = new FileReader();
-        reader.onload = function(e) {
+
+        reader.onload = async function(e) {
             const dataUrl = e.target.result;
-            localStorage.setItem("milanAvatar", dataUrl);
-            ["myAvatar", "composerAvatar"].forEach(id => { const el=document.getElementById(id); if(el){el.style.backgroundImage='url("'+dataUrl+'")'; el.style.backgroundSize="cover"; el.style.backgroundPosition="center"; el.style.backgroundRepeat="no-repeat"; el.textContent="";} });
-            const preview=document.getElementById("editProfilePhotoPreview"); if(preview){preview.src=""; preview.style.display="none";}
-            if(window.me&&window.me.profile){window.me.profile.avatar=dataUrl;}
-            const token=localStorage.getItem("milanToken")||"";
-            if(token){fetch("/api/profile",{method:"PUT",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({avatar:dataUrl})}).catch(err=>console.warn("Backend avatar save failed:",err));}
+            const token = localStorage.getItem("milan_token") || "";
+
+            if (!token) {
+                console.error("[MILAN] DP upload aborted: no milan_token");
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/profile", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({ avatar: dataUrl })
+                });
+
+                const saved = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(saved.error || "Profile save failed: " + response.status);
+                }
+
+                const verifiedResponse = await fetch("/api/profile", {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                const verified = await verifiedResponse.json();
+
+                if (!verifiedResponse.ok || !verified.avatar) {
+                    throw new Error("DP was not verified after DWN save");
+                }
+
+                console.log("[MILAN] DP verified from server/DWN");
+
+                if (window.me) {
+                    window.me.profile = {
+                        ...(window.me.profile || {}),
+                        ...verified
+                    };
+                }
+
+                localStorage.setItem("milanAvatar", verified.avatar);
+
+                ["myAvatar", "composerAvatar"].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.style.backgroundImage = 'url("' + verified.avatar + '")';
+                        el.style.backgroundSize = "cover";
+                        el.style.backgroundPosition = "center";
+                        el.style.backgroundRepeat = "no-repeat";
+                        el.textContent = "";
+                    }
+                });
+
+                const preview = document.getElementById("editProfilePhotoPreview");
+                if (preview) {
+                    preview.src = "";
+                    preview.style.display = "none";
+                }
+
+            } catch (err) {
+                console.error("[MILAN] DP save/verify failed:", err);
+                alert("Profile picture could not be saved to DWN.");
+            }
         };
+
         reader.readAsDataURL(file);
     }
+
     if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initUpload); else initUpload();
 })();
 </script>
@@ -191,5 +259,86 @@
   }
 })();
 </script>
+
+<script>
+(function () {
+  async function restoreMilanSession() {
+    const token = localStorage.getItem("milan_token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("/api/auth/me", {
+        headers: {
+          "Authorization": "Bearer " + token
+        },
+        cache: "no-store"
+      });
+
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem("milan_token");
+          localStorage.removeItem("milanAvatar");
+          return;
+        }
+        throw new Error("auth/me failed: " + res.status);
+      }
+
+      const me = await res.json();
+      let profile = me.profile || {};
+
+      // Always verify profile directly from the authoritative backend/DWN path.
+      try {
+        const pr = await fetch("/api/profile", {
+          headers: {
+            "Authorization": "Bearer " + token
+          },
+          cache: "no-store"
+        });
+
+        if (pr.ok) {
+          const savedProfile = await pr.json();
+          profile = { ...profile, ...savedProfile };
+        }
+      } catch (e) {
+        console.warn("[MILAN] profile restore failed:", e.message);
+      }
+
+      if (profile.avatar) {
+        localStorage.setItem("milanAvatar", profile.avatar);
+
+        ["myAvatar", "composerAvatar"].forEach(function (id) {
+          const el = document.getElementById(id);
+          if (!el) return;
+
+          el.style.backgroundImage = 'url("' + profile.avatar + '")';
+          el.style.backgroundSize = "cover";
+          el.style.backgroundPosition = "center";
+          el.style.backgroundRepeat = "no-repeat";
+          el.textContent = "";
+        });
+
+        console.log("[MILAN] DP restored from authoritative profile/DWN");
+      }
+
+      const name = profile.display_name || me.name || me.email?.split("@")[0] || "MILAN User";
+      const nameEl = document.getElementById("myName");
+      const emailEl = document.getElementById("myEmail");
+
+      if (nameEl) nameEl.textContent = name;
+      if (emailEl) emailEl.textContent = me.email || "";
+
+    } catch (e) {
+      console.error("[MILAN] session restore failed:", e);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", restoreMilanSession, { once: true });
+  } else {
+    restoreMilanSession();
+  }
+})();
+</script>
+
 </body>
 </html>

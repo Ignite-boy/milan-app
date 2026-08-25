@@ -262,28 +262,83 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
 
 
 router.get('/me', auth, asyncRoute(async (req, res) => {
-  // Hot path: serve from the local cache. No repair and no remote write on the
-  // critical path — /me must be a fast read (it runs on every page load).
-  let users = cleanUsersDb(readJson(global.usersFile, {}));
-  let found = Object.entries(users).find(([,u]) => u.id === req.userId);
-  if (!found) {
-    // Cache miss (rare — e.g. a cold/restarted instance): pull the authoritative
-    // snapshot once. loadUsersFromDwn() also repairs the local file internally.
-    users = await loadUsersFromDwn();
-    found = Object.entries(users).find(([,u]) => u.id === req.userId);
+  const { data: dbUser, error } = await supabaseDb
+    .from('users')
+    .select('id,email,name,did')
+    .eq('id', req.userId)
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({
+      error: 'Account database unavailable',
+      details: error.message,
+      code: error.code
+    });
   }
-  if (!found) return res.status(404).json({ error: 'User not found' });
-  const [email, user] = found;
-  // ensureUserDwn only mutates the in-memory user object and returns it (not a
-  // change flag), so we can't cheaply tell whether anything actually changed.
-  // Persist the (idempotent) result in the background — never block the response.
-  ensureUserDwn(user, email); users[email] = user;
-  persistUsersAuthoritatively(users).catch(err => console.warn('[me] bg DWN sync failed:', err.message));
-  res.json({ email, did: user.did, dwn: getDwnInfo(user), profile: user.profile || {}, settings: user.settings || {}, login_count: user.login_count || 0, created_at: user.created_at, last_login_at: user.last_login_at });
+
+  if (!dbUser) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  let avatar = '';
+  const recordId = `profile-picture:${dbUser.did}`;
+
+  try {
+    const response = await fetch(`${process.env.MINI_DWN_ENDPOINT || 'http://127.0.0.1:3000'}/json-rpc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: Date.now().toString(),
+        method: 'dwn.processMessage',
+        params: {
+          target: dbUser.did,
+          message: {
+            descriptor: {
+              interface: 'Records',
+              method: 'Read',
+              recordId
+            },
+            authorization: {
+              payload: 'e30',
+              signatures: []
+            }
+          }
+        }
+      })
+    });
+
+    const body = await response.json();
+    const reply = body?.result?.reply;
+
+    if (reply?.status?.code === 200 && reply.encodedData) {
+      const encoded = String(reply.encodedData)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(Math.ceil(String(reply.encodedData).length / 4) * 4, '=');
+
+      const mime = reply.record?.dataFormat || 'image/jpeg';
+      avatar = `data:${mime};base64,${encoded}`;
+    }
+  } catch (e) {
+    console.warn('[auth/me] profile picture restore failed:', e.message);
+  }
+
+  return res.json({
+    id: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name,
+    did: dbUser.did,
+    profile: {
+      avatar,
+      avatarRecordId: recordId
+    },
+    settings: {},
+    emailVerified: true,
+    twoFactorEnabled: false
+  });
 }));
 
-/* ── Email verification ────────────────────────────────────────── */
-// Confirm an email via the link token OR the 6-digit code.
 router.post('/verify-email', asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const token = String(req.body.token || '');
