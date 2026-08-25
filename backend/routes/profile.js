@@ -2,7 +2,6 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const { readJson, writeJson, findUserById, addActivity } = require('../utils/store');
-const realDwn = require('../services/realDwnNodeClient');
 const MINI_DWN_ENDPOINT = process.env.MINI_DWN_ENDPOINT || 'http://127.0.0.1:3000';
 
 const router = express.Router();
@@ -13,7 +12,6 @@ const supabaseDb = createClient(
 );
 
 async function resolveAccount(req, users) {
-  // Supabase is the authoritative account identity store.
   const byId = await supabaseDb
     .from('users')
     .select('id,email,name,did')
@@ -86,7 +84,7 @@ function dataUrlToDwn(dataUrl) {
 async function miniDwnProcess(target, message, encodedData) {
   const response = await fetch(`${MINI_DWN_ENDPOINT}/json-rpc`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({
       jsonrpc: '2.0',
       id: Date.now().toString(),
@@ -99,7 +97,17 @@ async function miniDwnProcess(target, message, encodedData) {
     })
   });
 
-  const body = await response.json();
+  const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+  const raw = await response.text();
+
+  let body;
+  try {
+    body = JSON.parse(raw);
+  } catch (err) {
+    const preview = raw.replace(/\s+/g, ' ').slice(0, 220);
+    throw new Error(`Mini-DWN returned non-JSON (${response.status}, ${contentType || 'no content-type'}): ${preview}`);
+  }
+
   const reply = body?.result?.reply;
   const status = reply?.status?.code;
 
@@ -231,7 +239,7 @@ router.put('/', auth, async (req, res) => {
     let dwnPicture = null;
 
     if (avatar && String(avatar).startsWith('data:image/')) {
-      dwnPicture = await writeProfilePicture(found.user.did, avatar, found.user.id, found.email);
+      dwnPicture = await writeProfilePicture(found.user.did, avatar);
     } else {
       dwnPicture = await readProfilePicture(found.user.did);
     }
