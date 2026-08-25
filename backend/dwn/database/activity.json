@@ -1272,6 +1272,16 @@
   ],
   "36a6abf0-79cd-4d8a-bbda-01bafc5dcebd": [
     {
+      "id": "1787676536924-7128dea0fdf448",
+      "action": "record.created.in.dwn",
+      "details": {
+        "title": "MILAN Quote",
+        "accessMode": "private",
+        "dwnRecordId": "8af6b8dd-eb9a-4723-a606-62652cbaca68"
+      },
+      "at": "2026-08-25T16:48:56.924Z"
+    },
+    {
       "id": "1787655846846-1a9f1a09c972e8",
       "action": "profile.updated",
       "details": {},
