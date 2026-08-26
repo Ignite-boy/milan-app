@@ -518,11 +518,74 @@ async function createRecord(userId, ownerDid, body = {}) {
     storagePath: path.relative(path.join(__dirname, '..'), recordFile(userId, id)).replace(/\\/g, '/')
   };
   applyAccess(record, access.mode, access.dids);
-  await markCloudSync(record, ownerDid);
+
+  /* ---------------------------------------------------------
+     Publish must not be blocked by remote DWN sync latency.
+     Persist the record first, then sync to the authoritative
+     cloud/DWN store asynchronously.
+     --------------------------------------------------------- */
+
+  record.cloudDwn = record.cloudDwn || {};
+  record.cloudDwn.sync = {
+    ok: false,
+    status: 'pending',
+    queuedAt: new Date().toISOString()
+  };
+
   list.unshift(record);
   persistRecord(userId, record);
   all[userId] = list;
   writeIndex(all);
+
+  markCloudSync(record, ownerDid)
+    .then(() => {
+      record.cloudDwn = record.cloudDwn || {};
+      record.cloudDwn.sync = {
+        ok: true,
+        status: 'synced',
+        syncedAt: new Date().toISOString()
+      };
+
+      try {
+        persistRecord(userId, record);
+        const latest = ownerRecordsRaw(userId);
+        latest.all[userId] = latest.list;
+        writeIndex(latest.all);
+      } catch (persistErr) {
+        console.error(
+          'Post cloud-sync status persist failed:',
+          persistErr.message
+        );
+      }
+    })
+    .catch(err => {
+      record.cloudDwn = record.cloudDwn || {};
+      record.cloudDwn.sync = {
+        ok: false,
+        status: 'failed',
+        failedAt: new Date().toISOString(),
+        error: String(err?.message || err || 'DWN sync failed').slice(0, 500)
+      };
+
+      try {
+        persistRecord(userId, record);
+        const latest = ownerRecordsRaw(userId);
+        latest.all[userId] = latest.list;
+        writeIndex(latest.all);
+      } catch (persistErr) {
+        console.error(
+          'Post cloud-sync failure status persist failed:',
+          persistErr.message
+        );
+      }
+
+      console.error(
+        'Background DWN sync failed for record',
+        record.id,
+        err
+      );
+    });
+
   return toClient(record, ownerDid);
 }
 
