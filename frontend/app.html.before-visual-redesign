@@ -8,8 +8,6 @@
   <link rel="stylesheet" href="/milan-ui.css">
   <link rel="stylesheet" href="/premium.css">
   <link rel="stylesheet" href="/assets/css/app-layout.css">
-  <link rel="stylesheet" href="/assets/css/milan-visual-base.css">
-  <link rel="stylesheet" href="/assets/css/milan-web5-engine.css">
 </head>
 <body>
 <div class="app">
@@ -36,10 +34,6 @@
       <img id="editProfilePhotoPreview" alt="Profile photo">
     </label>
     <h2 id="myName"></h2><p id="myEmail"></p>
-    <span id="myDid" class="milan-data-bridge" aria-hidden="true"></span>
-    <span id="myDwn" class="milan-data-bridge" aria-hidden="true"></span>
-    <span id="privacyScore" class="milan-data-bridge" aria-hidden="true"></span>
-    <span id="privacyBar" class="milan-data-bridge" aria-hidden="true"></span>
     <div class="profile-stats"><div class="profile-stat"><b id="peopleCount">0</b><span>People</span></div><div class="profile-stat"><b id="postCount">0</b><span>Posts</span></div><div class="profile-stat"><b id="notifCount">0</b><span>Alerts</span></div></div>
   </div>
   <nav class="nav">
@@ -76,15 +70,9 @@
 
 
 <script src="/milan-creative-mode.js" defer></script>
-<script src="/assets/js/milan-creative-bridge.js" defer></script>
 <script src="/milan-polish.js" defer></script>
 <script src="/assets/js/milan-ui-actions.js?v=1" defer></script>
 <script src="/assets/js/app-page-actions.js" defer></script>
-<script src="/assets/js/milan-web5-motion.js" defer></script>
-<script src="/assets/js/milan-did-ring.js" defer></script>
-<script src="/assets/js/milan-identity-status.js" defer></script>
-<script src="/assets/js/milan-identity-intelligence.js" defer></script>
-<script src="/assets/js/milan-identity-status-sync.js" defer></script>
 
 
 </body>

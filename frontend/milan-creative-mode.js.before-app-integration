@@ -1,6 +1,6 @@
 /*!
  * MILAN — Creative Mode 🎨
- * One-click full-UI theme switcher. 12 hand-tuned themes.
+ * One-click full-UI theme switcher. 10 hand-tuned themes.
  * Pure frontend, zero dependencies. Persists in localStorage.
  * Works on the login page (index.html) and the app (app.html).
  */
@@ -75,12 +75,6 @@
       bg: 'radial-gradient(ellipse at 20% 0,rgba(125,211,252,.38),transparent 48%),radial-gradient(ellipse at 80% 12%,rgba(167,243,208,.28),transparent 45%),#f2fbff',
       surface: '#ffffff', surface2: '#eaf8ff', text: '#17324d', muted: '#6b879f', line: 'rgba(14,165,233,.22)',
       brand: '#0ea5e9', brand2: '#14b8a6', btn: '#ffffff', input: '#f2fbff' }
-,
-    
-    { id: 'obsidian', name: 'Obsidian Gold', emoji: '🜁', light: false,
-      bg: 'radial-gradient(ellipse at 18% 0,rgba(245,158,11,.20),transparent 46%),radial-gradient(ellipse at 82% 10%,rgba(251,191,36,.12),transparent 45%),#080808',
-      surface: '#101010', surface2: '#191919', text: '#fff8e7', muted: '#a89b7e', line: 'rgba(245,158,11,.20)',
-      brand: '#f59e0b', brand2: '#facc15', btn: '#090909', input: 'rgba(8,8,8,.90)' }
   ];
 
   function byId(id) { for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i]; return null; }
@@ -101,7 +95,7 @@
       S + ' .brand h1,' + S + ' .heroTitle,' + S + ' .logo-center h2,' + S + ' .hero-title{background:' + grad + ' !important;-webkit-background-clip:text !important;background-clip:text !important;color:transparent !important;}',
       S + ' .tag,' + S + ' .muted,' + S + ' .mini,' + S + ' .card-header p{color:' + t.muted + ' !important;}',
       // buttons (primary)
-      S + ' button:not(.ghost):not(.soft):not(.mcm-btn):not(.tab):not(.mcm-card):not(.mcm-x):not(.mcm-surprise):not(.mcm-reset),' + S + ' .login-button,' + S + ' #loginBtn,' + S + ' #registerBtn{background:' + grad + ' !important;color:' + t.btn + ' !important;border:0 !important;box-shadow:0 6px 20px ' + t.brand + '44 !important;}',
+      S + ' button:not(.ghost):not(.soft):not(.mcm-btn):not(.tab),' + S + ' .login-button,' + S + ' #loginBtn,' + S + ' #registerBtn{background:' + grad + ' !important;color:' + t.btn + ' !important;border:0 !important;box-shadow:0 6px 20px ' + t.brand + '44 !important;}',
       // ghost/soft buttons
       S + ' button.ghost{background:transparent !important;color:' + t.brand + ' !important;border:1px solid ' + t.line + ' !important;}',
       // inputs
@@ -251,28 +245,7 @@
   fab.style.pointerEvents = 'auto';
     document.body.appendChild(fab);
     var overlay = buildPanel();
-
-    /* MILAN APP — use the existing topbar Theme button as
-       the Creative Mode launcher. Keep the floating FAB for
-       pages that do not have the app Theme control. */
-    var appThemeButton = document.querySelector('.icon-btn[title="Theme"]');
-
-    if (appThemeButton) {
-      appThemeButton.title = 'Creative Mode';
-      appThemeButton.setAttribute('aria-label', 'Creative Mode');
-      appThemeButton.setAttribute('type', 'button');
-
-      appThemeButton.addEventListener('click', function () {
-        overlay.classList.add('open');
-        refreshActive();
-      });
-
-    } else {
-      fab.addEventListener('click', function () {
-        overlay.classList.add('open');
-        refreshActive();
-      });
-    }
+    fab.addEventListener('click', function () { overlay.classList.add('open'); refreshActive(); });
     // keyboard: Shift+T toggles the panel
     document.addEventListener('keydown', function (e) {
       if ((e.shiftKey) && (e.key === 'T' || e.key === 't') && !/input|textarea|select/i.test((e.target.tagName || ''))) {
@@ -287,22 +260,6 @@
     var saved = localStorage.getItem(KEY);
     if (saved && byId(saved)) document.documentElement.setAttribute('data-mcm', saved);
   } catch (e) {}
-  // Boot on both login and app pages.
-  // Login may signal app-ready; app.html can also boot
-  // directly once DOM is ready.
-  var booted = false;
-
-  function safeBoot() {
-    if (booted) return;
-    booted = true;
-    boot();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', safeBoot, {once:true});
-  } else {
-    safeBoot();
-  }
-
-  window.addEventListener('milan:app-ready', safeBoot, {once:true});
+  // style injection needs <head>; if early, head exists already.
+  if (window.__milanAppReady) boot(); else window.addEventListener('milan:app-ready', boot, {once:true});
 })();

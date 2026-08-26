@@ -142,7 +142,221 @@ function initMilanMediaObserver(){
   ).forEach(el=>window.__milanMediaObserver.observe(el));
 }
 
-function postHtml(r){const p=r.ownerProfile||{},mine=r.social?.reactions?.mine,saved=savedIds().includes(r.id),owner=!!me&&r.owner===me.did;return`<article class="card post" id="post-${esc(r.id)}"><div class="postHead"><div class="postUser">${avatarHtml(p)}<div><b>${esc(p.name||"MILAN User")}</b><div class="mini">${esc(r.accessMode)} • ${new Date(r.dateModified||r.dateCreated||Date.now()).toLocaleString()}<br><span>${esc((p.did||r.owner||"").slice(0,44))}...</span> <button class="ghost" onclick="copyText('${esc(p.did||r.owner||"")}')">Copy DID</button></div></div></div><div>${owner?'<span class="badge">Owner</span>':'<span class="badge">Visible by permission</span>'}</div></div>${mediaHtml(r)}<div class="postBody"><div class="postTitle">${esc(r.title||"Untitled")}</div><div class="postText">${esc(postText(r))}</div><div style="margin-top:8px">${(r.tags||[]).map(t=>`<span class="badge">#${esc(t)}</span>`).join(" ")}</div></div><div class="postMetrics"><span class="reactionTotal">${r.social?.reactions?.total||0} reactions</span><span class="commentTotal">${r.social?.commentsCount||0} comments</span></div><div class="reactionBar"><button class="${"like"===mine?"active":""}" onclick="react('${r.id}','like',this)">👍 Like</button><button class="${"love"===mine?"active":""}" onclick="react('${r.id}','love',this)">💙 Love</button><button onclick="openComments('${r.id}')">💬 Comment</button><button onclick="toggleSave('${r.id}',this)">${saved?"🔖 Saved":"🔖 Save"}</button>${owner?`<button onclick="editPost('${r.id}')">✏️ Edit</button><button onclick="accessPanel('${r.id}')">🔐 Access</button><button class="danger" onclick="deletePost('${r.id}')">🗑 Delete</button>`:`<button onclick="requestAccess('${esc(r.owner||"")}','${r.id}')">🔑 Request</button>`}</div></article>`}function updateRecordLocal(id,patch){const i=currentFeed.findIndex(r=>r.id===id);if(i>=0){currentFeed[i]={...currentFeed[i],...patch};const el=$("post-"+id);el&&(el.outerHTML=postHtml(currentFeed[i]))}}async function react(id,type,btn){try{const summary=await api("/social/records/"+id+"/reactions",{method:"POST",body:JSON.stringify({type:type})}),r=currentFeed.find(x=>x.id===id);r&&(r.social=r.social||{},r.social.reactions=summary);const card=btn.closest(".post");card.querySelector(".reactionTotal").textContent=(summary.total||0)+" reactions",card.querySelectorAll(".reactionBar button").forEach(b=>b.classList.remove("active")),summary.mine===type&&btn.classList.add("active"),loadNotifications(),loadSummary()}catch(e){toast(e.message)}}async function openComments(id){try{const rows=await api("/social/records/"+id+"/comments");$("modalBody").innerHTML=`<h2>Comments</h2><div class="comments">${rows.map(c=>`<div class="comment">${avatarHtml(c.authorProfile||{})}<div class="bubble"><b>${esc(c.authorProfile?.name||"User")}</b><div>${esc(c.text)}</div><div class="mini">${new Date(c.createdAt).toLocaleString()}</div></div></div>`).join("")||'<div class="empty">No comments yet.</div>'}</div><textarea id="newComment" placeholder="Write a comment"></textarea><br><button onclick="addComment('${id}')">Post comment</button>`,$("modalBack").classList.remove("hidden")}catch(e){toast(e.message)}}async function addComment(id){try{const text=$("newComment").value.trim();if(!text)return toast("Write a comment first");await api("/social/records/"+id+"/comments",{method:"POST",body:JSON.stringify({text:text})}),closeModal();const r=currentFeed.find(x=>x.id===id);if(r){r.social=r.social||{},r.social.commentsCount=Number(r.social.commentsCount||0)+1;const card=$("post-"+id);card&&(card.querySelector(".commentTotal").textContent=r.social.commentsCount+" comments")}toast("Comment posted"),loadNotifications()}catch(e){toast(e.message)}}function accessPanel(id){$("modalBody").innerHTML=`<h2>Update access</h2><p class="mini">The DID box is blank every time. Paste only the DIDs you want to allow now.</p><label>Access mode</label><select id="accessMode"><option value="private">Private</option><option value="public">Public</option><option value="shared_did">Share with DID</option></select><label>Share DIDs</label><textarea id="accessDids" placeholder="Paste DIDs comma separated"></textarea><button onclick="updateAccess('${id}')">Update access</button>`,$("modalBack").classList.remove("hidden")}async function updateAccess(id){try{const mode=$("accessMode").value,dids=$("accessDids").value.split(",").map(x=>x.trim()).filter(x=>x.startsWith("did:"));await api("/records/"+id+"/permissions",{method:"PATCH",body:JSON.stringify({accessMode:mode,sharedWithDids:dids})}),closeModal(),toast("Access updated"),mediaPlaying()?loadSummary():await loadFeed()}catch(e){toast(e.message)}}function editPost(id){const r=currentFeed.find(x=>x.id===id);if(!r)return;const tags=(r.tags||[]).join(", ");$("modalBody").innerHTML=`<h2>Edit post</h2><label>Title</label><input id="editTitle" value="${esc(r.title||"")}"><label>Caption / Text</label><textarea id="editText">${esc(postText(r))}</textarea><label>Tags</label><input id="editTags" value="${esc(tags)}"><p class="mini">Media file is preserved while editing title, text or tags.</p><button onclick="saveEdit('${id}')">Save changes</button>`,$("modalBack").classList.remove("hidden")}async function saveEdit(id){try{const r=currentFeed.find(x=>x.id===id),text=$("editText").value,tags=$("editTags").value.split(",").map(x=>x.trim()).filter(Boolean);let data=r.data;data=data&&"media"===data.kind?{...data,caption:text}:{..."object"==typeof data?data:{},text:text,tags:tags};const updated=await api("/records/"+id,{method:"PUT",body:JSON.stringify({title:$("editTitle").value,data:data,tags:tags})});closeModal(),updateRecordLocal(id,updated),toast("Post updated")}catch(e){toast(e.message)}}async function deletePost(id){confirm("Delete this post?")&&(await api("/records/"+id,{method:"DELETE"}),currentFeed=currentFeed.filter(r=>r.id!==id),renderFeed(),toast("Post deleted"),loadSummary())}function sharePanel(id){accessPanel(id)}async function requestAccess(did,id){try{await api("/requests",{method:"POST",body:JSON.stringify({toDid:did,recordId:id,message:"Please allow access to this MILAN record."})}),toast("Access request sent")}catch(e){toast(e.message)}}async function publish(){try{const file=$("mediaFile").files[0],accessMode=$("privacy").value,sharedWithDids=$("shareDids").value.split(",").map(x=>x.trim()).filter(x=>x.startsWith("did:")),tags=$("tagsInput").value.split(",").map(x=>x.trim()).filter(Boolean);if("shared_did"===accessMode&&!sharedWithDids.length)throw new Error("Paste at least one DID for shared post");file?await apiUpload("/records/media",file,{title:$("postTitle").value||file.name,caption:$("postText").value,accessMode:accessMode,sharedWithDids:sharedWithDids,tags:tags}):await api("/records",{method:"POST",body:JSON.stringify({title:$("postTitle").value||"MILAN Post",data:{text:$("postText").value,tags:tags},dataFormat:"application/json",accessMode:accessMode,sharedWithDids:sharedWithDids,tags:tags})}),["postTitle","postText","mediaFile","tagsInput","shareDids"].forEach(id=>$(id).value=""),$("privacy").value="private",$("shareBox").classList.add("hidden"),toast("Post published"),await loadFeed(),await loadSummary()}catch(e){toast(e.message)}}function peopleActions(p){const did=esc(p.did||""),id=esc(p.connectionId||"");let primary="";return"none"===p.connectionStatus||"rejected"===p.connectionStatus?primary=`<button onclick="sendConnect('${did}')">➕ Connect</button>`:"sent"===p.connectionStatus?primary='<button class="ghost" disabled>⏳ Sent</button>':"received"===p.connectionStatus?primary=`<div class="actionRow"><button class="ok" onclick="approveConnect('${id}')">✓ Accept</button><button class="danger" onclick="rejectConnect('${id}')">✕ Reject</button></div>`:"friends"===p.connectionStatus&&(primary='<button class="ok" disabled>✓ Connected</button>'),`<div class="personActions">${primary}<div class="actionRow"><button class="ghost" onclick="copyText('${did}')">📋 DID</button><button class="soft" onclick="requestData('${did}')">🔐 Request</button></div></div>`}async function sendConnect(did){try{await api("/connections",{method:"POST",body:JSON.stringify({toDid:did,message:"I would like to connect with you on MILAN."})}),toast("Connection request sent"),await loadPeople(),await loadSummary(),await loadNotifications()}catch(e){toast(e.message)}}async function approveConnect(id){try{await api("/connections/"+id+"/approve",{method:"PATCH"}),toast("Connection accepted"),await loadPeople(),await loadFeed(),await loadSummary(),await loadNotifications()}catch(e){toast(e.message)}}async function rejectConnect(id){try{await api("/connections/"+id+"/reject",{method:"PATCH"}),toast("Connection rejected"),await loadPeople(),await loadSummary(),await loadNotifications()}catch(e){toast(e.message)}}async function requestData(did){try{const message=prompt("What data do you want to request?","Please share selected MILAN data with me.");if(null===message)return;await api("/requests",{method:"POST",body:JSON.stringify({toDid:did,scope:"profile_or_record",message:message})}),toast("Data access request sent"),await loadNotifications(),await loadSummary()}catch(e){toast(e.message)}}async function loadPeople(){try{const q=($("peopleSearch")?.value||$("globalSearch").value||"").trim();people=await api("/social/people?q="+encodeURIComponent(q)),$("peopleList").innerHTML=people.length?people.map(p=>`<div class="person"><div class="personMain">${avatarHtml(p)}<div class="personInfo"><b>${esc(p.name||"MILAN User")}</b><div class="mini"><span class="personDid" title="${esc(p.did||"")}">${esc(p.did||"")}</span><div class="personMeta"><span class="badge">${esc(p.connectionStatus||"none")}</span></div></div></div></div>${peopleActions(p)}</div>`).join(""):'<div class="empty">No people found.</div>'}catch(e){$("peopleList").innerHTML='<div class="empty">'+esc(e.message)+"</div>"}}async function loadNotifications(){try{lastNotifications=await api("/social/notifications"),$("notifList").innerHTML=lastNotifications.slice(0,8).map(n=>`<div class="bubble"><b>${esc(n.type)}</b><div class="mini">${new Date(n.createdAt).toLocaleString()} • ${esc((n.actorDid||"").slice(0,35))}</div></div>`).join("")||'<div class="mini">No notifications.</div>'}catch(e){}}function savedIds(){try{return JSON.parse(localStorage.getItem("milanSavedIds")||"[]")}catch{return[]}}function setSavedIds(ids){localStorage.setItem("milanSavedIds",JSON.stringify(ids.slice(0,200)))}function toggleSave(id,btn){let ids=savedIds();ids=ids.includes(id)?ids.filter(x=>x!==id):[id,...ids],setSavedIds(ids),btn.textContent=ids.includes(id)?"🔖 Saved":"🔖 Save",renderSaved(),toast(ids.includes(id)?"Saved":"Removed from saved")}function renderSaved(){const ids=savedIds(),rows=currentFeed.filter(r=>ids.includes(r.id)).slice(0,6);$("savedList").innerHTML=rows.length?rows.map(r=>`<div class="bubble"><b>${esc(r.title||"Saved post")}</b><div class="mini">${esc(r.accessMode)}</div></div>`).join(""):'<div class="mini">Save posts to see them here.</div>'}function openProfile(){const p=me.profile||{};$("modalBody").innerHTML=`<h2>Edit Profile</h2><label>Name</label><input id="editName" value="${esc(p.display_name||"")}"><label>Bio</label><textarea id="editBio">${esc(p.bio||"")}</textarea><label>Website</label><input id="editWebsite" value="${esc(p.website||"")}"><label>Profile picture</label><input id="profilePicFile" type="file" accept="image/*"><div class="mini">Upload a small profile picture. It is stored in your profile for this demo.</div><br><button onclick="saveProfile()">Save profile</button>`,$("modalBack").classList.remove("hidden")}function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader;r.onload=()=>res(r.result),r.onerror=rej,r.readAsDataURL(file)})}async function saveProfile(){try{let avatar=me.profile?.avatar||"";const f=$("profilePicFile").files[0];if(f){if(f.size>9e5)throw new Error("Use profile picture under 900 KB for this free demo.");avatar=await fileToDataUrl(f)}const profile=await api("/profile",{method:"PUT",body:JSON.stringify({display_name:$("editName").value,bio:$("editBio").value,website:$("editWebsite").value,avatar:avatar})});me.profile=profile,closeModal(),renderMe(),loadFeed(),toast("Profile updated")}catch(e){toast(e.message)}}function openPrivacyCenter(){$("modalBody").innerHTML="<h2>Privacy Center</h2><p>MILAN keeps posts private by default. Use Public or Share with DID only when you choose.</p><ul><li>Private: only you</li><li>Public: visible in public feed</li><li>Share with DID: selected people only</li></ul>",$("modalBack").classList.remove("hidden")}function closeModal(){$("modalBack").classList.add("hidden")}function copyText(t){navigator.clipboard.writeText(t||""),toast("Copied")}function startBackgroundUpdates(){
+function postHtml(r){
+  const p={
+    ...(r.ownerProfile||{})
+  };
+
+  const currentDid=String(
+    me?.did ||
+    me?.user?.did ||
+    me?.data?.user?.did ||
+    ""
+  ).trim();
+
+  const recordOwner=String(
+    r.owner ||
+    r.ownerDid ||
+    r.creatorDid ||
+    r.authorDid ||
+    r.ownerProfile?.did ||
+    r.authorProfile?.did ||
+    ""
+  ).trim();
+
+  const currentEmail=String(
+    me?.email ||
+    me?.user?.email ||
+    me?.profile?.email ||
+    ""
+  ).trim().toLowerCase();
+
+  const ownerEmail=String(
+    p.email ||
+    r.ownerProfile?.email ||
+    ""
+  ).trim().toLowerCase();
+
+  const currentName=String(
+    me?.profile?.display_name ||
+    me?.profile?.name ||
+    me?.name ||
+    me?.display_name ||
+    ""
+  ).trim().toLowerCase();
+
+  const ownerName=String(
+    p.display_name ||
+    p.name ||
+    ""
+  ).trim().toLowerCase();
+
+  const owner=
+    Boolean(
+      (currentDid && recordOwner &&
+       currentDid===recordOwner) ||
+
+      (currentEmail && ownerEmail &&
+       currentEmail===ownerEmail) ||
+
+      (currentName && ownerName &&
+       currentName===ownerName)
+    );
+
+  if(owner){
+    p.name=
+      p.display_name ||
+      p.name ||
+      me?.profile?.display_name ||
+      me?.profile?.name ||
+      me?.name ||
+      me?.email?.split("@")[0] ||
+      "MILAN User";
+
+    p.avatar=
+      me?.profile?.avatar ||
+      p.avatar ||
+      "";
+
+    p.did=
+      currentDid ||
+      p.did ||
+      recordOwner;
+  }
+
+  const mine=
+    r.social?.reactions?.mine;
+
+  const saved=
+    savedIds().includes(r.id);
+
+  const ownerControls=owner
+    ? `
+      <button type="button"
+        onclick="editPost('${r.id}')">
+        ✏️ Edit
+      </button>
+
+      <button type="button"
+        onclick="accessPanel('${r.id}')">
+        🔐 Access
+      </button>
+
+      <button type="button"
+        class="milan-delete-post"
+        title="Delete this post"
+        aria-label="Delete this post"
+        onclick="deletePost('${r.id}')">
+        🗑 Delete
+      </button>
+    `
+    : `
+      <button type="button"
+        onclick="requestAccess('${esc(r.owner||"")}','${r.id}')">
+        🔑 Request
+      </button>
+    `;
+
+  return `<article class="card post" id="post-${esc(r.id)}">
+    <div class="postHead">
+      <div class="postUser">
+        ${avatarHtml(p)}
+        <div>
+          <b>${esc(p.name||"MILAN User")}</b>
+          <div class="mini">
+            ${esc(r.accessMode||"private")}
+            •
+            ${new Date(
+              r.dateModified ||
+              r.dateCreated ||
+              Date.now()
+            ).toLocaleString()}
+            <br>
+            <span>
+              ${esc(
+                (p.did||r.owner||"").slice(0,44)
+              )}${p.did||r.owner?"...":""}
+            </span>
+            ${
+              (p.did||r.owner)
+                ? `<button type="button"
+                    class="ghost"
+                    onclick="copyText('${esc(p.did||r.owner)}')">
+                    Copy DID
+                   </button>`
+                : ""
+            }
+          </div>
+        </div>
+      </div>
+
+      <div>
+        ${
+          owner
+            ? '<span class="badge">Owner</span>'
+            : '<span class="badge">Visible by permission</span>'
+        }
+      </div>
+    </div>
+
+    ${mediaHtml(r)}
+
+    <div class="postBody">
+      <div class="postTitle">
+        ${esc(r.title||"Untitled")}
+      </div>
+
+      <div class="postText">
+        ${esc(postText(r))}
+      </div>
+
+      <div style="margin-top:8px">
+        ${(r.tags||[])
+          .map(t =>
+            `<span class="badge">#${esc(t)}</span>`
+          )
+          .join(" ")}
+      </div>
+    </div>
+
+    <div class="postMetrics">
+      <span class="reactionTotal">
+        ${r.social?.reactions?.total||0} reactions
+      </span>
+
+      <span class="commentTotal">
+        ${r.social?.commentsCount||0} comments
+      </span>
+    </div>
+
+    <div class="reactionBar">
+      <button
+        class="${"like"===mine?"active":""}"
+        onclick="react('${r.id}','like',this)">
+        👍 Like
+      </button>
+
+      <button
+        class="${"love"===mine?"active":""}"
+        onclick="react('${r.id}','love',this)">
+        💙 Love
+      </button>
+
+      <button
+        onclick="openComments('${r.id}')">
+        💬 Comment
+      </button>
+
+      <button
+        onclick="toggleSave('${r.id}',this)">
+        ${saved?"🔖 Saved":"🔖 Save"}
+      </button>
+
+      ${ownerControls}
+    </div>
+  </article>`;
+}
+function updateRecordLocal(id,patch){const i=currentFeed.findIndex(r=>r.id===id);if(i>=0){currentFeed[i]={...currentFeed[i],...patch};const el=$("post-"+id);el&&(el.outerHTML=postHtml(currentFeed[i]))}}async function react(id,type,btn){try{const summary=await api("/social/records/"+id+"/reactions",{method:"POST",body:JSON.stringify({type:type})}),r=currentFeed.find(x=>x.id===id);r&&(r.social=r.social||{},r.social.reactions=summary);const card=btn.closest(".post");card.querySelector(".reactionTotal").textContent=(summary.total||0)+" reactions",card.querySelectorAll(".reactionBar button").forEach(b=>b.classList.remove("active")),summary.mine===type&&btn.classList.add("active"),loadNotifications(),loadSummary()}catch(e){toast(e.message)}}async function openComments(id){try{const rows=await api("/social/records/"+id+"/comments");$("modalBody").innerHTML=`<h2>Comments</h2><div class="comments">${rows.map(c=>`<div class="comment">${avatarHtml(c.authorProfile||{})}<div class="bubble"><b>${esc(c.authorProfile?.name||"User")}</b><div>${esc(c.text)}</div><div class="mini">${new Date(c.createdAt).toLocaleString()}</div></div></div>`).join("")||'<div class="empty">No comments yet.</div>'}</div><textarea id="newComment" placeholder="Write a comment"></textarea><br><button onclick="addComment('${id}')">Post comment</button>`,$("modalBack").classList.remove("hidden")}catch(e){toast(e.message)}}async function addComment(id){try{const text=$("newComment").value.trim();if(!text)return toast("Write a comment first");await api("/social/records/"+id+"/comments",{method:"POST",body:JSON.stringify({text:text})}),closeModal();const r=currentFeed.find(x=>x.id===id);if(r){r.social=r.social||{},r.social.commentsCount=Number(r.social.commentsCount||0)+1;const card=$("post-"+id);card&&(card.querySelector(".commentTotal").textContent=r.social.commentsCount+" comments")}toast("Comment posted"),loadNotifications()}catch(e){toast(e.message)}}function accessPanel(id){$("modalBody").innerHTML=`<h2>Update access</h2><p class="mini">The DID box is blank every time. Paste only the DIDs you want to allow now.</p><label>Access mode</label><select id="accessMode"><option value="private">Private</option><option value="public">Public</option><option value="shared_did">Share with DID</option></select><label>Share DIDs</label><textarea id="accessDids" placeholder="Paste DIDs comma separated"></textarea><button onclick="updateAccess('${id}')">Update access</button>`,$("modalBack").classList.remove("hidden")}async function updateAccess(id){try{const mode=$("accessMode").value,dids=$("accessDids").value.split(",").map(x=>x.trim()).filter(x=>x.startsWith("did:"));await api("/records/"+id+"/permissions",{method:"PATCH",body:JSON.stringify({accessMode:mode,sharedWithDids:dids})}),closeModal(),toast("Access updated"),mediaPlaying()?loadSummary():await loadFeed()}catch(e){toast(e.message)}}function editPost(id){const r=currentFeed.find(x=>x.id===id);if(!r)return;const tags=(r.tags||[]).join(", ");$("modalBody").innerHTML=`<h2>Edit post</h2><label>Title</label><input id="editTitle" value="${esc(r.title||"")}"><label>Caption / Text</label><textarea id="editText">${esc(postText(r))}</textarea><label>Tags</label><input id="editTags" value="${esc(tags)}"><p class="mini">Media file is preserved while editing title, text or tags.</p><button onclick="saveEdit('${id}')">Save changes</button>`,$("modalBack").classList.remove("hidden")}async function saveEdit(id){try{const r=currentFeed.find(x=>x.id===id),text=$("editText").value,tags=$("editTags").value.split(",").map(x=>x.trim()).filter(Boolean);let data=r.data;data=data&&"media"===data.kind?{...data,caption:text}:{..."object"==typeof data?data:{},text:text,tags:tags};const updated=await api("/records/"+id,{method:"PUT",body:JSON.stringify({title:$("editTitle").value,data:data,tags:tags})});closeModal(),updateRecordLocal(id,updated),toast("Post updated")}catch(e){toast(e.message)}}async function deletePost(id){confirm("Delete this post?")&&(await api("/records/"+id,{method:"DELETE"}),currentFeed=currentFeed.filter(r=>r.id!==id),renderFeed(),toast("Post deleted"),loadSummary())}function sharePanel(id){accessPanel(id)}async function requestAccess(did,id){try{await api("/requests",{method:"POST",body:JSON.stringify({toDid:did,recordId:id,message:"Please allow access to this MILAN record."})}),toast("Access request sent")}catch(e){toast(e.message)}}async function publish(){try{const file=$("mediaFile").files[0],accessMode=$("privacy").value,sharedWithDids=$("shareDids").value.split(",").map(x=>x.trim()).filter(x=>x.startsWith("did:")),tags=$("tagsInput").value.split(",").map(x=>x.trim()).filter(Boolean);if("shared_did"===accessMode&&!sharedWithDids.length)throw new Error("Paste at least one DID for shared post");file?await apiUpload("/records/media",file,{title:$("postTitle").value||file.name,caption:$("postText").value,accessMode:accessMode,sharedWithDids:sharedWithDids,tags:tags}):await api("/records",{method:"POST",body:JSON.stringify({title:$("postTitle").value||"MILAN Post",data:{text:$("postText").value,tags:tags},dataFormat:"application/json",accessMode:accessMode,sharedWithDids:sharedWithDids,tags:tags})}),["postTitle","postText","mediaFile","tagsInput","shareDids"].forEach(id=>$(id).value=""),$("privacy").value="private",$("shareBox").classList.add("hidden"),toast("Post published"),await loadFeed(),await loadSummary()}catch(e){toast(e.message)}}function peopleActions(p){const did=esc(p.did||""),id=esc(p.connectionId||"");let primary="";return"none"===p.connectionStatus||"rejected"===p.connectionStatus?primary=`<button onclick="sendConnect('${did}')">➕ Connect</button>`:"sent"===p.connectionStatus?primary='<button class="ghost" disabled>⏳ Sent</button>':"received"===p.connectionStatus?primary=`<div class="actionRow"><button class="ok" onclick="approveConnect('${id}')">✓ Accept</button><button class="danger" onclick="rejectConnect('${id}')">✕ Reject</button></div>`:"friends"===p.connectionStatus&&(primary='<button class="ok" disabled>✓ Connected</button>'),`<div class="personActions">${primary}<div class="actionRow"><button class="ghost" onclick="copyText('${did}')">📋 DID</button><button class="soft" onclick="requestData('${did}')">🔐 Request</button></div></div>`}async function sendConnect(did){try{await api("/connections",{method:"POST",body:JSON.stringify({toDid:did,message:"I would like to connect with you on MILAN."})}),toast("Connection request sent"),await loadPeople(),await loadSummary(),await loadNotifications()}catch(e){toast(e.message)}}async function approveConnect(id){try{await api("/connections/"+id+"/approve",{method:"PATCH"}),toast("Connection accepted"),await loadPeople(),await loadFeed(),await loadSummary(),await loadNotifications()}catch(e){toast(e.message)}}async function rejectConnect(id){try{await api("/connections/"+id+"/reject",{method:"PATCH"}),toast("Connection rejected"),await loadPeople(),await loadSummary(),await loadNotifications()}catch(e){toast(e.message)}}async function requestData(did){try{const message=prompt("What data do you want to request?","Please share selected MILAN data with me.");if(null===message)return;await api("/requests",{method:"POST",body:JSON.stringify({toDid:did,scope:"profile_or_record",message:message})}),toast("Data access request sent"),await loadNotifications(),await loadSummary()}catch(e){toast(e.message)}}async function loadPeople(){try{const q=($("peopleSearch")?.value||$("globalSearch").value||"").trim();people=await api("/social/people?q="+encodeURIComponent(q)),$("peopleList").innerHTML=people.length?people.map(p=>`<div class="person"><div class="personMain">${avatarHtml(p)}<div class="personInfo"><b>${esc(p.name||"MILAN User")}</b><div class="mini"><span class="personDid" title="${esc(p.did||"")}">${esc(p.did||"")}</span><div class="personMeta"><span class="badge">${esc(p.connectionStatus||"none")}</span></div></div></div></div>${peopleActions(p)}</div>`).join(""):'<div class="empty">No people found.</div>'}catch(e){$("peopleList").innerHTML='<div class="empty">'+esc(e.message)+"</div>"}}async function loadNotifications(){try{lastNotifications=await api("/social/notifications"),$("notifList").innerHTML=lastNotifications.slice(0,8).map(n=>`<div class="bubble"><b>${esc(n.type)}</b><div class="mini">${new Date(n.createdAt).toLocaleString()} • ${esc((n.actorDid||"").slice(0,35))}</div></div>`).join("")||'<div class="mini">No notifications.</div>'}catch(e){}}function savedIds(){try{return JSON.parse(localStorage.getItem("milanSavedIds")||"[]")}catch{return[]}}function setSavedIds(ids){localStorage.setItem("milanSavedIds",JSON.stringify(ids.slice(0,200)))}function toggleSave(id,btn){let ids=savedIds();ids=ids.includes(id)?ids.filter(x=>x!==id):[id,...ids],setSavedIds(ids),btn.textContent=ids.includes(id)?"🔖 Saved":"🔖 Save",renderSaved(),toast(ids.includes(id)?"Saved":"Removed from saved")}function renderSaved(){const ids=savedIds(),rows=currentFeed.filter(r=>ids.includes(r.id)).slice(0,6);$("savedList").innerHTML=rows.length?rows.map(r=>`<div class="bubble"><b>${esc(r.title||"Saved post")}</b><div class="mini">${esc(r.accessMode)}</div></div>`).join(""):'<div class="mini">Save posts to see them here.</div>'}function openProfile(){const p=me.profile||{};$("modalBody").innerHTML=`<h2>Edit Profile</h2><label>Name</label><input id="editName" value="${esc(p.display_name||"")}"><label>Bio</label><textarea id="editBio">${esc(p.bio||"")}</textarea><label>Website</label><input id="editWebsite" value="${esc(p.website||"")}"><label>Profile picture</label><input id="profilePicFile" type="file" accept="image/*"><div class="mini">Upload a small profile picture. It is stored in your profile for this demo.</div><br><button onclick="saveProfile()">Save profile</button>`,$("modalBack").classList.remove("hidden")}function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader;r.onload=()=>res(r.result),r.onerror=rej,r.readAsDataURL(file)})}async function saveProfile(){try{let avatar=me.profile?.avatar||"";const f=$("profilePicFile").files[0];if(f){if(f.size>9e5)throw new Error("Use profile picture under 900 KB for this free demo.");avatar=await fileToDataUrl(f)}const profile=await api("/profile",{method:"PUT",body:JSON.stringify({display_name:$("editName").value,bio:$("editBio").value,website:$("editWebsite").value,avatar:avatar})});me.profile=profile,closeModal(),renderMe(),loadFeed(),toast("Profile updated")}catch(e){toast(e.message)}}function openPrivacyCenter(){$("modalBody").innerHTML="<h2>Privacy Center</h2><p>MILAN keeps posts private by default. Use Public or Share with DID only when you choose.</p><ul><li>Private: only you</li><li>Public: visible in public feed</li><li>Share with DID: selected people only</li></ul>",$("modalBack").classList.remove("hidden")}function closeModal(){$("modalBack").classList.add("hidden")}function copyText(t){navigator.clipboard.writeText(t||""),toast("Copied")}function startBackgroundUpdates(){
   if(window.__milanTick)return;
 
   const native=document.body.classList.contains("native-apk")||/MilanNativeAudio/i.test(navigator.userAgent);

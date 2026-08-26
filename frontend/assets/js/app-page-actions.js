@@ -25,11 +25,33 @@
     const el = $(id);
     if (!el || !avatar) return;
 
-    el.style.backgroundImage = `url("${avatar}")`;
+    el.style.backgroundImage = "none";
+    el.style.backgroundColor = "transparent";
     el.style.backgroundSize = "cover";
     el.style.backgroundPosition = "center";
     el.style.backgroundRepeat = "no-repeat";
     el.textContent = "";
+
+    let img = el.querySelector("img");
+
+    if (!img) {
+      img = document.createElement("img");
+      img.alt = "Profile photo";
+      el.appendChild(img);
+    }
+
+    img.src = avatar;
+    img.alt = "Profile photo";
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.maxWidth = "none";
+    img.style.maxHeight = "none";
+    img.style.objectFit = "cover";
+    img.style.objectPosition = "center";
+    img.style.border = "0";
+    img.style.opacity = "1";
+    img.style.visibility = "visible";
   }
 
   async function compressProfileImage(file) {
@@ -147,28 +169,61 @@
         );
       }
 
+      /* Accept both:
+         { avatar: "..." }
+         and
+         { profile: { avatar: "..." } }
+      */
+      const savedProfile =
+        saved?.profile ||
+        saved?.data?.profile ||
+        saved;
+
+      const savedAvatar =
+        savedProfile?.avatar ||
+        saved?.avatar ||
+        "";
+
       const verifiedResponse = await fetch("/api/profile", {
+        method: "GET",
         headers: {
+          Accept: "application/json",
           Authorization: "Bearer " + token
         },
         cache: "no-store"
       });
 
-      const verified = await verifiedResponse.json().catch(() => ({}));
+      const verifiedRaw =
+        await verifiedResponse.json().catch(() => ({}));
 
-      if (!verifiedResponse.ok || !verified.avatar) {
+      const verifiedProfile =
+        verifiedRaw?.profile ||
+        verifiedRaw?.data?.profile ||
+        verifiedRaw;
+
+      const verifiedAvatar =
+        verifiedProfile?.avatar ||
+        verifiedRaw?.avatar ||
+        savedAvatar ||
+        "";
+
+      if (!verifiedResponse.ok || !verifiedAvatar) {
         throw new Error(
-          verified.detail ||
-          "DP was not verified after DWN save"
+          verifiedRaw.detail ||
+          verifiedRaw.error ||
+          "DP was saved but could not be verified."
         );
       }
 
       try {
-        localStorage.setItem("milanAvatar", verified.avatar);
+        localStorage.setItem(
+          "milanAvatar",
+          verifiedAvatar
+        );
       } catch {}
 
       ["myAvatar", "composerAvatar"].forEach(id =>
-        setAvatar(id, verified.avatar)
+        setAvatar(id, verifiedAvatar)
       );
 
       const preview = $("editProfilePhotoPreview");
@@ -180,7 +235,8 @@
       if (window.me) {
         window.me.profile = {
           ...(window.me.profile || {}),
-          ...verified
+          ...(verifiedProfile || {}),
+          avatar: verifiedAvatar
         };
       }
     } catch (error) {
