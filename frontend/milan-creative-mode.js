@@ -232,6 +232,17 @@
     injectStyle();
     var fab = document.createElement('button');
     fab.className = 'mcm-fab'; fab.title = 'Creative Mode — change the whole look'; fab.innerHTML = '🎨';
+
+  /* MILAN APP — keep the launcher visible above all app layers */
+  fab.style.position = 'fixed';
+  fab.style.right = '22px';
+  fab.style.bottom = '22px';
+  fab.style.zIndex = '2147483000';
+  fab.style.display = 'grid';
+  fab.style.placeItems = 'center';
+  fab.style.visibility = 'visible';
+  fab.style.opacity = '1';
+  fab.style.pointerEvents = 'auto';
     document.body.appendChild(fab);
     var overlay = buildPanel();
     fab.addEventListener('click', function () { overlay.classList.add('open'); refreshActive(); });
