@@ -437,8 +437,8 @@ router.post('/chat', async (req, res) => {
         throw new Error(travelData.error || `Travel Agent HTTP ${travelRes.status}`);
       }
     } catch (e) {
-      console.warn('[MILAN AI] Travel Agent failed, falling back:', e.message);
-      reply = await callAnyLLM(system, fullPrompt || 'Hello');
+      console.error('[MILAN AI] Travel Agent failed:', e.message);
+      return res.status(502).json({ success: false, error: 'Travel Agent unavailable: ' + e.message });
     }
 
     if (!reply) {
