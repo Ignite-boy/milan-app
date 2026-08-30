@@ -439,9 +439,6 @@ router.post('/chat', async (req, res) => {
     } catch (e) {
       console.warn('[MILAN AI] Travel Agent failed, falling back:', e.message);
       reply = await callAnyLLM(system, fullPrompt || 'Hello');
-    } catch (e) {
-      console.warn('[MILAN AI] chat LLM failed:', e.message);
-      reply = null;
     }
 
     if (!reply) {
