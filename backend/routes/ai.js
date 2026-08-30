@@ -420,6 +420,24 @@ router.post('/chat', async (req, res) => {
 
     let reply;
     try {
+      const travelAgentUrl = process.env.TRAVEL_AGENT_URL || 'https://ai-travel-agent-1u4n.onrender.com/chat';
+      const travelRes = await fetch(travelAgentUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: req.body.user_id || 'milan-user',
+          session_id: req.body.session_id || 'milan-session',
+          message: fullPrompt || 'Hello'
+        })
+      });
+      const travelData = await travelRes.json();
+      if (travelRes.ok && travelData.response) {
+        reply = travelData.response;
+      } else {
+        throw new Error(travelData.error || `Travel Agent HTTP ${travelRes.status}`);
+      }
+    } catch (e) {
+      console.warn('[MILAN AI] Travel Agent failed, falling back:', e.message);
       reply = await callAnyLLM(system, fullPrompt || 'Hello');
     } catch (e) {
       console.warn('[MILAN AI] chat LLM failed:', e.message);
