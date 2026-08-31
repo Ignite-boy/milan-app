@@ -430,7 +430,13 @@ router.post('/chat', async (req, res) => {
           message: fullPrompt || 'Hello'
         })
       });
-      const travelData = await travelRes.json();
+      const travelContentType = travelRes.headers.get('content-type') || '';
+      const travelBody = await travelRes.text();
+      console.log('[MILAN AI] Travel Agent:', travelRes.status, travelContentType, travelBody.slice(0, 300));
+      if (!travelContentType.includes('application/json')) {
+        throw new Error(`Travel Agent returned ${travelRes.status} ${travelContentType}: ${travelBody.slice(0, 120)}`);
+      }
+      const travelData = JSON.parse(travelBody);
       if (travelRes.ok && travelData.response) {
         reply = travelData.response;
       } else {
