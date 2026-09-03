@@ -360,3 +360,372 @@ document.addEventListener("DOMContentLoaded",()=>{
   setInterval(sync,1500);
 });
 </script>
+
+<style>
+/* MILAN CONTROL CENTER */
+#milanControlFab{
+  position:fixed;right:22px;bottom:22px;z-index:9998;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(135deg,#ff9c38,#df46c8);
+  color:#fff;border-radius:17px;padding:13px 17px;
+  font-weight:900;cursor:pointer;
+  box-shadow:0 15px 40px rgba(0,0,0,.35);
+}
+#milanControlFab:hover{filter:brightness(1.08);transform:translateY(-1px)}
+
+#milanControlOverlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(2,6,18,.72);
+  backdrop-filter:blur(12px);
+  display:none;padding:20px;overflow:auto;
+}
+#milanControlOverlay.open{display:flex;align-items:center;justify-content:center}
+
+#milanControlPanel{
+  width:min(900px,100%);
+  max-height:90vh;overflow:auto;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:26px;
+  background:linear-gradient(180deg,#101d3c,#081329);
+  box-shadow:0 35px 100px rgba(0,0,0,.45);
+  color:#f7f8ff;
+}
+#milanControlHead{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 24px;border-bottom:1px solid rgba(255,255,255,.08);
+}
+#milanControlHead h2{margin:0;font-size:22px}
+#milanControlClose{
+  border:0;background:rgba(255,255,255,.06);color:#fff;
+  width:38px;height:38px;border-radius:12px;cursor:pointer;font-size:18px;
+}
+#milanControlBody{padding:20px 24px 26px}
+
+.mcc-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+}
+.mcc-card{
+  padding:18px;border-radius:19px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.035);
+}
+.mcc-card.wide{grid-column:1/-1}
+.mcc-card h3{margin:0 0 6px;font-size:14px}
+.mcc-muted{color:#93a2c5;font-size:12px;line-height:1.55}
+.mcc-status{
+  display:flex;align-items:center;gap:8px;
+  margin-top:12px;font-size:13px;font-weight:800;
+}
+.mcc-dot{width:9px;height:9px;border-radius:50%;background:#42dfb5}
+.mcc-dot.warn{background:#ffb347}
+.mcc-dot.bad{background:#ff6679}
+
+.mcc-actions{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;
+}
+.mcc-actions button{
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.055);
+  color:#fff;border-radius:12px;padding:10px 12px;
+  cursor:pointer;font-weight:800;font-size:12px;
+}
+.mcc-actions button.primary{
+  border:0;background:linear-gradient(135deg,#ff9c38,#df46c8);
+}
+.mcc-actions button:hover{filter:brightness(1.08)}
+
+.mcc-list{
+  display:grid;gap:8px;margin-top:12px;
+}
+.mcc-row{
+  display:flex;justify-content:space-between;gap:10px;
+  padding:10px 12px;border-radius:12px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.06);
+}
+.mcc-row span:last-child{color:#9faecc}
+
+#mccResult{
+  margin-top:14px;padding:12px;border-radius:12px;
+  background:rgba(66,223,181,.07);
+  border:1px solid rgba(66,223,181,.12);
+  color:#bdf6e8;font-size:12px;display:none;
+}
+
+@media(max-width:700px){
+  #milanControlFab{right:14px;bottom:14px}
+  #milanControlOverlay{padding:10px}
+  #milanControlHead{padding:18px}
+  #milanControlBody{padding:15px}
+  .mcc-grid{grid-template-columns:1fr}
+  .mcc-card.wide{grid-column:auto}
+}
+</style>
+
+<script>
+(function(){
+  if(window.__milanControlCenterV1) return;
+  window.__milanControlCenterV1=true;
+
+  function escLocal(v){
+    return String(v??"").replace(/[&<>"']/g,m=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function makeUI(){
+    if(document.getElementById("milanControlFab")) return;
+
+    const fab=document.createElement("button");
+    fab.id="milanControlFab";
+    fab.type="button";
+    fab.textContent="⚙️ Control Center";
+
+    const overlay=document.createElement("div");
+    overlay.id="milanControlOverlay";
+    overlay.innerHTML=`
+      <section id="milanControlPanel" role="dialog" aria-modal="true" aria-labelledby="mccTitle">
+        <div id="milanControlHead">
+          <h2 id="mccTitle">MILAN Control Center</h2>
+          <button id="milanControlClose" type="button" aria-label="Close">✕</button>
+        </div>
+        <div id="milanControlBody">
+          <div class="mcc-grid">
+
+            <article class="mcc-card">
+              <h3>🟢 System Health</h3>
+              <div class="mcc-muted">Live application and DWN service health.</div>
+              <div class="mcc-status"><span class="mcc-dot" id="mccHealthDot"></span><span id="mccHealthText">Checking…</span></div>
+              <div class="mcc-actions">
+                <button class="primary" id="mccHealthBtn">Refresh Health</button>
+              </div>
+            </article>
+
+            <article class="mcc-card">
+              <h3>🔄 Data Refresh</h3>
+              <div class="mcc-muted">Refresh the current live views using the existing backend APIs.</div>
+              <div class="mcc-status"><span class="mcc-dot" id="mccSyncDot"></span><span id="mccSyncText">Ready</span></div>
+              <div class="mcc-actions">
+                <button class="primary" id="mccSyncBtn">Sync View Now</button>
+                <button id="mccRefreshBtn">Refresh Everything</button>
+              </div>
+            </article>
+
+            <article class="mcc-card">
+              <h3>🔐 Privacy & Access</h3>
+              <div class="mcc-muted">Manage post visibility and selected-DID access.</div>
+              <div class="mcc-actions">
+                <button class="primary" id="mccPrivacyBtn">Open Privacy Center</button>
+                <button id="mccSavedBtn">Saved Posts</button>
+              </div>
+            </article>
+
+            <article class="mcc-card">
+              <h3>👥 Connections</h3>
+              <div class="mcc-muted">People, connection requests and relationship state.</div>
+              <div class="mcc-actions">
+                <button class="primary" id="mccPeopleBtn">Open People</button>
+                <button id="mccRequestsBtn">View Requests</button>
+              </div>
+            </article>
+
+            <article class="mcc-card wide">
+              <h3>🗂️ My Data & Records</h3>
+              <div class="mcc-muted">Quick access to your posts and record actions.</div>
+              <div class="mcc-actions">
+                <button class="primary" id="mccMineBtn">My Posts</button>
+                <button id="mccAllBtn">Home Feed</button>
+                <button id="mccPublicBtn">Public Feed</button>
+              </div>
+              <div class="mcc-list" id="mccRecords"></div>
+            </article>
+
+            <article class="mcc-card">
+              <h3>📊 Account Activity</h3>
+              <div class="mcc-list">
+                <div class="mcc-row"><span>People</span><span id="mccPeopleCount">0</span></div>
+                <div class="mcc-row"><span>Visible posts</span><span id="mccPostCount">0</span></div>
+                <div class="mcc-row"><span>Requests</span><span id="mccRequestCount">0</span></div>
+                <div class="mcc-row"><span>Unread alerts</span><span id="mccNotifCount">0</span></div>
+              </div>
+            </article>
+
+            <article class="mcc-card">
+              <h3>👤 Profile & Identity</h3>
+              <div class="mcc-muted">Profile, DID and identity controls.</div>
+              <div class="mcc-actions">
+                <button class="primary" id="mccProfileBtn">Edit Profile</button>
+                <button id="mccDidBtn">Copy DID</button>
+              </div>
+            </article>
+
+          </div>
+          <div id="mccResult"></div>
+        </div>
+      </section>
+    `;
+
+    document.body.appendChild(fab);
+    document.body.appendChild(overlay);
+
+    const close=()=>overlay.classList.remove("open");
+    fab.onclick=()=>{overlay.classList.add("open");mccRefresh();};
+    document.getElementById("milanControlClose").onclick=close;
+    overlay.addEventListener("click",e=>{if(e.target===overlay)close();});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
+
+    document.getElementById("mccHealthBtn").onclick=checkHealth;
+    document.getElementById("mccSyncBtn").onclick=syncView;
+    document.getElementById("mccRefreshBtn").onclick=refreshEverything;
+
+    document.getElementById("mccPrivacyBtn").onclick=()=>{
+      close();
+      if(typeof openPrivacyCenter==="function") openPrivacyCenter();
+    };
+    document.getElementById("mccSavedBtn").onclick=()=>{
+      close();
+      const b=document.querySelector('[data-scope="saved"]');
+      if(b)b.click();
+    };
+    document.getElementById("mccPeopleBtn").onclick=()=>{
+      close();
+      const b=document.querySelector('[data-scope="friends"]');
+      if(b)b.click();
+      else if(typeof loadPeople==="function")loadPeople();
+    };
+    document.getElementById("mccRequestsBtn").onclick=()=>{
+      close();
+      const b=document.querySelector('[data-scope="friends"]');
+      if(b)b.click();
+    };
+    document.getElementById("mccMineBtn").onclick=()=>{
+      close();
+      const b=document.querySelector('[data-scope="mine"]');
+      if(b)b.click();
+    };
+    document.getElementById("mccAllBtn").onclick=()=>{
+      close();
+      const b=document.querySelector('[data-scope="all"]');
+      if(b)b.click();
+    };
+    document.getElementById("mccPublicBtn").onclick=()=>{
+      close();
+      const b=document.querySelector('[data-scope="public"]');
+      if(b)b.click();
+    };
+    document.getElementById("mccProfileBtn").onclick=()=>{
+      close();
+      if(typeof openProfile==="function")openProfile();
+      else document.getElementById("profileBtn")?.click();
+    };
+    document.getElementById("mccDidBtn").onclick=()=>{
+      if(typeof copyText==="function"){
+        const did=document.getElementById("myDid")?.textContent||"";
+        copyText(did);
+        showResult("DID copied.");
+      }
+    };
+  }
+
+  async function checkHealth(){
+    const dot=document.getElementById("mccHealthDot");
+    const text=document.getElementById("mccHealthText");
+    if(!dot||!text)return;
+    text.textContent="Checking…";
+    dot.className="mcc-dot warn";
+    try{
+      const r=await fetch("/api/health",{credentials:"same-origin",cache:"no-store"});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      const d=await r.json();
+      const dwn=d.dwn||{};
+      const good=d.ok!==false && dwn.ok!==false && dwn.storageOperational!==false;
+      dot.className="mcc-dot "+(good?"":"bad");
+      text.textContent=good
+        ?"API + DWN healthy"
+        :"Health response needs attention";
+      showResult(
+        "Health: "+(good?"OK":"Attention")+
+        " · DWN: "+(dwn.ok===false?"problem":"ok")+
+        " · Storage: "+(dwn.storageOperational===false?"problem":"ok")
+      );
+    }catch(e){
+      dot.className="mcc-dot bad";
+      text.textContent="Health check failed";
+      showResult("Health check error: "+e.message);
+    }
+  }
+
+  async function syncView(){
+    const dot=document.getElementById("mccSyncDot");
+    const text=document.getElementById("mccSyncText");
+    if(!dot||!text)return;
+    dot.className="mcc-dot warn";
+    text.textContent="Refreshing…";
+    try{
+      const tasks=[];
+      if(typeof loadFeed==="function")tasks.push(loadFeed());
+      if(typeof loadSummary==="function")tasks.push(loadSummary());
+      if(typeof loadPeople==="function")tasks.push(loadPeople());
+      if(typeof loadNotifications==="function")tasks.push(loadNotifications());
+      await Promise.allSettled(tasks);
+      dot.className="mcc-dot";
+      text.textContent="View refreshed";
+      mccUpdate();
+      showResult("Live feed, summary, people and notifications refreshed.");
+    }catch(e){
+      dot.className="mcc-dot bad";
+      text.textContent="Refresh failed";
+      showResult("Refresh error: "+e.message);
+    }
+  }
+
+  async function refreshEverything(){
+    await checkHealth();
+    await syncView();
+  }
+
+  function mccUpdate(){
+    const map=[
+      ["peopleCount","mccPeopleCount"],
+      ["postCount","mccPostCount"],
+      ["requestCount","mccRequestCount"],
+      ["notifCount","mccNotifCount"]
+    ];
+    map.forEach(([a,b])=>{
+      const x=document.getElementById(a),y=document.getElementById(b);
+      if(x&&y)y.textContent=x.textContent||"0";
+    });
+
+    const records=document.getElementById("mccRecords");
+    if(records && Array.isArray(window.currentFeed)){
+      const rows=window.currentFeed.slice(0,6);
+      records.innerHTML=rows.length
+        ?rows.map(r=>`
+          <div class="mcc-row">
+            <span>${escLocal(r.title||"Untitled record")}</span>
+            <span>${escLocal(r.accessMode||"private")}</span>
+          </div>
+        `).join("")
+        :'<div class="mcc-muted">No records loaded in the current feed.</div>';
+    }
+  }
+
+  function showResult(msg){
+    const box=document.getElementById("mccResult");
+    if(!box)return;
+    box.style.display="block";
+    box.textContent=msg;
+    clearTimeout(window.__mccResultTimer);
+    window.__mccResultTimer=setTimeout(()=>box.style.display="none",5000);
+  }
+
+  function mccRefresh(){
+    mccUpdate();
+    checkHealth();
+  }
+
+  document.addEventListener("DOMContentLoaded",makeUI,{once:true});
+  setTimeout(makeUI,1500);
+  setInterval(()=>{if(document.getElementById("milanControlOverlay")?.classList.contains("open"))mccUpdate()},2000);
+})();
+</script>
