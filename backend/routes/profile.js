@@ -192,48 +192,26 @@ async function writeProfilePicture(did, dataUrl) {
 
   const recordId = profileRecordId(did);
 
-  const record = {
-    id: recordId,
-    dwnRecordId: recordId,
-    owner: did,
-    recipient: did,
-    schema: 'milan-profile-picture',
-    title: 'MILAN Profile Picture',
-    dataFormat: parsed.mime,
-    data: {
-      kind: 'profile-picture',
-      avatar: dataUrl
+  const message = {
+    descriptor: {
+      interface: 'Records',
+      method: 'Write',
+      recordId,
+      dataFormat: parsed.mime,
+      dateCreated: new Date().toISOString(),
+      dateModified: new Date().toISOString()
     },
-    tags: ['profile-picture'],
-    accessMode: 'private',
-    isPublic: false,
-    sharedWithDids: [],
-    dateCreated: new Date().toISOString(),
-    dateModified: new Date().toISOString()
+    authorization: {
+      payload: 'e30',
+      signatures: []
+    }
   };
 
-  const response = await fetch(
-    'https://milanlife.in/api/dwn/records/write',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        spaceId: did,
-        ownerDid: did,
-        record
-      })
-    }
-  );
+  const reply = await miniDwnProcess(did, message, parsed.encodedData);
 
-  const body = await response.json().catch(() => ({}));
-
-  if (!response.ok || body.accepted !== true) {
+  if (reply.status?.code !== 202) {
     throw new Error(
-      body.error ||
-      body.detail ||
-      `Live DWN profile write failed: HTTP ${response.status}`
+      reply.status?.detail || 'Mini-DWN profile write failed'
     );
   }
 
@@ -244,13 +222,6 @@ async function writeProfilePicture(did, dataUrl) {
     avatar: dataUrl,
     liveDwn: true
   };
-}
-
-async function readProfilePicture(did) {
-  // The live V49 API currently exposes Records.Write for this
-  // embedded DWN route, while profile.js already keeps the
-  // verified avatar in the user's profile for immediate restore.
-  return null;
 }
 
 async function readProfilePicture(did) {
