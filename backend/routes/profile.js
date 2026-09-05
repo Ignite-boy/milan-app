@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const { readJson, writeJson, findUserById, addActivity } = require('../utils/store');
 const MINI_DWN_ENDPOINT = (
   process.env.MINI_DWN_ENDPOINT ||
-  `${process.env.MILAN_LIVE_DWN_BASE || 'https://milanlife.in'}/api/dwn`
+  `${process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com'}/api/dwn`
 ).replace(/\/$/, '');
 
 const router = express.Router();
