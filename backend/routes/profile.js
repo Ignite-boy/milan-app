@@ -15,6 +15,23 @@ const supabaseDb = createClient(
 );
 
 async function resolveAccount(req, users) {
+  // Fast path: the authenticated email already maps to the local profile.
+  // This avoids an unnecessary Supabase round-trip on every DP upload.
+  const email = String(req.userEmail || '').trim().toLowerCase();
+  const localUser = email ? users[email] : null;
+
+  if (localUser && (!req.userId || !localUser.id || localUser.id === req.userId)) {
+    return {
+      email,
+      user: {
+        ...localUser,
+        id: localUser.id || req.userId,
+        email: localUser.email || email,
+        did: localUser.did
+      }
+    };
+  }
+
   const byId = await supabaseDb
     .from('users')
     .select('id,email,name,did')
@@ -34,7 +51,6 @@ async function resolveAccount(req, users) {
     };
   }
 
-  const email = String(req.userEmail || '').trim().toLowerCase();
   if (email) {
     const byEmail = await supabaseDb
       .from('users')
@@ -132,7 +148,6 @@ async function miniDwnProcess(target, message, encodedData) {
       const reply = body?.result?.reply;
       const status = reply?.status?.code;
 
-      // Retry only transient upstream failures.
       if ([408, 425, 429, 500, 502, 503, 504, 530].includes(response.status)) {
         if (attempt < maxAttempts) {
           const retryAfterHeader = response.headers.get('retry-after');
@@ -224,6 +239,18 @@ async function writeProfilePicture(did, dataUrl) {
   };
 }
 
+function queueProfilePictureSync(did, dataUrl, recordId) {
+  // Deliberately do not await this. The API response can return as soon as
+  // the local profile is safely persisted; Mini-DWN sync continues in-process.
+  void writeProfilePicture(did, dataUrl)
+    .then(() => {
+      console.log('[profile] background DP sync complete:', recordId);
+    })
+    .catch(error => {
+      console.warn('[profile] background DP sync pending/failed:', error.message);
+    });
+}
+
 async function readProfilePicture(did) {
   const recordId = profileRecordId(did);
 
@@ -273,6 +300,18 @@ router.get('/', auth, async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
+  // Fast path: the profile store is now the immediate source of truth.
+  // Only fall back to Mini-DWN when no local DP exists yet.
+  if (found.user.profile?.avatar) {
+    return res.json({
+      ...(found.user.profile || {}),
+      avatar: found.user.profile.avatar,
+      avatarRecordId:
+        found.user.profile.avatarRecordId ||
+        profileRecordId(found.user.did)
+    });
+  }
+
   try {
     const dwnPicture = await readProfilePicture(found.user.did);
 
@@ -284,11 +323,6 @@ router.get('/', auth, async (req, res) => {
       } : {})
     });
   } catch (error) {
-    /*
-     * Mini-DWN may be temporarily unavailable locally.
-     * The profile itself remains the safe fallback so the
-     * user's uploaded DP is not lost or hidden.
-     */
     console.warn('[profile] Mini-DWN unavailable; using stored profile avatar:', error.message);
 
     return res.json({
@@ -319,41 +353,30 @@ router.put('/', auth, async (req, res) => {
 
   try {
     let dwnPicture = null;
+    let avatarSyncPending = false;
 
     if (avatar && String(avatar).startsWith('data:image/')) {
-      try {
-        dwnPicture = await writeProfilePicture(found.user.did, avatar);
-      } catch (dwnError) {
-        /*
-         * Keep the DP usable even when the local Mini-DWN
-         * endpoint is offline. The avatar is still persisted
-         * in the user's profile and can be synchronized later.
-         */
-        console.warn(
-          '[profile] Mini-DWN write unavailable; keeping profile avatar:',
-          dwnError.message
-        );
-
-        dwnPicture = {
-          recordId: profileRecordId(found.user.did),
-          avatar: String(avatar)
-        };
+      // Validate the image synchronously, but NEVER block the API response
+      // on the remote Mini-DWN write.
+      const parsed = dataUrlToDwn(avatar);
+      if (!parsed) {
+        return res.status(400).json({ error: 'Invalid profile picture data.' });
       }
+
+      dwnPicture = {
+        recordId: profileRecordId(found.user.did),
+        avatar: String(avatar),
+        liveDwn: false
+      };
+      avatarSyncPending = true;
     } else {
-      try {
-        dwnPicture = await readProfilePicture(found.user.did);
-      } catch (dwnError) {
-        console.warn(
-          '[profile] Mini-DWN read unavailable; using stored avatar:',
-          dwnError.message
-        );
-
-        dwnPicture = {
-          recordId: found.user.profile?.avatarRecordId ||
-            profileRecordId(found.user.did),
-          avatar: found.user.profile?.avatar || ''
-        };
-      }
+      // Name/bio/settings saves do not need to wait for a remote DP read.
+      dwnPicture = {
+        recordId:
+          found.user.profile?.avatarRecordId ||
+          profileRecordId(found.user.did),
+        avatar: found.user.profile?.avatar || ''
+      };
     }
 
     const cleanName = String(display_name || '').trim().slice(0, 80);
@@ -382,6 +405,10 @@ router.put('/', auth, async (req, res) => {
       avatarRecordId:
         dwnPicture?.recordId ||
         profileRecordId(found.user.did),
+      avatarSync:
+        avatarSyncPending
+          ? 'pending'
+          : (found.user.profile?.avatarSync || 'synced'),
       updated_at: new Date().toISOString()
     };
 
@@ -403,11 +430,24 @@ router.put('/', auth, async (req, res) => {
     writeJson(global.usersFile, users);
     addActivity(req.userId, 'profile.updated');
 
-    return res.status(200).json(found.user.profile);
+    if (avatarSyncPending) {
+      queueProfilePictureSync(
+        found.user.did,
+        found.user.profile.avatar,
+        found.user.profile.avatarRecordId
+      );
+    }
+
+    return res.status(200).json({
+      ...found.user.profile,
+      avatar: found.user.profile.avatar,
+      avatarRecordId: found.user.profile.avatarRecordId,
+      avatarSync: found.user.profile.avatarSync
+    });
   } catch (error) {
-    console.error('[profile] DWN write/read failed:', error.message);
+    console.error('[profile] profile save failed:', error.message);
     return res.status(502).json({
-      error: 'Profile picture DWN save failed',
+      error: 'Profile save failed',
       detail: error.message
     });
   }
