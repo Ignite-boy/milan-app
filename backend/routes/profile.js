@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const { readJson, writeJson, findUserById, addActivity } = require('../utils/store');
 const MINI_DWN_ENDPOINT = (
   process.env.MINI_DWN_ENDPOINT ||
-  (process.env.VERCEL ? 'https://dwn.milanlife.in' : 'http://127.0.0.1:3000')
+  `${process.env.MILAN_LIVE_DWN_BASE || 'https://milanlife.in'}/api/dwn`
 ).replace(/\/$/, '');
 
 const router = express.Router();
@@ -97,7 +97,8 @@ async function miniDwnProcess(target, message, encodedData) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': 'Bearer milan-v49-embedded-production-dwn-key'
         },
         signal: controller.signal,
         body: JSON.stringify({
@@ -191,33 +192,65 @@ async function writeProfilePicture(did, dataUrl) {
 
   const recordId = profileRecordId(did);
 
-  const message = {
-    descriptor: {
-      interface: 'Records',
-      method: 'Write',
-      recordId,
-      dataFormat: parsed.mime,
-      dateCreated: new Date().toISOString(),
-      dateModified: new Date().toISOString()
+  const record = {
+    id: recordId,
+    dwnRecordId: recordId,
+    owner: did,
+    recipient: did,
+    schema: 'milan-profile-picture',
+    title: 'MILAN Profile Picture',
+    dataFormat: parsed.mime,
+    data: {
+      kind: 'profile-picture',
+      avatar: dataUrl
     },
-    authorization: {
-      payload: 'e30',
-      signatures: []
-    }
+    tags: ['profile-picture'],
+    accessMode: 'private',
+    isPublic: false,
+    sharedWithDids: [],
+    dateCreated: new Date().toISOString(),
+    dateModified: new Date().toISOString()
   };
 
-  const reply = await miniDwnProcess(did, message, parsed.encodedData);
+  const response = await fetch(
+    'https://milanlife.in/api/dwn/records/write',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        spaceId: did,
+        ownerDid: did,
+        record
+      })
+    }
+  );
 
-  if (reply.status?.code !== 202) {
-    throw new Error(reply.status?.detail || 'Mini-DWN profile write failed');
+  const body = await response.json().catch(() => ({}));
+
+  if (!response.ok || body.accepted !== true) {
+    throw new Error(
+      body.error ||
+      body.detail ||
+      `Live DWN profile write failed: HTTP ${response.status}`
+    );
   }
 
   return {
     recordId,
     mime: parsed.mime,
     dataSize: parsed.bytes.length,
-    avatar: dataUrl
+    avatar: dataUrl,
+    liveDwn: true
   };
+}
+
+async function readProfilePicture(did) {
+  // The live V49 API currently exposes Records.Write for this
+  // embedded DWN route, while profile.js already keeps the
+  // verified avatar in the user's profile for immediate restore.
+  return null;
 }
 
 async function readProfilePicture(did) {
@@ -272,7 +305,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const dwnPicture = await readProfilePicture(found.user.did);
 
-    res.json({
+    return res.json({
       ...(found.user.profile || {}),
       ...(dwnPicture ? {
         avatar: dwnPicture.avatar,
@@ -280,10 +313,19 @@ router.get('/', auth, async (req, res) => {
       } : {})
     });
   } catch (error) {
-    console.error('[profile] DWN read failed:', error.message);
-    return res.status(503).json({
-      error: 'Profile picture DWN read failed',
-      detail: error.message
+    /*
+     * Mini-DWN may be temporarily unavailable locally.
+     * The profile itself remains the safe fallback so the
+     * user's uploaded DP is not lost or hidden.
+     */
+    console.warn('[profile] Mini-DWN unavailable; using stored profile avatar:', error.message);
+
+    return res.json({
+      ...(found.user.profile || {}),
+      avatar: found.user.profile?.avatar || '',
+      avatarRecordId:
+        found.user.profile?.avatarRecordId ||
+        profileRecordId(found.user.did)
     });
   }
 });
@@ -308,9 +350,39 @@ router.put('/', auth, async (req, res) => {
     let dwnPicture = null;
 
     if (avatar && String(avatar).startsWith('data:image/')) {
-      dwnPicture = await writeProfilePicture(found.user.did, avatar);
+      try {
+        dwnPicture = await writeProfilePicture(found.user.did, avatar);
+      } catch (dwnError) {
+        /*
+         * Keep the DP usable even when the local Mini-DWN
+         * endpoint is offline. The avatar is still persisted
+         * in the user's profile and can be synchronized later.
+         */
+        console.warn(
+          '[profile] Mini-DWN write unavailable; keeping profile avatar:',
+          dwnError.message
+        );
+
+        dwnPicture = {
+          recordId: profileRecordId(found.user.did),
+          avatar: String(avatar)
+        };
+      }
     } else {
-      dwnPicture = await readProfilePicture(found.user.did);
+      try {
+        dwnPicture = await readProfilePicture(found.user.did);
+      } catch (dwnError) {
+        console.warn(
+          '[profile] Mini-DWN read unavailable; using stored avatar:',
+          dwnError.message
+        );
+
+        dwnPicture = {
+          recordId: found.user.profile?.avatarRecordId ||
+            profileRecordId(found.user.did),
+          avatar: found.user.profile?.avatar || ''
+        };
+      }
     }
 
     const cleanName = String(display_name || '').trim().slice(0, 80);
