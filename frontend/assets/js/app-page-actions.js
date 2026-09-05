@@ -140,7 +140,7 @@
     const token = getToken();
 
     if (!token) {
-      alert("Please login again before changing your profile picture.");
+      console.warn("[MILAN] Please login again before changing your profile picture.");
       input.value = "";
       return;
     }
@@ -165,7 +165,7 @@
       const optimized = await compressProfileImage(file);
 
       // One network write only. No extra verification GET.
-      const response = await fetch("/api/profile", {
+      const response = await fetch("https://milan-app-pzhf.onrender.com/api/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -225,7 +225,7 @@
     } catch (error) {
       console.error("[MILAN] DP upload failed:", error);
       restoreAvatar();
-      alert("Profile picture could not be saved.");
+      console.warn("[MILAN] Profile photo save failed; keeping the local preview without a blocking alert.");
     } finally {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -278,7 +278,7 @@
     }
 
     try {
-      const response = await fetch("/api/profile", {
+      const response = await fetch("https://milan-app-pzhf.onrender.com/api/profile", {
         headers,
         cache: "no-store"
       });
