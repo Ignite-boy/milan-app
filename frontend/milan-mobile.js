@@ -24,13 +24,16 @@
   }
 
   function init() {
-    // Hamburger — bottom-LEFT FAB (right side already has the action dock; no overlap)
     var burger = document.createElement("button");
     burger.id = "milan-burger";
     burger.type = "button";
     burger.setAttribute("aria-label", "Open menu");
+    burger.setAttribute("aria-expanded", "false");
     burger.innerHTML = "☰";
-    document.body.appendChild(burger);
+
+    var topbar = document.querySelector(".topbar");
+    if (topbar) topbar.appendChild(burger);
+    else document.body.appendChild(burger);
 
     var overlay = document.createElement("div");
     overlay.id = "milan-drawer-ov";
@@ -48,7 +51,7 @@
 
     function build() {
       var nameEl = document.querySelector(
-        "#profileName, #userName, .profileCard h3, .profileName, .leftRail .profileCard b"
+        "#profileName, #userName, #myName, .profileCard h3, .profileName, .leftRail .profileCard b"
       );
       var name = (nameEl && nameEl.textContent ? nameEl.textContent : "Your account").trim().slice(0, 40);
 
@@ -61,14 +64,13 @@
         navHtml += '<button class="md-item" data-fwd="1">' + esc(t) + "</button>";
       });
       if (!navHtml) {
-        // Fallback nav if the in-page menu isn't found
         navHtml =
           '<a class="md-item" href="/app">🏠 Home Feed</a>' +
           '<a class="md-item" href="/app">📝 My Posts</a>';
       }
 
       drawer.innerHTML =
-        '<div class="md-head"><span class="md-brand">MILAN</span>' +
+        '<div class="md-head"><div><span class="md-brand">MILAN</span><span class="md-sub">Navigation</span></div>' +
           '<button class="md-close" type="button" aria-label="Close menu">×</button></div>' +
         '<div class="md-user">👤 ' + esc(name) + "</div>" +
         '<div class="md-sec">Navigate</div>' +
@@ -79,7 +81,6 @@
         '<a class="md-item" href="/about">ℹ️ About</a>' +
         '<button class="md-logout" id="milan-drawer-logout" type="button">⎋ Log out</button>';
 
-      // Forward in-app nav clicks to the real buttons (keeps all existing handlers)
       var byText = {};
       btns.forEach(function (b) { byText[(b.textContent || "").trim()] = b; });
       drawer.querySelectorAll('.md-item[data-fwd="1"]').forEach(function (it) {
@@ -101,10 +102,19 @@
       });
     }
 
-    function openDrawer() { build(); document.body.classList.add("milan-drawer-open"); }
-    function closeDrawer() { document.body.classList.remove("milan-drawer-open"); }
+    function openDrawer() {
+      build();
+      document.body.classList.add("milan-drawer-open");
+      burger.setAttribute("aria-expanded", "true");
+    }
+    function closeDrawer() {
+      document.body.classList.remove("milan-drawer-open");
+      burger.setAttribute("aria-expanded", "false");
+    }
 
-    burger.addEventListener("click", openDrawer);
+    burger.addEventListener("click", function () {
+      document.body.classList.contains("milan-drawer-open") ? closeDrawer() : openDrawer();
+    });
     overlay.addEventListener("click", closeDrawer);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
   }
