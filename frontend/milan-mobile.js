@@ -42,7 +42,7 @@
 
     function realMenuButtons() {
       return Array.prototype.slice.call(
-        document.querySelectorAll(".leftRail .menu button, .card.menu button, .menu button")
+        document.querySelectorAll(".sidebar .nav button, .leftRail .menu button, .card.menu button, .menu button")
       );
     }
 
