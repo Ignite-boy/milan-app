@@ -145,9 +145,26 @@
       return;
     }
 
+    let previewUrl = "";
+
     try {
+      // Show the selected DP immediately.
+      previewUrl = URL.createObjectURL(file);
+
+      ["myAvatar", "composerAvatar"].forEach(id => {
+        setAvatar(id, previewUrl);
+      });
+
+      const preview = $("editProfilePhotoPreview");
+      if (preview) {
+        preview.src = previewUrl;
+        preview.style.display = "block";
+      }
+
+      // Compress before upload to keep the request fast.
       const optimized = await compressProfileImage(file);
 
+      // One network write only. No extra verification GET.
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: {
@@ -169,11 +186,6 @@
         );
       }
 
-      /* Accept both:
-         { avatar: "..." }
-         and
-         { profile: { avatar: "..." } }
-      */
       const savedProfile =
         saved?.profile ||
         saved?.data?.profile ||
@@ -182,67 +194,42 @@
       const savedAvatar =
         savedProfile?.avatar ||
         saved?.avatar ||
-        "";
+        optimized.dataUrl;
 
-      const verifiedResponse = await fetch("/api/profile", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer " + token
-        },
-        cache: "no-store"
-      });
-
-      const verifiedRaw =
-        await verifiedResponse.json().catch(() => ({}));
-
-      const verifiedProfile =
-        verifiedRaw?.profile ||
-        verifiedRaw?.data?.profile ||
-        verifiedRaw;
-
-      const verifiedAvatar =
-        verifiedProfile?.avatar ||
-        verifiedRaw?.avatar ||
-        savedAvatar ||
-        "";
-
-      if (!verifiedResponse.ok || !verifiedAvatar) {
-        throw new Error(
-          verifiedRaw.detail ||
-          verifiedRaw.error ||
-          "DP was saved but could not be verified."
-        );
+      if (!savedAvatar) {
+        throw new Error("Profile picture was not returned by server.");
       }
 
+      // Persist the saved DP locally for fast restore.
       try {
-        localStorage.setItem(
-          "milanAvatar",
-          verifiedAvatar
-        );
+        localStorage.setItem("milanAvatar", savedAvatar);
       } catch {}
 
-      ["myAvatar", "composerAvatar"].forEach(id =>
-        setAvatar(id, verifiedAvatar)
-      );
-
-      const preview = $("editProfilePhotoPreview");
-      if (preview) {
-        preview.src = "";
-        preview.style.display = "none";
-      }
+      // Show the final saved DP.
+      ["myAvatar", "composerAvatar"].forEach(id => {
+        setAvatar(id, savedAvatar);
+      });
 
       if (window.me) {
         window.me.profile = {
           ...(window.me.profile || {}),
-          ...(verifiedProfile || {}),
-          avatar: verifiedAvatar
+          ...(savedProfile || {}),
+          avatar: savedAvatar
         };
       }
+
+      if (preview) {
+        preview.src = "";
+        preview.style.display = "none";
+      }
     } catch (error) {
-      console.error("[MILAN] DP save/verify failed:", error);
-      alert("Profile picture could not be saved to DWN.");
+      console.error("[MILAN] DP upload failed:", error);
+      restoreAvatar();
+      alert("Profile picture could not be saved.");
     } finally {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
       input.value = "";
     }
   }
