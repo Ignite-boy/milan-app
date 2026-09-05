@@ -1,57 +1,18 @@
 {
   "outputDirectory": "frontend",
   "rewrites": [
-    {
-      "source": "/api/auth/:action",
-      "destination": "/api/auth.js"
-    },
-    {
-      "source": "/api/profile",
-      "destination": "https://milan-app-pzhf.onrender.com/api/profile"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/app",
-      "destination": "/app.html"
-    },
-    {
-      "source": "/music",
-      "destination": "/music.html"
-    },
-    {
-      "source": "/milan-music",
-      "destination": "/music.html"
-    },
-    {
-      "source": "/about",
-      "destination": "/about.html"
-    },
-    {
-      "source": "/decentralized-social-media",
-      "destination": "/decentralized-social-media-premium.html"
-    },
-    {
-      "source": "/social-media-privacy",
-      "destination": "/social-media-privacy.html"
-    },
-    {
-      "source": "/private-social-network",
-      "destination": "/private-social-network.html"
-    },
-    {
-      "source": "/what-is-web5",
-      "destination": "/what-is-web5.html"
-    },
-    {
-      "source": "/best-social-media-apps",
-      "destination": "/best-social-media-apps.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/$1"
-    }
+    {"source":"/api/auth/:action","destination":"/api/auth.js"},
+    {"source":"/api/profile","destination":"https://milan-app-pzhf.onrender.com/api/profile"},
+    {"source":"/api/:path*","destination":"/api/index.js"},
+    {"source":"/app","destination":"/app.html"},
+    {"source":"/music","destination":"/music.html"},
+    {"source":"/milan-music","destination":"/music.html"},
+    {"source":"/about","destination":"/about.html"},
+    {"source":"/decentralized-social-media","destination":"/web5-ecosystem.html"},
+    {"source":"/social-media-privacy","destination":"/social-media-privacy.html"},
+    {"source":"/private-social-network","destination":"/private-social-network.html"},
+    {"source":"/what-is-web5","destination":"/what-is-web5.html"},
+    {"source":"/best-social-media-apps","destination":"/best-social-media-apps.html"},
+    {"source":"/(.*)","destination":"/$1"}
   ]
 }
