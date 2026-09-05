@@ -6,6 +6,10 @@
       "destination": "/api/auth.js"
     },
     {
+      "source": "/api/profile",
+      "destination": "https://milan-app-pzhf.onrender.com/api/profile"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index.js"
     },
