@@ -228,7 +228,7 @@
     } catch (error) {
       console.error("[MILAN] DP upload failed:", error);
       restoreAvatar();
-      console.warn("[MILAN] Profile photo save failed; keeping the local preview without a blocking alert.");
+      console.warn("[MILAN] Profile photo sync failed; local preview retained.");
     } finally {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
