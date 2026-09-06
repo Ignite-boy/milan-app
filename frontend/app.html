@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script id="milan-runtime-dp-kill">
+(function(){
+  const A = window.alert.bind(window);
+  window.alert = function(msg){
+    const m = String(msg||"").toLowerCase();
+    if (m.includes("profile picture") && (m.includes("saved") || m.includes("save failed") || m.includes("dwn"))) return;
+    return A(msg);
+  };
+})();
+</script>
+
 <script id="milan-dp-popup-kill">
 (() => {
   const nativeAlert = window.alert.bind(window);
