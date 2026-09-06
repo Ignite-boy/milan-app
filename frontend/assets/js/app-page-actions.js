@@ -129,6 +129,9 @@
   }
 
   async function handleUpload(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
     const input = event.currentTarget;
     const file = input?.files?.[0];
 
@@ -362,11 +365,21 @@
   }
 
   function init() {
-    const photoInput = $("editProfilePhoto");
+    let photoInput = $("editProfilePhoto");
 
-    if (photoInput && !photoInput.dataset.appUploadBound) {
-      photoInput.dataset.appUploadBound = "1";
-      photoInput.addEventListener("change", handleUpload);
+    if (photoInput) {
+      // Replace the input so any older/duplicate listeners are discarded.
+      if (!photoInput.dataset.milanCanonicalInput) {
+        const cleanInput = photoInput.cloneNode(true);
+        cleanInput.dataset.milanCanonicalInput = "1";
+        photoInput.replaceWith(cleanInput);
+        photoInput = cleanInput;
+      }
+
+      if (!photoInput.dataset.appUploadBound) {
+        photoInput.dataset.appUploadBound = "1";
+        photoInput.addEventListener("change", handleUpload, { capture: true });
+      }
     }
 
     restoreAvatar();
