@@ -228,7 +228,7 @@
     } catch (error) {
       console.error("[MILAN] DP upload failed:", error);
       restoreAvatar();
-      console.warn("[MILAN] Profile photo sync failed; local preview retained.");
+      console.warn("[MILAN] DP sync failed; cached preview retained.");
     } finally {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -379,6 +379,20 @@
   }
 
   function init() {
+    // Restore the last known DP immediately on every page load.
+    try {
+      const cached = localStorage.getItem("milanAvatar") || "";
+      if (cached) {
+        ["myAvatar", "composerAvatar"].forEach(id => setAvatar(id, cached));
+        if (window.me) {
+          window.me.profile = {
+            ...(window.me.profile || {}),
+            avatar: cached
+          };
+        }
+      }
+    } catch {}
+
     let photoInput = $("editProfilePhoto");
 
     if (photoInput) {
