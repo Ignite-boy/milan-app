@@ -397,7 +397,9 @@
     }
 
     restoreAvatar();
-    syncLiveProfileIdentity();
+    syncLiveProfileIdentity().finally(() => {
+      restoreAvatar();
+    });
     installLogout();
   }
 

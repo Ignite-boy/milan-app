@@ -1,6 +1,19 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script id="milan-dp-no-alert">
+(() => {
+  const realAlert = window.alert;
+  window.alert = function (message) {
+    if (/profile picture could not be saved/i.test(String(message || ""))) {
+      console.warn("[MILAN] DP save popup suppressed.");
+      return;
+    }
+    return realAlert.apply(window, arguments);
+  };
+})();
+</script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Milan</title>
@@ -91,7 +104,7 @@
 <script src="/milan-mobile.js" defer></script>
 <script src="/milan-polish.js" defer></script>
 <script src="/assets/js/milan-ui-actions.js?v=1" defer></script>
-<script src="/assets/js/app-page-actions.js?v=dp-final-20260906-r4" defer></script>
+<script src="/assets/js/app-page-actions.js?v=dp-final-20260906-r5-r4" defer></script>
 <script src="/assets/js/milan-web5-motion.js" defer></script>
 <script src="/assets/js/milan-did-ring.js" defer></script>
 <script src="/assets/js/milan-identity-status.js" defer></script>
