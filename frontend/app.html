@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head>\n<script id="milan-dp-popup-kill-final">
+(function(){
+  var realAlert = window.alert;
+  window.alert = function(message){
+    if (/profile picture could not be saved/i.test(String(message || ""))) return;
+    return realAlert.apply(this, arguments);
+  };
+})();
+</script>
+
 <script id="milan-native-alert-disabled">
 (() => {
   const noopAlert = function () {};
