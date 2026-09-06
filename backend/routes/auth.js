@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const bcrypt = require('../services/cryptoPool'); // bcrypt off the event loop (worker_threads)
 const jwt = require('jsonwebtoken');
@@ -141,9 +143,18 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   }
 
   const id = uuidv4();
-  const did = `did:milan:${id}`;
   const passwordHash = await bcrypt.hash(password, 10);
   const displayName = name || email.split('@')[0];
+
+  // Mint the user's real cryptographic identity through the DWN engine.
+  const identity = await mintRealUserIdentity({
+    userId: id,
+    email
+  });
+
+  const did = identity.did;
+  const spaceId = identity.spaceId;
+  const identityReal = identity.real;
 
   // Supabase PostgreSQL is the authoritative account store.
   const { data: existingUser, error: lookupError } = await supabaseDb
@@ -172,7 +183,9 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
       email,
       password_hash: passwordHash,
       name: displayName,
-      did
+      did,
+      space_id: spaceId,
+      did_real: identityReal
     });
 
   if (insertError) {
@@ -191,7 +204,9 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
     id,
     email,
     name: displayName,
-    did
+    did,
+    spaceId,
+    real: identityReal
   });
 }));
 

@@ -44,12 +44,13 @@ async function mintRealUserIdentity({ userId = '', email = '' } = {}) {
         return { did: opened.node.tenantDid, rawSeedHex, spaceId, real: true };
       }
     }
-  } catch (_) { /* fall through to legacy */ }
+  } catch (error) {
+    throw new Error(
+      `Real DID engine unavailable: ${error?.message || "identity mint failed"}`
+    );
+  }
 
-  // Fallback: legacy identifier (still unique), engine will mint a real DID
-  // lazily on first record write.
-  const legacy = generateDIDAndRawSeed();
-  return { did: legacy.did, rawSeedHex, spaceId, real: false };
+  throw new Error("Real DID engine unavailable: no tenant DID returned");
 }
 
 module.exports = { generateDIDAndRawSeed, mintRealUserIdentity };
