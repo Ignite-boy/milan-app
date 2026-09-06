@@ -309,6 +309,17 @@
       profile ||
       {};
 
+    // Preserve the locally persisted DP across reloads when the
+    // remote profile response does not contain an avatar.
+    let localAvatar = "";
+    try {
+      localAvatar = localStorage.getItem("milanAvatar") || "";
+    } catch {}
+
+    if (!profileData.avatar && localAvatar) {
+      profileData.avatar = localAvatar;
+    }
+
     const name = String(
       profileData.display_name ||
       profileData.name ||
@@ -339,7 +350,10 @@
         profile: {
           ...(window.me.profile || {}),
           ...meProfile,
-          ...profileData
+          ...profileData,
+          ...(localAvatar && !profileData.avatar
+            ? { avatar: localAvatar }
+            : {})
         }
       };
     }
