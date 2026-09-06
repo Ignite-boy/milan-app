@@ -249,7 +249,6 @@
             }
         } catch (err) {
             console.error("[MILAN] DP save/verify failed:", err);
-            alert("Profile picture could not be saved to DWN.");
         } finally {
             this.value = "";
         }
