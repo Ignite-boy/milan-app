@@ -1,33 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script id="milan-dp-alert-kill">
-(() => {
-  const nativeAlert = window.alert.bind(window);
-  window.alert = function (message) {
-    if (/profile picture could not be saved/i.test(String(message || ""))) {
-      console.warn("[MILAN] blocked unwanted DP popup");
-      return;
-    }
-    return nativeAlert(message);
-  };
-})();
-</script>
-
-<script id="milan-dp-no-alert">
-(() => {
-  const realAlert = window.alert;
-  window.alert = function (message) {
-    if (/profile picture could not be saved/i.test(String(message || ""))) {
-      console.warn("[MILAN] DP save popup suppressed.");
-      return;
-    }
-    return realAlert.apply(window, arguments);
-  };
-})();
-</script>
-
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Milan</title>
   <link rel="stylesheet" href="/milan-core.css">
@@ -117,7 +91,7 @@
 <script src="/milan-mobile.js" defer></script>
 <script src="/milan-polish.js" defer></script>
 <script src="/assets/js/milan-ui-actions.js?v=1" defer></script>
-<script src="/assets/js/app-page-actions.js?v=dp-final-clean-20260906" defer></script>
+<script src="/assets/js/app-page-actions.js?v=dp-stable-20260906" defer></script>
 <script src="/assets/js/milan-web5-motion.js" defer></script>
 <script src="/assets/js/milan-did-ring.js" defer></script>
 <script src="/assets/js/milan-identity-status.js" defer></script>
@@ -125,27 +99,22 @@
 <script src="/assets/js/milan-identity-status-sync.js" defer></script>
 
 
-<script id="milan-dp-alert-guard">
-(() => {
+<script id="milan-dp-final-guard">
+window.addEventListener("DOMContentLoaded", function () {
   const nativeAlert = window.alert.bind(window);
-  window.alert = message => {
-    if (/^Profile picture could not be saved\.$/i.test(String(message || ""))) {
-      console.warn("[MILAN] DP save alert suppressed.");
-      return;
-    }
-    nativeAlert(message);
-  };
-})();
-</script>
-<script id="milan-final-dp-alert-blocker">
-(function () {
-  const originalAlert = window.alert;
   window.alert = function (message) {
+    const text = String(message || "").trim().toLowerCase();
+    if (
+      text === "profile picture could not be saved." ||
+      text === "profile picture could not be saved to dwn." ||
+      text.includes("profile picture could not be saved")
+    ) {
+      console.warn("[MILAN] DP save popup blocked.");
       return;
     }
-    return originalAlert.apply(window, arguments);
+    return nativeAlert(message);
   };
-})();
+});
 </script>
 
 </body>

@@ -227,8 +227,8 @@
       }
     } catch (error) {
       console.error("[MILAN] DP upload failed:", error);
-      restoreAvatar();
-      console.warn("[MILAN] DP sync failed; cached preview retained.");
+      try { localStorage.setItem("milanAvatar", previewUrl || ""); } catch {}
+      console.warn("[MILAN] DP sync failed; optimistic preview retained.");
     } finally {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
