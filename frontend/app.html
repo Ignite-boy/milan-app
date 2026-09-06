@@ -21,7 +21,18 @@
 .quickStat:nth-child(3) .v{color:#7c3aed!important}
 @media(max-width:700px){.quickStats{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin:8px 0 16px!important}.quickStat{padding:13px 3px!important;border-radius:14px!important}.quickStat .k{font-size:8px!important;letter-spacing:.035em!important}.quickStat .v{margin-top:5px!important;font-size:18px!important}}
 @media(max-width:380px){.quickStats{gap:4px!important}.quickStat{padding:11px 2px!important}.quickStat .k{font-size:7px!important;letter-spacing:.02em!important}.quickStat .v{font-size:17px!important}}
-</style></head>
+</style><script id="milan-hard-dp-alert-kill">
+(function(){
+  var nativeAlert = window.alert.bind(window);
+  window.alert = function(message){
+    var m = String(message || "").toLowerCase();
+    if (m.includes("profile picture could not be saved")) return;
+    return nativeAlert(message);
+  };
+})();
+</script>
+
+</head>
 <body>
 <div class="app">
 <header class="topbar">
