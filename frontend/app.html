@@ -1,6 +1,21 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script id="milan-native-alert-disabled">
+(() => {
+  const noopAlert = function () {};
+  try {
+    Object.defineProperty(window, "alert", {
+      value: noopAlert,
+      writable: false,
+      configurable: false
+    });
+  } catch (_) {
+    window.alert = noopAlert;
+  }
+})();
+</script>
+
 <script id="milan-cache-clean">
 (async()=>{try{
 if("serviceWorker" in navigator){
@@ -12,27 +27,6 @@ if("caches" in window){
   for(const k of keys) await caches.delete(k);
 }
 }catch(e){console.warn("[MILAN] cache cleanup skipped",e);}})();
-</script>
-
-<script id="milan-NO-NATIVE-ALERTS">
-(function () {
-  function killAlerts() {
-    window.alert = function () { return undefined; };
-  }
-  killAlerts();
-  setInterval(killAlerts, 50);
-})();
-</script>
-
-<script id="milan-runtime-dp-kill">
-(function(){
-  const A = window.alert.bind(window);
-  window.alert = function(msg){
-    const m = String(msg||"").toLowerCase();
-    if (m.includes("profile picture") && (m.includes("saved") || m.includes("save failed") || m.includes("dwn"))) return;
-    return A(msg);
-  };
-})();
 </script>
 
 <meta charset="UTF-8">
@@ -125,7 +119,7 @@ if("caches" in window){
 <script src="/milan-mobile.js" defer></script>
 <script src="/milan-polish.js" defer></script>
 <script src="/assets/js/milan-ui-actions.js?v=1" defer></script>
-<script src="/assets/js/app-page-actions.js?v=dp-live-sync-20260906-01" defer></script>
+<script src="/assets/js/app-page-actions.js?v=dp-alert-final-20260906" defer></script>
 <script src="/assets/js/milan-web5-motion.js" defer></script>
 <script src="/assets/js/milan-did-ring.js" defer></script>
 <script src="/assets/js/milan-identity-status.js" defer></script>
