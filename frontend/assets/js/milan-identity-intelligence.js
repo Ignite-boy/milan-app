@@ -3,6 +3,9 @@
 (() => {
   const $ = id => document.getElementById(id);
 
+  const POLL_MS = 5000;
+  const REQUEST_TIMEOUT_MS = 8000;
+
   function token() {
     try {
       return (
@@ -25,9 +28,7 @@
   }
 
   function toast(message) {
-    let el = document.querySelector(
-      ".milan-identity-toast"
-    );
+    let el = document.querySelector(".milan-identity-toast");
 
     if (!el) {
       el = document.createElement("div");
@@ -39,10 +40,7 @@
     el.classList.add("show");
 
     clearTimeout(el.__timer);
-
-    el.__timer = setTimeout(() => {
-      el.classList.remove("show");
-    }, 1800);
+    el.__timer = setTimeout(() => el.classList.remove("show"), 1800);
   }
 
   async function copyText(text) {
@@ -55,7 +53,6 @@
 
     try {
       const area = document.createElement("textarea");
-
       area.value = text;
       area.setAttribute("readonly", "");
       area.style.position = "fixed";
@@ -64,393 +61,306 @@
       area.style.opacity = "0";
 
       document.body.appendChild(area);
-
       area.focus();
       area.select();
       area.setSelectionRange(0, area.value.length);
 
       const ok = document.execCommand("copy");
-
       area.remove();
-
       return ok;
     } catch {
       return false;
     }
   }
 
+  async function fetchJson(url, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        cache: "no-store",
+        ...options,
+        signal: controller.signal
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {}
+
+      return { ok: response.ok, status: response.status, data };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function fetchIdentity() {
     const t = token();
-
     if (!t) return null;
 
     try {
-      const response = await fetch(
-        "/api/auth/me",
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: "Bearer " + t
-          },
-          cache: "no-store"
+      const response = await fetchJson("/api/auth/me", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer " + t
         }
-      );
+      });
 
       if (!response.ok) {
-        console.warn(
-          "[MILAN] identity fetch failed:",
-          response.status
-        );
+        console.warn("[MILAN] identity fetch failed:", response.status);
         return null;
       }
 
-      const data =
-        await response.json();
-
-      const user =
-        data?.user ||
-        data?.data?.user ||
-        data?.data ||
-        data;
-
-      const profile =
-        data?.profile ||
-        data?.data?.profile ||
-        user?.profile ||
-        {};
+      const data = response.data || {};
+      const user = data?.user || data?.data?.user || data?.data || data;
+      const profile = data?.profile || data?.data?.profile || user?.profile || {};
 
       const did = String(
-        user?.did ||
-        profile?.did ||
-        data?.did ||
-        ""
+        user?.did || profile?.did || data?.did || ""
       ).trim();
 
-      const dwn =
-        user?.dwn ||
-        data?.dwn ||
-        profile?.dwn ||
-        null;
+      const dwn = user?.dwn || profile?.dwn || data?.dwn || null;
 
-      return {
-        did,
-        dwn
-      };
+      return { did, dwn };
     } catch (error) {
-      console.warn(
-        "[MILAN] identity fetch error:",
-        error
-      );
+      console.warn("[MILAN] identity fetch error:", error);
       return null;
     }
   }
 
-  function writeBridge(
-    did,
-    dwn,
-    privacy
-  ) {
+  async function probeDwn(did, identityDwn) {
+    const rawIdentityDwn = String(
+      typeof identityDwn === "string"
+        ? identityDwn
+        : identityDwn?.endpoint || identityDwn?.spaceId || identityDwn?.mode || identityDwn?.id || ""
+    ).trim();
+
+    if (!did) {
+      return { state: "Resolving", detail: "DID not available yet" };
+    }
+
+    // A backend identity response that explicitly contains a DWN object is authoritative.
+    if (identityDwn && typeof identityDwn === "object") {
+      const mode = String(identityDwn.mode || "").toLowerCase();
+      const endpoint = String(identityDwn.endpoint || "").trim();
+
+      if (/offline|disconnected|unavailable|error/.test(mode)) {
+        return { state: "Unavailable", detail: rawIdentityDwn || mode };
+      }
+
+      if (endpoint || identityDwn.spaceId || identityDwn.id || mode) {
+        return { state: "Connected", detail: endpoint || rawIdentityDwn };
+      }
+    }
+
+    // Live DWN probe. The existing /api/dwn GET endpoint is used only as a health probe;
+    // no record contents are rendered or persisted in the browser.
+    try {
+      const response = await fetchJson(
+        "/api/dwn?did=" + encodeURIComponent(did),
+        {
+          method: "GET",
+          headers: { Accept: "application/json" }
+        }
+      );
+
+      if (response.ok && response.data && Array.isArray(response.data.records)) {
+        return {
+          state: "Connected",
+          detail: `records:${response.data.records.length}`
+        };
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        return { state: "Unavailable", detail: "DWN access denied" };
+      }
+
+      return {
+        state: "Unavailable",
+        detail: `HTTP ${response.status || 0}`
+      };
+    } catch (error) {
+      console.warn("[MILAN] DWN probe failed:", error);
+      return { state: "Unavailable", detail: error?.message || "probe failed" };
+    }
+  }
+
+  function writeBridge(did, dwn, privacy) {
     const didBridge = $("myDid");
     const dwnBridge = $("myDwn");
     const privacyBridge = $("privacyScore");
 
-    if (didBridge && did) {
-      didBridge.textContent = did;
-    }
+    if (didBridge && did) didBridge.textContent = did;
 
-    if (
-      dwnBridge &&
-      dwn
-    ) {
-      if (typeof dwn === "string") {
-        dwnBridge.textContent = dwn;
-      } else {
+    if (dwnBridge) {
+      if (typeof dwn === "string" && dwn.trim()) {
+        dwnBridge.textContent = dwn.trim();
+      } else if (dwn && typeof dwn === "object") {
         dwnBridge.textContent =
-          dwn.spaceId ||
-          dwn.mode ||
-          dwn.id ||
-          "Connected";
+          dwn.endpoint || dwn.spaceId || dwn.mode || dwn.id || "Connected";
       }
     }
 
-    if (
-      privacyBridge &&
-      privacy
-    ) {
-      privacyBridge.textContent =
-        privacy;
-    }
+    if (privacyBridge && privacy) privacyBridge.textContent = privacy;
   }
 
   function updateDidChip(did) {
-    const chip =
-      document.querySelector(
-        ".milan-identity-status-chip.did"
-      );
-
+    const chip = document.querySelector(".milan-identity-status-chip.did");
     if (!chip) return;
 
-    let inline =
-      chip.querySelector(
-        ".milan-did-inline"
-      );
+    let inline = chip.querySelector(".milan-did-inline");
 
     if (!inline) {
-      const oldValue =
-        chip.querySelector(".value");
+      const oldValue = chip.querySelector(".value");
+      inline = document.createElement("div");
+      inline.className = "milan-did-inline";
 
-      inline =
-        document.createElement("div");
-
-      inline.className =
-        "milan-did-inline";
-
-      const value =
-        document.createElement("span");
-
+      const value = document.createElement("span");
       value.className = "value";
 
-      const button =
-        document.createElement("button");
-
+      const button = document.createElement("button");
       button.type = "button";
-      button.className =
-        "milan-did-copy";
+      button.className = "milan-did-copy";
       button.textContent = "⧉";
       button.title = "Copy full DID";
-      button.setAttribute(
-        "aria-label",
-        "Copy full DID"
-      );
+      button.setAttribute("aria-label", "Copy full DID");
 
-      button.addEventListener(
-        "click",
-        async event => {
-          event.preventDefault();
-          event.stopPropagation();
+      button.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
 
-          const fullDid =
-            button.dataset.fullDid || "";
-
-          if (!fullDid) {
-            toast(
-              "DID is still resolving"
-            );
-            return;
-          }
-
-          const ok =
-            await copyText(fullDid);
-
-          if (ok) {
-            button.textContent = "✓";
-            button.classList.add(
-              "copied"
-            );
-
-            toast(
-              "DID copied to clipboard"
-            );
-
-            setTimeout(() => {
-              button.textContent = "⧉";
-              button.classList.remove(
-                "copied"
-              );
-            }, 1300);
-          } else {
-            toast(
-              "Copy failed — select the DID manually"
-            );
-          }
+        const fullDid = button.dataset.fullDid || "";
+        if (!fullDid) {
+          toast("DID is still resolving");
+          return;
         }
-      );
+
+        const ok = await copyText(fullDid);
+
+        if (ok) {
+          button.textContent = "✓";
+          button.classList.add("copied");
+          toast("DID copied to clipboard");
+
+          setTimeout(() => {
+            button.textContent = "⧉";
+            button.classList.remove("copied");
+          }, 1300);
+        } else {
+          toast("Copy failed — select the DID manually");
+        }
+      });
 
       inline.appendChild(value);
       inline.appendChild(button);
-
       oldValue?.replaceWith(inline);
     }
 
-    const value =
-      inline.querySelector(".value");
-
-    const button =
-      inline.querySelector(
-        ".milan-did-copy"
-      );
+    const value = inline.querySelector(".value");
+    const button = inline.querySelector(".milan-did-copy");
 
     if (!did) {
       value.textContent = "Resolving";
       button.disabled = true;
       button.dataset.fullDid = "";
-      chip.title =
-        "DID is still resolving";
+      chip.title = "DID is still resolving";
+      chip.classList.remove("active", "resolving", "unavailable");
+      chip.classList.add("resolving");
       return;
     }
 
-    value.textContent =
-      shortenDid(did);
-
+    value.textContent = shortenDid(did);
     button.disabled = false;
     button.dataset.fullDid = did;
-
     chip.title = did;
+    chip.classList.remove("active", "resolving", "unavailable");
+    chip.classList.add("active");
   }
 
-  function updateDwnChip(dwn) {
-    const chip =
-      document.querySelector(
-        ".milan-identity-status-chip.dwn"
-      );
-
+  function updateDwnChip(result) {
+    const chip = document.querySelector(".milan-identity-status-chip.dwn");
     if (!chip) return;
 
-    const value =
-      chip.querySelector(".value");
-
+    const value = chip.querySelector(".value");
     if (!value) return;
 
-    const raw = String(
-      dwn || ""
-    ).trim().toLowerCase();
-
-    let state = "Connected";
-
-    if (!raw) {
-      state = "Resolving";
-    } else if (
-      /offline|isolated|disconnected|unavailable/.test(raw)
-    ) {
-      state = "Isolated";
-    }
-
+    const state = result?.state || "Resolving";
     value.textContent = state;
 
-    chip.classList.remove(
-      "connected",
-      "resolving",
-      "isolated"
-    );
+    chip.classList.remove("connected", "resolving", "isolated", "unavailable");
+    chip.classList.add(state.toLowerCase());
 
-    chip.classList.add(
-      state.toLowerCase()
-    );
-
-    chip.title =
-      dwn
-        ? `DWN: ${dwn}`
-        : "DWN resolving";
+    chip.title = result?.detail
+      ? `DWN: ${result.detail}`
+      : "DWN status is being resolved";
   }
 
   function updatePrivacyChip() {
-    const chip =
-      document.querySelector(
-        ".milan-identity-status-chip.privacy"
-      );
-
+    const chip = document.querySelector(".milan-identity-status-chip.privacy");
     if (!chip) return;
 
-    const value =
-      chip.querySelector(".value");
+    const value = chip.querySelector(".value");
+    const score = $("privacyScore")?.textContent.trim();
 
-    const score =
-      $("privacyScore")?.textContent.trim();
-
-    if (value) {
-      value.textContent =
-        score || "100%";
-    }
+    if (value) value.textContent = score || "100%";
   }
 
   async function sync() {
-    const identity =
-      await fetchIdentity();
+    updateDidChip("");
+    updateDwnChip({ state: "Resolving", detail: "Contacting identity service…" });
+
+    const identity = await fetchIdentity();
 
     if (!identity) {
       updateDidChip("");
-      updateDwnChip("");
+      updateDwnChip({ state: "Unavailable", detail: "Identity service unavailable" });
       updatePrivacyChip();
       return;
     }
 
-    const did =
-      identity.did;
+    const did = identity.did;
+    const dwnProbePromise = probeDwn(did, identity.dwn);
 
-    const dwn =
-      identity.dwn;
+    if (did) updateDidChip(did);
 
     writeBridge(
       did,
-      dwn,
+      identity.dwn,
       $("privacyScore")?.textContent.trim()
     );
 
-    updateDidChip(did);
-    updateDwnChip(
-      typeof dwn === "string"
-        ? dwn
-        : (
-            dwn?.spaceId ||
-            dwn?.mode ||
-            dwn?.id ||
-            ""
-          )
-    );
-
+    const dwnResult = await dwnProbePromise;
+    updateDwnChip(dwnResult);
     updatePrivacyChip();
   }
 
   function start() {
     sync();
 
-    /*
-     * Identity can become available shortly after
-     * the main app boot. Retry briefly, then stop.
-     */
-    let attempts = 0;
+    let running = false;
+    const tick = async () => {
+      if (running) return;
+      running = true;
+      try {
+        await sync();
+      } finally {
+        running = false;
+      }
+    };
 
-    const timer =
-      setInterval(() => {
-        sync();
+    setInterval(tick, POLL_MS);
 
-        attempts++;
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) tick();
+    });
 
-        if (attempts >= 8) {
-          clearInterval(timer);
-        }
-      }, 750);
-
-    const observer =
-      new MutationObserver(() => {
-        updatePrivacyChip();
-      });
-
-    const privacy =
-      $("privacyScore");
-
-    if (privacy) {
-      observer.observe(
-        privacy,
-        {
-          childList: true,
-          subtree: true,
-          characterData: true
-        }
-      );
-    }
+    window.addEventListener("online", tick);
   }
 
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      start,
-      { once: true }
-    );
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
   } else {
     start();
   }
