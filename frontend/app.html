@@ -103,13 +103,33 @@
 <script src="/milan-mobile.js" defer></script>
 <script src="/milan-polish.js" defer></script>
 <script src="/assets/js/milan-ui-actions.js?v=1" defer></script>
-<script src="/assets/js/app-page-actions.js?v=dp-popup-kill-final" defer></script>
+<script src="/assets/js/app-page-actions.js?v=dp-clean-final-20260906" defer></script>
 <script src="/assets/js/milan-web5-motion.js" defer></script>
 <script src="/assets/js/milan-did-ring.js" defer></script>
 <script src="/assets/js/milan-identity-status.js" defer></script>
 <script src="/assets/js/milan-identity-intelligence.js" defer></script>
 <script src="/assets/js/milan-identity-status-sync.js" defer></script>
 
+
+<script id="milan-dp-runtime-kill">
+(function () {
+  function kill() {
+    var nativeAlert = window.alert;
+    window.alert = function (message) {
+      var text = String(message || "").toLowerCase();
+      if (text.includes("profile picture") &&
+          (text.includes("saved") || text.includes("save failed"))) {
+        return;
+      }
+      return nativeAlert.apply(window, arguments);
+    };
+  }
+  kill();
+  setTimeout(kill, 100);
+  setTimeout(kill, 500);
+  setTimeout(kill, 1500);
+});
+</script>
 
 </body>
 </html>
