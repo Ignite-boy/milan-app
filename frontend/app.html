@@ -115,7 +115,6 @@
 (function () {
   const originalAlert = window.alert;
   window.alert = function (message) {
-    if (String(message || "").trim() === "Profile picture could not be saved.") {
       return;
     }
     return originalAlert.apply(window, arguments);
