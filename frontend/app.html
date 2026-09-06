@@ -6,7 +6,6 @@
   const nativeAlert = window.alert.bind(window);
   window.alert = function(message) {
     if (/profile picture.*(?:could not be saved|save failed)|profile photo.*(?:could not be saved|save failed)/i.test(String(message || ""))) {
-      console.warn("[MILAN] unwanted DP popup blocked");
       return;
     }
     return nativeAlert(message);
