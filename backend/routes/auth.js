@@ -295,52 +295,68 @@ router.get('/me', auth, asyncRoute(async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  let avatar = '';
+  // Profile photos are persisted in the user profile snapshot by /api/profile.
+  // Keep that saved value authoritative on login/reload so a temporary DWN
+  // read failure or stale remote read cannot erase a valid DP from the UI.
+  let persistedAvatar = '';
+  try {
+    const users = readJson(global.usersFile, {});
+    const stored = users?.[dbUser.email];
+    persistedAvatar = String(stored?.profile?.avatar || '').trim();
+  } catch (e) {
+    console.warn('[auth/me] persisted profile avatar read failed:', e.message);
+  }
+
+  let avatar = persistedAvatar;
   const recordId = `profile-picture:${dbUser.did}`;
 
-  try {
-    const response = await fetch(`${process.env.MINI_DWN_ENDPOINT || process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com/api/dwn'}/json-rpc`, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer milan-v49-embedded-production-dwn-key'
-        },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: Date.now().toString(),
-        method: 'dwn.processMessage',
-        params: {
-          target: dbUser.did,
-          message: {
-            descriptor: {
-              interface: 'Records',
-              method: 'Read',
-              recordId
-            },
-            authorization: {
-              payload: 'e30',
-              signatures: []
+  // Only consult the DWN profile-picture record when the persisted profile
+  // snapshot does not already contain a saved avatar.
+  if (!avatar) {
+    try {
+      const response = await fetch(`${process.env.MINI_DWN_ENDPOINT || process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com/api/dwn'}/json-rpc`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer milan-v49-embedded-production-dwn-key'
+          },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: Date.now().toString(),
+          method: 'dwn.processMessage',
+          params: {
+            target: dbUser.did,
+            message: {
+              descriptor: {
+                interface: 'Records',
+                method: 'Read',
+                recordId
+              },
+              authorization: {
+                payload: 'e30',
+                signatures: []
+              }
             }
           }
-        }
-      })
-    });
+        })
+      });
 
-    const body = await response.json();
-    const reply = body?.result?.reply;
+      const body = await response.json();
+      const reply = body?.result?.reply;
 
-    if (reply?.status?.code === 200 && reply.encodedData) {
-      const encoded = String(reply.encodedData)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-        .padEnd(Math.ceil(String(reply.encodedData).length / 4) * 4, '=');
+      if (reply?.status?.code === 200 && reply.encodedData) {
+        const encoded = String(reply.encodedData)
+          .replace(/-/g, '+')
+          .replace(/_/g, '/')
+          .padEnd(Math.ceil(String(reply.encodedData).length / 4) * 4, '=');
 
-      const mime = reply.record?.dataFormat || 'image/jpeg';
-      avatar = `data:${mime};base64,${encoded}`;
+        const mime = reply.record?.dataFormat || 'image/jpeg';
+        avatar = `data:${mime};base64,${encoded}`;
+      }
+    } catch (e) {
+      console.warn('[auth/me] profile picture restore failed:', e.message);
     }
-  } catch (e) {
-    console.warn('[auth/me] profile picture restore failed:', e.message);
   }
 
   return res.json({
