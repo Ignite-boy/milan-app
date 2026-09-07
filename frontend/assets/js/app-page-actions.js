@@ -242,8 +242,10 @@
   }
 
 
-  // Keep the persisted profile photo authoritative even if another
-  // script re-renders/replaces the avatar DOM after boot.
+  // Keep the persisted profile photo authoritative if another script
+  // explicitly calls the exported guard after a profile sync.
+  // app.html contains the canonical DOM mutation guard, so this module
+  // intentionally does not install a second observer or polling timer.
   function installAvatarGuard() {
     if (window.__milanAvatarGuardInstalled) return;
     window.__milanAvatarGuardInstalled = true;
@@ -261,21 +263,6 @@
     const enforce = () => {
       const saved = getSavedAvatar();
       if (!saved || saved === lastAvatar) {
-        // Even when the value is unchanged, repair an avatar node that
-        // another renderer may have replaced with initials.
-        if (saved) {
-          ["myAvatar", "composerAvatar"].forEach(id => {
-            const el = $(id);
-            if (!el) return;
-
-            const img = el.querySelector("img");
-            const current = String(img?.src || "").trim();
-
-            if (current !== saved) {
-              setAvatar(id, saved);
-            }
-          });
-        }
         return;
       }
 
@@ -294,21 +281,6 @@
     };
 
     enforce();
-
-    const observer = new MutationObserver(() => {
-      try {
-        enforce();
-      } catch {}
-    });
-
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ["src", "style", "class"]
-    });
-
-    setInterval(enforce, 1000);
     window.__milanAvatarGuardEnforce = enforce;
   }
 
