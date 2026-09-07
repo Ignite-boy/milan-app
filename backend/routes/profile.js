@@ -421,13 +421,15 @@ router.put('/', auth, async (req, res) => {
     users[found.email] = found.user;
     writeJson(global.usersFile, users);
     addActivity(req.userId, 'profile.updated');
-
     if (avatarSyncPending) {
-      // Do not report a successful DP save until DWN confirms the write.
       const synced = await writeProfilePicture(
         found.user.did,
         found.user.profile.avatar
       );
+
+      if (!synced?.avatar) {
+        throw new Error('DWN did not confirm the profile picture save.');
+      }
 
       found.user.profile.avatar = synced.avatar;
       found.user.profile.avatarRecordId = synced.recordId;
