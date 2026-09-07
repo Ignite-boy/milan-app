@@ -300,18 +300,7 @@ router.get('/', auth, async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  // Fast path: return the persisted profile avatar immediately.
-  // This keeps reloads stable even while DWN sync is completing.
-  if (found.user.profile?.avatar) {
-    return res.json({
-      ...(found.user.profile || {}),
-      avatar: found.user.profile.avatar,
-      avatarRecordId:
-        found.user.profile.avatarRecordId ||
-        profileRecordId(found.user.did),
-      avatarSync: found.user.profile.avatarSync || "synced"
-    });
-  }
+  // DWN is the authoritative source for the profile picture.
   try {
     const dwnPicture = await readProfilePicture(found.user.did);
 
@@ -320,29 +309,22 @@ router.get('/', auth, async (req, res) => {
         ...(found.user.profile || {}),
         avatar: dwnPicture.avatar,
         avatarRecordId: dwnPicture.recordId,
-        avatarSync: "synced"
+        avatarSync: 'synced'
       });
     }
-
-    return res.json({
-      ...(found.user.profile || {}),
-      avatar: found.user.profile?.avatar || "",
-      avatarRecordId:
-        found.user.profile?.avatarRecordId ||
-        profileRecordId(found.user.did),
-      avatarSync: found.user.profile?.avatar ? "local-fallback" : "missing"
-    });
   } catch (error) {
-    console.warn('[profile] Mini-DWN unavailable; using stored profile avatar:', error.message);
-
-    return res.json({
-      ...(found.user.profile || {}),
-      avatar: found.user.profile?.avatar || '',
-      avatarRecordId:
-        found.user.profile?.avatarRecordId ||
-        profileRecordId(found.user.did)
-    });
+    console.warn('[profile] DWN profile picture read failed:', error.message);
   }
+
+  // Safe fallback to the persisted profile store.
+  return res.json({
+    ...(found.user.profile || {}),
+    avatar: found.user.profile?.avatar || '',
+    avatarRecordId:
+      found.user.profile?.avatarRecordId ||
+      profileRecordId(found.user.did),
+    avatarSync: found.user.profile?.avatar ? 'local-fallback' : 'missing'
+  });
 });
 
 router.put('/', auth, async (req, res) => {
@@ -441,11 +423,15 @@ router.put('/', auth, async (req, res) => {
     addActivity(req.userId, 'profile.updated');
 
     if (avatarSyncPending) {
-      queueProfilePictureSync(
+      // Do not report a successful DP save until DWN confirms the write.
+      const synced = await writeProfilePicture(
         found.user.did,
-        found.user.profile.avatar,
-        found.user.profile.avatarRecordId
+        found.user.profile.avatar
       );
+
+      found.user.profile.avatar = synced.avatar;
+      found.user.profile.avatarRecordId = synced.recordId;
+      found.user.profile.avatarSync = 'synced';
     }
 
     return res.status(200).json({
