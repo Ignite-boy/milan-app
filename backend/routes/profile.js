@@ -307,29 +307,25 @@ router.get('/', auth, async (req, res) => {
     found.user.profile?.avatar || ''
   ).trim();
 
+  // IMPORTANT:
+  // The saved profile avatar is authoritative for reloads.
+  // A stale/failed DWN read must never replace or erase it.
+  if (persistedAvatar) {
+    return res.json({
+      ...(found.user.profile || {}),
+      avatar: persistedAvatar,
+      avatarRecordId:
+        found.user.profile?.avatarRecordId ||
+        profileRecordId(found.user.did),
+      avatarSync: found.user.profile?.avatarSync || 'persisted'
+    });
+  }
+
+  // No persisted avatar exists yet, so DWN may provide the first copy.
   try {
     const dwnPicture = await readProfilePicture(found.user.did);
 
     if (dwnPicture?.avatar) {
-      // Keep the local profile in sync with the confirmed DWN value.
-      found.user.profile = {
-        ...(found.user.profile || {}),
-        avatar: dwnPicture.avatar,
-        avatarRecordId: dwnPicture.recordId,
-        avatarSync: 'synced'
-      };
-
-      users[found.email] = found.user;
-
-      try {
-        writeJson(global.usersFile, users);
-      } catch (error) {
-        console.warn(
-          '[profile] local profile avatar sync write failed:',
-          error.message
-        );
-      }
-
       return res.json({
         ...(found.user.profile || {}),
         avatar: dwnPicture.avatar,
@@ -339,7 +335,7 @@ router.get('/', auth, async (req, res) => {
     }
   } catch (error) {
     console.warn(
-      '[profile] DWN profile picture read failed; using persisted avatar:',
+      '[profile] DWN profile picture read failed:',
       error.message
     );
   }
@@ -445,38 +441,24 @@ router.put('/', auth, async (req, res) => {
       }
     }
 
-    // CRITICAL ORDER:
-    // 1) Persist the actual DP to Mini-DWN first.
-    // 2) Store the confirmed avatar in the user profile.
-    // 3) Persist/sync users.json only after the DP is confirmed.
+    // CRITICAL:
+    // Save the DP to the persistent profile first.
+    // DWN is synchronization only and must never make the upload fail.
     if (avatarSyncPending) {
-      const synced = await writeProfilePicture(
+      found.user.profile.avatarSync = 'pending';
+
+      // Background DWN sync; do not block the profile response.
+      queueProfilePictureSync(
         found.user.did,
-        found.user.profile.avatar
+        found.user.profile.avatar,
+        found.user.profile.avatarRecordId
       );
-
-      if (!synced?.avatar) {
-        throw new Error('DWN did not confirm the profile picture save.');
-      }
-
-      found.user.profile.avatar = synced.avatar;
-      found.user.profile.avatarRecordId = synced.recordId;
-      found.user.profile.avatarSync = 'synced';
     }
 
     users[found.email] = found.user;
 
-    const persisted = await writeJsonAndSync(
-      global.usersFile,
-      users
-    );
-
-    if (!persisted?.ok) {
-      throw new Error(
-        'Profile database persistence failed: ' +
-        (persisted?.error || 'remote DWN sync failed')
-      );
-    }
+    // Immediate persistent profile save.
+    writeJson(global.usersFile, users);
 
     addActivity(req.userId, 'profile.updated');
 
