@@ -1,12 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-(function(){
-  var realAlert = window.alert;
-  window.alert = function(message){
-    if (/profile picture could not be saved/i.test(String(message || ""))) return;
-    return realAlert.apply(this, arguments);
-  };
 })();
 </script>
 
