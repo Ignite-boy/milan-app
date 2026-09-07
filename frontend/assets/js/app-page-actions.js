@@ -313,15 +313,38 @@
       profile ||
       {};
 
-    // Preserve the locally persisted DP across reloads when the
-    // remote profile response does not contain an avatar.
+    // Use the server/DWN avatar when available; otherwise fall back
+    // to the locally persisted avatar.
     let localAvatar = "";
     try {
       localAvatar = localStorage.getItem("milanAvatar") || "";
     } catch {}
 
-    if (localAvatar) {
+    const remoteAvatar = String(profileData.avatar || "").trim();
+
+    if (remoteAvatar) {
+      localAvatar = remoteAvatar;
+
+      try {
+        localStorage.setItem("milanAvatar", remoteAvatar);
+      } catch {}
+    } else if (localAvatar) {
       profileData.avatar = localAvatar;
+    }
+
+    const restoredAvatar = String(
+      profileData.avatar || localAvatar || ""
+    ).trim();
+
+    if (restoredAvatar) {
+      ["myAvatar", "composerAvatar"].forEach(id => {
+        setAvatar(id, restoredAvatar);
+      });
+
+      const preview = $("editProfilePhotoPreview");
+      if (preview) {
+        preview.src = restoredAvatar;
+      }
     }
 
     const name = String(
