@@ -27,9 +27,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// ---- lazy ESM module cache -------------------------------------------------
-let _sdk = null;        // @tbd54566975/dwn-sdk-js namespace
-let _dids = null;       // @web5/dids namespace
+let _sdk = null;
+let _dids = null;
 let _sdkLoadError = null;
 
 async function loadSdk() {
@@ -48,8 +47,6 @@ async function loadSdk() {
 }
 
 function enabled() {
-  // Real DWN engine is ON by default. Set MILAN_REAL_DWN_ENGINE=false to
-  // fall back to JSON-only persistence (e.g. constrained environments).
   return String(process.env.MILAN_REAL_DWN_ENGINE || 'true').toLowerCase() !== 'false';
 }
 
@@ -57,10 +54,7 @@ function safeName(value) {
   return String(value || 'unknown').replace(/[^a-zA-Z0-9._-]/g, '_');
 }
 
-// ---- per-user DWN node registry -------------------------------------------
-// Map<spaceId, { dwn, did, tenantDid, storeRoot, openedAt }>
 const _nodes = new Map();
-// Map<spaceId, Promise> — de-dupe concurrent opens for the same user.
 const _opening = new Map();
 
 let _enginePersistRoot = null;
@@ -75,28 +69,18 @@ function nodeStoreRoot(spaceId) {
   return path.join(persistRoot(), safeName(spaceId));
 }
 
-/**
- * Reconstruct (or create) a real signing DID for the user.
- * Priority:
- *   1. Portable DID JSON persisted in the user's node dir (durable, real key).
- *   2. Fresh did:key (real Ed25519) — persisted for reuse so the DID is
- *      stable across restarts from that point on.
- * Returns { didApi, uri, signer }.
- */
-async function resolveUserDid({ dids }, { spaceId, knownDidUri }) {
+async function resolveUserDid({ dids }, { spaceId }) {
   const { DidKey } = dids;
   const portableFile = path.join(nodeStoreRoot(spaceId), 'portable-did.json');
 
-  // 1. durable portable DID (real signing key)
   try {
     if (fs.existsSync(portableFile)) {
       const portable = JSON.parse(fs.readFileSync(portableFile, 'utf8'));
       const didApi = await DidKey.import({ portableDid: portable });
       return await asSignable(didApi);
     }
-  } catch (_) { /* fall through to fresh */ }
+  } catch (_) {}
 
-  // 2. fresh real DID, persisted durably for reuse
   const didApi = await DidKey.create();
   const portable = await didApi.export();
   persistPortable(portableFile, portable);
@@ -107,12 +91,11 @@ function persistPortable(file, portable) {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(portable, null, 2), { mode: 0o600 });
-  } catch (_) { /* best-effort */ }
+  } catch (_) {}
 }
 
 async function asSignable(didApi) {
   const signer = await didApi.getSigner();
-  // dwn-sdk-js expects a Signer with { keyId, algorithm, sign(bytes) }.
   const keyFragment = didApi.uri.split(':')[2];
   const dwnSigner = {
     keyId: `${didApi.uri}#${keyFragment}`,
@@ -122,10 +105,6 @@ async function asSignable(didApi) {
   return { didApi, uri: didApi.uri, signer: dwnSigner };
 }
 
-/**
- * Open (or return cached) the real DWN node for a given user.
- * @returns {Promise<{ok:boolean, node?:object, reason?:string, error?:string}>}
- */
 async function openNode({ spaceId, rawSeedHex, knownDidUri }) {
   if (!enabled()) return { ok: false, reason: 'engine-disabled' };
   if (!spaceId) return { ok: false, reason: 'missing-space-id' };
@@ -157,7 +136,6 @@ async function openNode({ spaceId, rawSeedHex, knownDidUri }) {
       });
 
       const dwn = await Dwn.create({ messageStore, dataStore, eventLog, resumableTaskStore });
-
       const { uri, signer, didApi } = await resolveUserDid({ dids }, { spaceId, knownDidUri });
 
       const node = {
@@ -190,19 +168,14 @@ function toBytes(value) {
   return new TextEncoder().encode(JSON.stringify(value));
 }
 
-/**
- * Write a record into the user's real DWN node as a signed RecordsWrite.
- * Idempotent per logical recordId via a deterministic protocol path/tag.
- * @returns {Promise<{ok, status, dwnRecordId?, reason?, error?}>}
- */
 async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
   const opened = await openNode({ spaceId, rawSeedHex, knownDidUri });
   if (!opened.ok) return { ok: false, reason: opened.reason, error: opened.error };
   const { node } = opened;
+
   try {
     const { sdk } = await loadSdk();
     const { RecordsWrite, DataStream } = sdk;
-
     const payload = {
       milanRecordId: record.id,
       title: record.title,
@@ -215,22 +188,24 @@ async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
     };
     const bytes = toBytes(JSON.stringify(payload));
 
-    const rw = await RecordsWrite.create({
+    const writeOptions = {
       signer: node.signer,
       dataFormat: 'application/json',
       schema: `https://milanlife.in/schemas/${safeName(record.schema || 'record')}`,
       data: bytes,
       tags: record.id ? { milanRecordId: String(record.id) } : undefined
-    });
+    };
 
+    if (record.id) writeOptions.recordId = String(record.id);
+
+    const rw = await RecordsWrite.create(writeOptions);
     const res = await node.dwn.processMessage(node.tenantDid, rw.message, {
       dataStream: DataStream.fromBytes(bytes)
     });
 
     const status = res.status && res.status.code;
-    const ok = status === 202 || status === 200;
     return {
-      ok,
+      ok: status === 202 || status === 200,
       status,
       dwnRecordId: rw.message && rw.message.recordId,
       tenantDid: node.tenantDid,
@@ -242,9 +217,60 @@ async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
   }
 }
 
-/**
- * Query records from the user's real DWN node (signed RecordsQuery).
- */
+async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
+  const opened = await openNode({ spaceId, rawSeedHex, knownDidUri });
+  if (!opened.ok) return { ok: false, reason: opened.reason, error: opened.error };
+  if (!recordId) return { ok: false, reason: 'missing-record-id' };
+
+  try {
+    const { sdk } = await loadSdk();
+    const { RecordsRead, DataStream } = sdk;
+    const { node } = opened;
+
+    const read = await RecordsRead.create({
+      signer: node.signer,
+      filter: { recordId: String(recordId) }
+    });
+
+    const response = await node.dwn.processMessage(node.tenantDid, read.message);
+    if (response?.status?.code !== 200) {
+      return {
+        ok: false,
+        status: response?.status?.code,
+        detail: response?.status?.detail
+      };
+    }
+
+    const entry = response.entry;
+    if (!entry) return { ok: false, status: 404, reason: 'record-not-found' };
+
+    let bytes = null;
+    if (entry.encodedData) {
+      const base64 = String(entry.encodedData)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(Math.ceil(String(entry.encodedData).length / 4) * 4, '=');
+      bytes = Buffer.from(base64, 'base64');
+    } else if (entry.data) {
+      bytes = Buffer.from(await DataStream.toBytes(entry.data));
+    }
+
+    if (!bytes || !bytes.length) {
+      return { ok: false, reason: 'record-data-empty' };
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      recordId: String(recordId),
+      descriptor: entry.descriptor || {},
+      data: bytes
+    };
+  } catch (err) {
+    return { ok: false, reason: 'read-failed', error: err.message };
+  }
+}
+
 async function queryRecords({ spaceId, rawSeedHex, knownDidUri }, filter = {}) {
   const opened = await openNode({ spaceId, rawSeedHex, knownDidUri });
   if (!opened.ok) return { ok: false, reason: opened.reason, error: opened.error };
@@ -252,8 +278,6 @@ async function queryRecords({ spaceId, rawSeedHex, knownDidUri }, filter = {}) {
   try {
     const { sdk } = await loadSdk();
     const { RecordsQuery } = sdk;
-    // The DWN protocol rejects an empty filter ({}), so default to the MILAN
-    // dataFormat which matches every record this engine writes.
     const effectiveFilter = (filter && Object.keys(filter).length)
       ? filter
       : { dataFormat: 'application/json' };
@@ -273,9 +297,6 @@ async function queryRecords({ spaceId, rawSeedHex, knownDidUri }, filter = {}) {
   }
 }
 
-/**
- * Health + proof for a single user's real DWN node.
- */
 async function nodeStatus({ spaceId, rawSeedHex, knownDidUri }) {
   if (!enabled()) return { ok: false, enabled: false, reason: 'engine-disabled' };
   const opened = await openNode({ spaceId, rawSeedHex, knownDidUri });
@@ -296,9 +317,6 @@ async function nodeStatus({ spaceId, rawSeedHex, knownDidUri }) {
   };
 }
 
-/**
- * Gracefully close one node, or all (on shutdown).
- */
 async function closeNode(spaceId) {
   const node = _nodes.get(spaceId);
   if (!node) return;
@@ -332,6 +350,7 @@ module.exports = {
   setPersistRoot,
   openNode,
   writeRecord,
+  readRecord,
   queryRecords,
   nodeStatus,
   closeNode,
