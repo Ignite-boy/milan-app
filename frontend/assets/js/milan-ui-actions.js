@@ -947,16 +947,29 @@
 
                             if (!el) return;
 
-                            el.style.backgroundImage =
-                                `url("${saved.avatar}")`;
-
-                            el.style.backgroundSize =
-                                "cover";
-
-                            el.style.backgroundPosition =
-                                "center";
-
+                            el.style.backgroundImage = "none";
+                            el.style.backgroundColor = "transparent";
+                            el.style.backgroundSize = "cover";
+                            el.style.backgroundPosition = "center";
+                            el.style.backgroundRepeat = "no-repeat";
                             el.textContent = "";
+
+                            let img = el.querySelector("img");
+
+                            if (!img) {
+                                img = document.createElement("img");
+                                img.alt = "Profile photo";
+                                el.appendChild(img);
+                            }
+
+                            img.src = saved.avatar;
+                            img.alt = "Profile photo";
+                            img.style.display = "block";
+                            img.style.width = "100%";
+                            img.style.height = "100%";
+                            img.style.objectFit = "cover";
+                            img.style.objectPosition = "center";
+                            img.style.border = "0";
                         });
                     }
 
