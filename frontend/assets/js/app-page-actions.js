@@ -393,19 +393,22 @@
 
     const remoteAvatar = String(profileData.avatar || "").trim();
 
-    if (remoteAvatar) {
+    // IMPORTANT:
+    // Once this browser has a successfully saved DP, NEVER replace it
+    // during reload with an older/stale remote avatar response.
+    // The remote avatar may be used only when there is no local DP yet.
+    if (localAvatar) {
+      profileData.avatar = localAvatar;
+    } else if (remoteAvatar) {
       localAvatar = remoteAvatar;
 
       try {
         localStorage.setItem("milanAvatar", remoteAvatar);
       } catch {}
-    } else if (localAvatar) {
-      profileData.avatar = localAvatar;
+
+      profileData.avatar = remoteAvatar;
     }
 
-    // IMPORTANT:
-    // A previously saved local avatar must survive reload even when
-    // /api/profile or Mini-DWN temporarily returns an empty avatar.
     const restoredAvatar = String(
       localAvatar || profileData.avatar || ""
     ).trim();

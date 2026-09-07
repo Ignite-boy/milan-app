@@ -445,24 +445,10 @@ router.put('/', auth, async (req, res) => {
       }
     }
 
-    users[found.email] = found.user;
-
-    // CRITICAL: profile/DP persistence must be confirmed in the
-    // production DWN snapshot before the API reports success.
-    const persisted = await writeJsonAndSync(
-      global.usersFile,
-      users
-    );
-
-    if (!persisted?.ok) {
-      throw new Error(
-        'Profile database persistence failed: ' +
-        (persisted?.error || 'remote DWN sync failed')
-      );
-    }
-
-    addActivity(req.userId, 'profile.updated');
-
+    // CRITICAL ORDER:
+    // 1) Persist the actual DP to Mini-DWN first.
+    // 2) Store the confirmed avatar in the user profile.
+    // 3) Persist/sync users.json only after the DP is confirmed.
     if (avatarSyncPending) {
       const synced = await writeProfilePicture(
         found.user.did,
@@ -477,6 +463,22 @@ router.put('/', auth, async (req, res) => {
       found.user.profile.avatarRecordId = synced.recordId;
       found.user.profile.avatarSync = 'synced';
     }
+
+    users[found.email] = found.user;
+
+    const persisted = await writeJsonAndSync(
+      global.usersFile,
+      users
+    );
+
+    if (!persisted?.ok) {
+      throw new Error(
+        'Profile database persistence failed: ' +
+        (persisted?.error || 'remote DWN sync failed')
+      );
+    }
+
+    addActivity(req.userId, 'profile.updated');
 
     return res.status(200).json({
       ...found.user.profile,
