@@ -300,27 +300,26 @@ router.get('/', auth, async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  // Fast path: the profile store is now the immediate source of truth.
-  // Only fall back to Mini-DWN when no local DP exists yet.
-  if (found.user.profile?.avatar) {
-    return res.json({
-      ...(found.user.profile || {}),
-      avatar: found.user.profile.avatar,
-      avatarRecordId:
-        found.user.profile.avatarRecordId ||
-        profileRecordId(found.user.did)
-    });
-  }
-
+  // DWN is the authoritative source for the profile picture.
   try {
     const dwnPicture = await readProfilePicture(found.user.did);
 
+    if (dwnPicture?.avatar) {
+      return res.json({
+        ...(found.user.profile || {}),
+        avatar: dwnPicture.avatar,
+        avatarRecordId: dwnPicture.recordId,
+        avatarSync: "synced"
+      });
+    }
+
     return res.json({
       ...(found.user.profile || {}),
-      ...(dwnPicture ? {
-        avatar: dwnPicture.avatar,
-        avatarRecordId: dwnPicture.recordId
-      } : {})
+      avatar: found.user.profile?.avatar || "",
+      avatarRecordId:
+        found.user.profile?.avatarRecordId ||
+        profileRecordId(found.user.did),
+      avatarSync: found.user.profile?.avatar ? "local-fallback" : "missing"
     });
   } catch (error) {
     console.warn('[profile] Mini-DWN unavailable; using stored profile avatar:', error.message);
@@ -431,11 +430,18 @@ router.put('/', auth, async (req, res) => {
     addActivity(req.userId, 'profile.updated');
 
     if (avatarSyncPending) {
-      queueProfilePictureSync(
+      // Wait for the DWN write to succeed before confirming the DP save.
+      const synced = await writeProfilePicture(
         found.user.did,
-        found.user.profile.avatar,
-        found.user.profile.avatarRecordId
+        found.user.profile.avatar
       );
+
+      found.user.profile.avatar = synced.avatar;
+      found.user.profile.avatarRecordId = synced.recordId;
+      found.user.profile.avatarSync = "synced";
+
+      users[found.email] = found.user;
+      writeJson(global.usersFile, users);
     }
 
     return res.status(200).json({

@@ -227,8 +227,7 @@
       }
     } catch (error) {
       console.error("[MILAN] DP upload failed:", error);
-      try { localStorage.setItem("milanAvatar", previewUrl || ""); } catch {}
-      console.warn("[MILAN] DP sync failed; optimistic preview retained.");
+      console.warn("[MILAN] DP upload failed; temporary preview will not be persisted.");
     } finally {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
