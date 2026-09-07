@@ -320,7 +320,7 @@
       localAvatar = localStorage.getItem("milanAvatar") || "";
     } catch {}
 
-    if (!profileData.avatar && localAvatar) {
+    if (localAvatar) {
       profileData.avatar = localAvatar;
     }
 
