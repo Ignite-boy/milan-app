@@ -167,6 +167,11 @@
       // Compress before upload to keep the request fast.
       const optimized = await compressProfileImage(file);
 
+      // Persist the real data URL immediately — never persist a temporary blob: URL.
+      try {
+        localStorage.setItem("milanAvatar", optimized.dataUrl);
+      } catch {}
+
       // One network write only. No extra verification GET.
       const response = await fetch("https://milan-app-pzhf.onrender.com/api/profile", {
         method: "PUT",
