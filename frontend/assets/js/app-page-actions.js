@@ -403,11 +403,20 @@
       profileData.avatar = localAvatar;
     }
 
+    // IMPORTANT:
+    // A previously saved local avatar must survive reload even when
+    // /api/profile or Mini-DWN temporarily returns an empty avatar.
     const restoredAvatar = String(
-      profileData.avatar || localAvatar || ""
+      localAvatar || profileData.avatar || ""
     ).trim();
 
     if (restoredAvatar) {
+      profileData.avatar = restoredAvatar;
+
+      try {
+        localStorage.setItem("milanAvatar", restoredAvatar);
+      } catch {}
+
       ["myAvatar", "composerAvatar"].forEach(id => {
         setAvatar(id, restoredAvatar);
       });
@@ -415,6 +424,14 @@
       const preview = $("editProfilePhotoPreview");
       if (preview) {
         preview.src = restoredAvatar;
+        preview.style.display = "block";
+      }
+
+      if (window.me) {
+        window.me.profile = {
+          ...(window.me.profile || {}),
+          avatar: restoredAvatar
+        };
       }
     }
 
