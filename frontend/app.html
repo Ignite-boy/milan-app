@@ -128,6 +128,91 @@ if("caches" in window){
 <script src="/assets/js/milan-identity-status-sync.js" defer></script>
 
 
+
+<script id="milan-final-avatar-persistence-guard">
+(() => {
+  "use strict";
+
+  const AVATAR_KEY = "milanAvatar";
+  const IDS = ["myAvatar", "composerAvatar"];
+
+  function getSavedAvatar() {
+    try {
+      return String(localStorage.getItem(AVATAR_KEY) || "").trim();
+    } catch {
+      return "";
+    }
+  }
+
+  function apply(id, avatar) {
+    const el = document.getElementById(id);
+    if (!el || !avatar) return;
+
+    let img = el.querySelector("img");
+
+    if (!img) {
+      img = document.createElement("img");
+      img.alt = "Profile photo";
+      el.replaceChildren(img);
+    } else {
+      el.textContent = "";
+    }
+
+    el.style.backgroundImage = "none";
+    el.style.backgroundColor = "transparent";
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    el.style.backgroundRepeat = "no-repeat";
+    el.style.overflow = "hidden";
+
+    img.src = avatar;
+    img.alt = "Profile photo";
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.maxWidth = "none";
+    img.style.maxHeight = "none";
+    img.style.objectFit = "cover";
+    img.style.objectPosition = "center";
+    img.style.border = "0";
+    img.style.opacity = "1";
+    img.style.visibility = "visible";
+  }
+
+  function enforce() {
+    const avatar = getSavedAvatar();
+    if (!avatar) return;
+
+    IDS.forEach(id => apply(id, avatar));
+
+    const preview = document.getElementById("editProfilePhotoPreview");
+    if (preview) {
+      preview.src = avatar;
+      preview.style.display = "block";
+    }
+  }
+
+  function start() {
+    enforce();
+
+    new MutationObserver(enforce).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["src", "style", "class"]
+    });
+
+    setInterval(enforce, 500);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
+  }
+})();
+</script>
+
 </body>
 </html>
 
