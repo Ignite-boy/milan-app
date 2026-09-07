@@ -120,7 +120,11 @@ async function writeProfilePictureToUserDwn(user, dataUrl, recordId) {
   );
 
   if (!result?.ok) {
-    throw new Error(result?.error || result?.reason || 'User isolated DWN profile picture write failed.');
+    throw new Error(
+      result?.error ||
+      result?.reason ||
+      'User isolated DWN profile picture write failed.'
+    );
   }
 
   return {
@@ -136,22 +140,6 @@ async function readProfilePictureFromUserDwn(user, recordId) {
   const info = getDwnInfo(user);
   if (!info?.spaceId || !user?.raw_seed) return null;
 
-  const result = await realDwnEngine.queryRecords(
-    {
-      spaceId: info.spaceId,
-      rawSeedHex: user.raw_seed,
-      knownDidUri: user.did
-    },
-    { schema: 'https://milanlife.in/schemas/profile-picture' }
-  );
-
-  if (!result?.ok || !Array.isArray(result.entries)) return null;
-
-  const match = result.entries.find(entry => entry.recordId === recordId);
-  if (!match) return null;
-
-  // Query metadata alone does not contain record data, so the exact record is
-  // read with the same user's isolated DWN node below.
   const opened = await realDwnEngine.openNode({
     spaceId: info.spaceId,
     rawSeedHex: user.raw_seed,
@@ -161,10 +149,7 @@ async function readProfilePictureFromUserDwn(user, recordId) {
   if (!opened?.ok) return null;
 
   const { node } = opened;
-  const { RecordsRead } = await (async () => {
-    const sdk = await import('@tbd54566975/dwn-sdk-js');
-    return sdk;
-  })();
+  const { RecordsRead } = await import('@tbd54566975/dwn-sdk-js');
 
   const read = await RecordsRead.create({
     signer: node.signer,
@@ -172,33 +157,38 @@ async function readProfilePictureFromUserDwn(user, recordId) {
   });
 
   const response = await node.dwn.processMessage(node.tenantDid, read.message);
-  const reply = response?.reply || response;
+  if (response?.status?.code !== 200) return null;
 
-  if (response?.status?.code !== 200 && reply?.status?.code !== 200) return null;
+  // RecordsRead returns a single `entry`, not `entries[]`.
+  const entry = response.entry || response.entries?.[0];
+  if (!entry) return null;
 
-  const record = response?.entries?.[0] || reply?.entries?.[0];
-  if (!record) return null;
+  const encodedData = entry.encodedData;
+  if (!encodedData) return null;
 
-  const bytes = record.encodedData;
-  if (!bytes) return null;
+  const mime = entry.descriptor?.dataFormat || 'application/json';
+  let parsed;
 
-  const mime = record.descriptor?.dataFormat || 'image/jpeg';
-  const base64 = String(bytes)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
-    .padEnd(Math.ceil(String(bytes).length / 4) * 4, '=');
+  try {
+    const base64 = String(encodedData)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(String(encodedData).length / 4) * 4, '=');
+
+    parsed = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+  } catch (error) {
+    throw new Error('Stored profile picture record could not be decoded.');
+  }
+
+  const avatar = String(parsed?.data?.avatar || parsed?.avatar || '').trim();
+  if (!avatar) return null;
 
   return {
     recordId,
-    avatar: `data:${mime};base64,${base64}`,
+    avatar,
+    mime,
     spaceId: info.spaceId
   };
-}
-
-function queueProfilePictureSync(user, dataUrl, recordId) {
-  void writeProfilePictureToUserDwn(user, dataUrl, recordId)
-    .then(result => console.log('[profile] isolated user DWN DP sync complete:', result.spaceId, result.dwnRecordId))
-    .catch(error => console.warn('[profile] isolated user DWN DP sync failed:', error.message));
 }
 
 router.get('/', auth, async (req, res) => {
@@ -210,6 +200,7 @@ router.get('/', auth, async (req, res) => {
 
   try {
     const dwnPicture = await readProfilePictureFromUserDwn(found.user, recordId);
+
     if (dwnPicture?.avatar) {
       found.user.profile = {
         ...(found.user.profile || {}),
@@ -217,8 +208,10 @@ router.get('/', auth, async (req, res) => {
         avatarRecordId: recordId,
         avatarSync: 'synced'
       };
+
       users[found.email] = found.user;
       writeJson(global.usersFile, users);
+
       return res.json({
         ...(found.user.profile || {}),
         avatar: dwnPicture.avatar,
@@ -257,6 +250,8 @@ router.put('/', auth, async (req, res) => {
     }
 
     const previous = found.user.profile || {};
+    const recordId = profileRecordId(found.user.did);
+
     found.user.profile = {
       ...previous,
       display_name: cleanName,
@@ -264,7 +259,7 @@ router.put('/', auth, async (req, res) => {
       bio: String(bio || '').trim().slice(0, 500),
       website: String(website || '').trim().slice(0, 200),
       avatar: hasNewAvatar ? String(avatar) : (previous.avatar || ''),
-      avatarRecordId: profileRecordId(found.user.did),
+      avatarRecordId: recordId,
       avatarSync: hasNewAvatar ? 'pending' : (previous.avatarSync || 'synced'),
       updated_at: new Date().toISOString()
     };
@@ -274,20 +269,25 @@ router.put('/', auth, async (req, res) => {
         .from('users')
         .update({ name: cleanName })
         .eq('id', found.user.id);
+
       if (nameError) throw new Error('Profile name database update failed: ' + nameError.message);
+    }
+
+    // DP persistence is now synchronous: the API does not report success
+    // until the authenticated user's isolated real DWN has accepted the record.
+    if (hasNewAvatar) {
+      const saved = await writeProfilePictureToUserDwn(
+        found.user,
+        found.user.profile.avatar,
+        recordId
+      );
+
+      found.user.profile.avatarSync = 'synced';
+      found.user.profile.avatarRecordId = saved.dwnRecordId || recordId;
     }
 
     users[found.email] = found.user;
     writeJson(global.usersFile, users);
-
-    if (hasNewAvatar) {
-      // Do not block the profile response on the DWN network.
-      queueProfilePictureSync(
-        found.user,
-        found.user.profile.avatar,
-        found.user.profile.avatarRecordId
-      );
-    }
 
     addActivity(req.userId, 'profile.updated');
 
@@ -299,11 +299,14 @@ router.put('/', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('[profile] profile save failed:', error.message);
-    return res.status(502).json({ error: 'Profile save failed', detail: error.message });
+    return res.status(502).json({
+      error: 'Profile save failed',
+      detail: error.message
+    });
   }
 });
 
-router.put('/settings', auth, (req, res) => {
+router.put('/settings', (req, res) => {
   const users = readJson(global.usersFile);
   const found = findUserById(users, req.userId);
   if (!found) return res.status(404).json({ error: 'User not found' });
