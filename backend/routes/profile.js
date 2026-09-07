@@ -140,53 +140,30 @@ async function readProfilePictureFromUserDwn(user, recordId) {
   const info = getDwnInfo(user);
   if (!info?.spaceId || !user?.raw_seed) return null;
 
-  const opened = await realDwnEngine.openNode({
-    spaceId: info.spaceId,
-    rawSeedHex: user.raw_seed,
-    knownDidUri: user.did
-  });
+  const result = await realDwnEngine.readRecord(
+    {
+      spaceId: info.spaceId,
+      rawSeedHex: user.raw_seed,
+      knownDidUri: user.did
+    },
+    recordId
+  );
 
-  if (!opened?.ok) return null;
+  if (!result?.ok || !result.data) return null;
 
-  const { node } = opened;
-  const { RecordsRead } = await import('@tbd54566975/dwn-sdk-js');
-
-  const read = await RecordsRead.create({
-    signer: node.signer,
-    filter: { recordId }
-  });
-
-  const response = await node.dwn.processMessage(node.tenantDid, read.message);
-  if (response?.status?.code !== 200) return null;
-
-  // RecordsRead returns a single `entry`, not `entries[]`.
-  const entry = response.entry || response.entries?.[0];
-  if (!entry) return null;
-
-  const encodedData = entry.encodedData;
-  if (!encodedData) return null;
-
-  const mime = entry.descriptor?.dataFormat || 'application/json';
-  let parsed;
-
+  let payload;
   try {
-    const base64 = String(encodedData)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/')
-      .padEnd(Math.ceil(String(encodedData).length / 4) * 4, '=');
-
-    parsed = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
-  } catch (error) {
-    throw new Error('Stored profile picture record could not be decoded.');
+    payload = JSON.parse(Buffer.from(result.data).toString('utf8'));
+  } catch {
+    return null;
   }
 
-  const avatar = String(parsed?.data?.avatar || parsed?.avatar || '').trim();
+  const avatar = String(payload?.data?.avatar || payload?.avatar || '').trim();
   if (!avatar) return null;
 
   return {
     recordId,
     avatar,
-    mime,
     spaceId: info.spaceId
   };
 }
@@ -273,8 +250,8 @@ router.put('/', auth, async (req, res) => {
       if (nameError) throw new Error('Profile name database update failed: ' + nameError.message);
     }
 
-    // DP persistence is now synchronous: the API does not report success
-    // until the authenticated user's isolated real DWN has accepted the record.
+    // The profile API does not report success until the user's isolated real
+    // DWN has accepted the new DP record.
     if (hasNewAvatar) {
       const saved = await writeProfilePictureToUserDwn(
         found.user,
