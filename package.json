@@ -4,8 +4,8 @@
   "description": "MILAN V7 — Sober premium UI, GEO/AI SEO (founder Nitesh Pandey), welcome email (support@milanlife.in), modern media upload, AI writing assist, premium About/Privacy/Terms/Admin",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node backend/server.js",
+    "start": "node -r ./backend/services/avatar-hydration-guard.js backend/server.js",
+    "dev": "node -r ./backend/services/avatar-hydration-guard.js backend/server.js",
     "mail:test": "node scripts/test-mail.js",
     "mail:diagnose": "node scripts/smtp-diagnose.js",
     "build": "node -e \"console.log('MILAN V3 Engagement Engine — 500 Techniques Active ✦')\""
