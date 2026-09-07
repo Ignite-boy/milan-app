@@ -299,9 +299,13 @@ router.get('/me', auth, asyncRoute(async (req, res) => {
   const recordId = `profile-picture:${dbUser.did}`;
 
   try {
-    const response = await fetch(`${process.env.MINI_DWN_ENDPOINT || 'http://127.0.0.1:3000'}/json-rpc`, {
+    const response = await fetch(`${process.env.MINI_DWN_ENDPOINT || process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com/api/dwn'}/json-rpc`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer milan-v49-embedded-production-dwn-key'
+        },
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: Date.now().toString(),
