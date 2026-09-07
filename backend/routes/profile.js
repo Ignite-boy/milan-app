@@ -2,6 +2,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const { readJson, writeJson, writeJsonAndSync, findUserById, addActivity } = require('../utils/store');
+const { getDwnInfo, realDwnEngine } = require('../services/cloudDwnRegistry');
 const MINI_DWN_ENDPOINT = (
   process.env.MINI_DWN_ENDPOINT ||
   `${process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com'}/api/dwn`
@@ -239,15 +240,73 @@ async function writeProfilePicture(did, dataUrl) {
   };
 }
 
-function queueProfilePictureSync(did, dataUrl, recordId) {
-  // Deliberately do not await this. The API response can return as soon as
-  // the local profile is safely persisted; Mini-DWN sync continues in-process.
-  void writeProfilePicture(did, dataUrl)
-    .then(() => {
-      console.log('[profile] background DP sync complete:', recordId);
+async function writeProfilePictureToUserDwn(user, dataUrl, recordId) {
+  const info = getDwnInfo(user);
+
+  if (!info?.spaceId) {
+    throw new Error('User isolated DWN space is not available.');
+  }
+
+  if (!user?.raw_seed) {
+    throw new Error('User isolated DWN identity seed is not available.');
+  }
+
+  const record = {
+    id: recordId,
+    title: 'MILAN Profile Picture',
+    schema: 'profile-picture',
+    access: 'private',
+    dataFormat: 'application/json',
+    dateCreated: new Date().toISOString(),
+    dateModified: new Date().toISOString(),
+    data: {
+      type: 'profile-picture',
+      avatar: dataUrl,
+      ownerDid: user.did,
+      spaceId: info.spaceId
+    }
+  };
+
+  const result = await realDwnEngine.writeRecord(
+    {
+      spaceId: info.spaceId,
+      rawSeedHex: user.raw_seed,
+      knownDidUri: user.did
+    },
+    record
+  );
+
+  if (!result?.ok) {
+    throw new Error(
+      result?.error ||
+      result?.reason ||
+      'User isolated DWN profile picture write failed.'
+    );
+  }
+
+  return {
+    ok: true,
+    recordId,
+    spaceId: info.spaceId,
+    dwnRecordId: result.dwnRecordId,
+    avatar: dataUrl
+  };
+}
+
+function queueProfilePictureSync(user, dataUrl, recordId) {
+  void writeProfilePictureToUserDwn(user, dataUrl, recordId)
+    .then(result => {
+      console.log(
+        '[profile] isolated user DWN DP sync complete:',
+        result.spaceId,
+        result.dwnRecordId
+      );
     })
     .catch(error => {
-      console.warn('[profile] background DP sync pending/failed:', error.message);
+      console.warn(
+        '[profile] isolated user DWN DP sync failed:',
+        error.message
+      );
     });
 }
 
@@ -449,7 +508,7 @@ router.put('/', auth, async (req, res) => {
 
       // Background DWN sync; do not block the profile response.
       queueProfilePictureSync(
-        found.user.did,
+        found.user,
         found.user.profile.avatar,
         found.user.profile.avatarRecordId
       );
