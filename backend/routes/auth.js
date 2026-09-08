@@ -117,7 +117,15 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   if (lookupError) return res.status(500).json({ error: 'Account database unavailable', details: lookupError.message, code: lookupError.code });
   if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
-  const { error: insertError } = await supabaseDb.from('users').insert({ id, email, password_hash: passwordHash, name: displayName, did, space_id: spaceId, did_real: identityReal });
+  // Core account registration must not depend on optional DWN metadata columns.
+  // Supabase account creation is authoritative; DWN metadata is best-effort.
+  const { error: insertError } = await supabaseDb.from('users').insert({
+    id,
+    email,
+    password_hash: passwordHash,
+    name: displayName,
+    did
+  });
   if (insertError) return res.status(500).json({ error: 'Account database registration failed', details: insertError.message, code: insertError.code });
 
   console.log('[auth] account created in Supabase:', email, id);
