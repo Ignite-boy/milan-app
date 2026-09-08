@@ -1,8 +1,9 @@
 const express = require('express');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const { readJson, writeJson, writeJsonAndSync, findUserById, addActivity } = require('../utils/store');
-const { getDwnInfo, realDwnEngine } = require('../services/cloudDwnRegistry');
+const { getDwnInfo, realDwnEngine, syncDatabaseSnapshot, pullDatabaseSnapshot } = require('../services/cloudDwnRegistry');
 
 const router = express.Router();
 
@@ -72,6 +73,15 @@ async function resolveAccount(req, users) {
 
 function profileRecordId(did) {
   return `profile-picture:${did}`;
+}
+
+function profileAvatarSnapshotName(email = '') {
+  const digest = crypto
+    .createHash('sha256')
+    .update(String(email || '').trim().toLowerCase())
+    .digest('hex')
+    .slice(0, 24);
+  return `profile-avatar-${digest}.json`;
 }
 
 function dataUrlToDwn(dataUrl) {
@@ -169,6 +179,31 @@ async function readProfilePictureFromUserDwn(user, recordId) {
   };
 }
 
+async function readDurableProfileAvatar(email) {
+  try {
+    const snapshot = await pullDatabaseSnapshot(profileAvatarSnapshotName(email));
+    const avatar = String(snapshot?.avatar || snapshot?.data?.avatar || '').trim();
+    return avatar || null;
+  } catch (error) {
+    console.warn('[profile] durable profile avatar read failed:', error.message);
+    return null;
+  }
+}
+
+async function writeDurableProfileAvatar(email, avatar, recordId, did) {
+  const name = profileAvatarSnapshotName(email);
+  const result = await syncDatabaseSnapshot(name, {
+    avatar,
+    recordId,
+    ownerDid: did,
+    updatedAt: new Date().toISOString()
+  });
+  if (!result || result.ok === false) {
+    throw new Error(result?.error || result?.skipped || 'Durable profile avatar sync failed.');
+  }
+  return result;
+}
+
 router.get('/', auth, async (req, res) => {
   const users = readJson(global.usersFile, {});
   const found = await resolveAccount(req, users);
@@ -199,6 +234,29 @@ router.get('/', auth, async (req, res) => {
     }
   } catch (error) {
     console.warn('[profile] isolated user DWN profile picture read failed:', error.message);
+  }
+
+  // The isolated LevelDB DWN may be recreated after a service restart.
+  // Use the durable remote avatar snapshot as the recovery source before
+  // falling back to the local users.json cache.
+  const durableAvatar = await readDurableProfileAvatar(found.email);
+  if (durableAvatar) {
+    found.user.profile = {
+      ...(found.user.profile || {}),
+      avatar: durableAvatar,
+      avatarRecordId: recordId,
+      avatarSync: 'remote-snapshot'
+    };
+
+    users[found.email] = found.user;
+    writeJson(global.usersFile, users);
+
+    return res.json({
+      ...(found.user.profile || {}),
+      avatar: durableAvatar,
+      avatarRecordId: recordId,
+      avatarSync: 'remote-snapshot'
+    });
   }
 
   return res.json({
@@ -251,8 +309,7 @@ router.put('/', auth, async (req, res) => {
       if (nameError) throw new Error('Profile name database update failed: ' + nameError.message);
     }
 
-    // The profile API does not report success until the user's isolated real
-    // DWN has accepted the new DP record.
+    // Keep the real per-user DWN write as the first persistence layer.
     if (hasNewAvatar) {
       const saved = await writeProfilePictureToUserDwn(
         found.user,
@@ -267,13 +324,21 @@ router.put('/', auth, async (req, res) => {
     users[found.email] = found.user;
 
     if (hasNewAvatar) {
-      // DP changes must reach the authoritative remote DWN before success.
+      // First persist the normal user snapshot, then persist the DP again in
+      // its own durable remote DWN snapshot so a restarted node can restore it.
       const syncResult = await writeJsonAndSync(global.usersFile, users);
       if (!syncResult || syncResult.ok === false) {
         throw new Error(
           syncResult?.error || 'Profile remote DWN DP persistence failed.'
         );
       }
+
+      await writeDurableProfileAvatar(
+        found.email,
+        found.user.profile.avatar,
+        recordId,
+        found.user.did
+      );
     } else {
       writeJson(global.usersFile, users);
     }
