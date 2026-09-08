@@ -14,6 +14,10 @@
       "destination": "https://milan-app-pzhf.onrender.com/api/cloud-dwn/:path*"
     },
     {
+      "source": "/api/dwn/:path*",
+      "destination": "https://milan-app-pzhf.onrender.com/api/dwn/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index.js"
     },
