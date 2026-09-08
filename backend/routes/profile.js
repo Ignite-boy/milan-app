@@ -265,7 +265,18 @@ router.put('/', auth, async (req, res) => {
     }
 
     users[found.email] = found.user;
-    writeJson(global.usersFile, users);
+
+    if (hasNewAvatar) {
+      // DP changes must reach the authoritative remote DWN before success.
+      const syncResult = await writeJsonAndSync(global.usersFile, users);
+      if (!syncResult || syncResult.ok === false) {
+        throw new Error(
+          syncResult?.error || 'Profile remote DWN DP persistence failed.'
+        );
+      }
+    } else {
+      writeJson(global.usersFile, users);
+    }
 
     addActivity(req.userId, 'profile.updated');
 
