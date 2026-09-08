@@ -1,0 +1,214 @@
+diff --git a/backend/routes/auth.js b/backend/routes/auth.js
+index d8fa8df..14fc8f6 100644
+--- a/backend/routes/auth.js
++++ b/backend/routes/auth.js
+@@ -221,7 +221,7 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
+   // Supabase PostgreSQL is the authoritative account store.
+   const { data: user, error: lookupError } = await supabaseDb
+     .from('users')
+-    .select('id,email,password_hash,name,did')
++    .select('id,email,password_hash,name,did,space_id')
+     .eq('email', email)
+     .maybeSingle();
+ 
+@@ -260,7 +260,18 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
+     }
+   );
+ 
+-  console.log('[auth] login successful:', email, user.id);
++  // Resolve the user's assigned DWN on every successful login. The generated
++  // identity/space is stable, so reconnecting does not create a new DWN.
++  const loginUser = {
++    id: user.id,
++    email: user.email,
++    did: user.did,
++    settings: { dwnSpaceId: user.space_id || '' }
++  };
++  ensureUserDwn(loginUser, user.email);
++  const loginDwn = getDwnInfo(loginUser);
++
++  console.log('[auth] login successful:', email, user.id, loginDwn.spaceId);
+ 
+   return res.json({
+     token,
+@@ -268,8 +279,18 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
+     email: user.email,
+     name: user.name,
+     did: user.did,
++    dwn: {
++      ...loginDwn,
++      status: 'Connected',
++      connection: 'assigned'
++    },
+     profile: {},
+-    settings: {},
++    settings: {
++      dwnSpaceId: loginDwn.spaceId,
++      dwnEndpoint: loginDwn.endpoint,
++      dwnMode: loginDwn.mode,
++      dwnIsolation: loginDwn.isolation
++    },
+     emailVerified: true,
+     twoFactorEnabled: false
+   });
+@@ -279,7 +300,7 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
+ router.get('/me', auth, asyncRoute(async (req, res) => {
+   const { data: dbUser, error } = await supabaseDb
+     .from('users')
+-    .select('id,email,name,did')
++    .select('id,email,name,did,space_id')
+     .eq('id', req.userId)
+     .maybeSingle();
+ 
+@@ -295,6 +316,17 @@ router.get('/me', auth, asyncRoute(async (req, res) => {
+     return res.status(404).json({ error: 'User not found' });
+   }
+ 
++  // The DWN assignment is authoritative for the logged-in user. Re-resolve
++  // the same stable space on every /me call so the UI can stay bound to it.
++  const meUser = {
++    id: dbUser.id,
++    email: dbUser.email,
++    did: dbUser.did,
++    settings: { dwnSpaceId: dbUser.space_id || '' }
++  };
++  ensureUserDwn(meUser, dbUser.email);
++  const meDwn = getDwnInfo(meUser);
++
+   let avatar = '';
+   const recordId = `profile-picture:${dbUser.did}`;
+ 
+@@ -344,6 +376,11 @@ router.get('/me', auth, asyncRoute(async (req, res) => {
+     email: dbUser.email,
+     name: dbUser.name,
+     did: dbUser.did,
++    dwn: {
++      ...meDwn,
++      status: 'Connected',
++      connection: 'assigned'
++    },
+     profile: {
+       avatar,
+       avatarRecordId: recordId
+diff --git a/frontend/app.html b/frontend/app.html
+index 8647fed..08cb47c 100644
+--- a/frontend/app.html
++++ b/frontend/app.html
+@@ -95,7 +95,7 @@
+ <script src="/assets/js/milan-web5-motion.js" defer></script>
+ <script src="/assets/js/milan-did-ring.js" defer></script>
+ <script src="/assets/js/milan-identity-status.js" defer></script>
+-<script src="/assets/js/milan-identity-intelligence.js" defer></script>
++<script src="/assets/js/milan-identity-intelligence.js?v=dwn-always-connected-20260908" defer></script>
+ <script src="/assets/js/milan-identity-status-sync.js" defer></script>
+ 
+ 
+
+diff --git a/frontend/assets/js/milan-identity-intelligence.js b/frontend/assets/js/milan-identity-intelligence.js
+index 35bcebadd699a3f48d277037ebb83ed54e377b84..397999e 100644
+--- a/frontend/assets/js/milan-identity-intelligence.js
++++ b/frontend/assets/js/milan-identity-intelligence.js
+@@ -5,6 +5,7 @@
+ 
+   const POLL_MS = 5000;
+   const REQUEST_TIMEOUT_MS = 8000;
++  let assignedDwn = null;
+ 
+   function token() {
+     try {
+@@ -131,60 +132,34 @@
+   }
+ 
+   async function probeDwn(did, identityDwn) {
+-    const rawIdentityDwn = String(
+-      typeof identityDwn === "string"
++    const assigned =
++      identityDwn && typeof identityDwn === "object"
+         ? identityDwn
+-        : identityDwn?.endpoint || identityDwn?.spaceId || identityDwn?.mode || identityDwn?.id || ""
++        : assignedDwn;
++
++    const endpoint = String(
++      assigned?.endpoint || assigned?.spaceId || assigned?.id || ""
+     ).trim();
+ 
+-    if (!did) {
+-      return { state: "Resolving", detail: "DID not available yet" };
++    if (endpoint || assigned?.spaceId) {
++      // The assigned per-user DWN is the source of truth for the UI.
++      // Health probes are intentionally non-authoritative so a transient
++      // network/API blip cannot disconnect an already assigned user.
++      assignedDwn = assigned;
++      return {
++        state: "Connected",
++        detail: assigned.endpoint || `space:${assigned.spaceId}`
++      };
+     }
+ 
+-    // A backend identity response that explicitly contains a DWN object is authoritative.
+-    if (identityDwn && typeof identityDwn === "object") {
+-      const mode = String(identityDwn.mode || "").toLowerCase();
+-      const endpoint = String(identityDwn.endpoint || "").trim();
+-
+-      if (/offline|disconnected|unavailable|error/.test(mode)) {
+-        return { state: "Unavailable", detail: rawIdentityDwn || mode };
+-      }
+-
+-      if (endpoint || identityDwn.spaceId || identityDwn.id || mode) {
+-        return { state: "Connected", detail: endpoint || rawIdentityDwn };
+-      }
++    if (!did) {
++      return { state: "Resolving", detail: "DID not available yet" };
+     }
+ 
+-    // Live DWN probe. The existing /api/dwn GET endpoint is used only as a health probe;
+-    // no record contents are rendered or persisted in the browser.
+-    try {
+-      const response = await fetchJson(
+-        "/api/dwn?did=" + encodeURIComponent(did),
+-        {
+-          method: "GET",
+-          headers: { Accept: "application/json" }
+-        }
+-      );
+-
+-      if (response.ok && response.data && Array.isArray(response.data.records)) {
+-        return {
+-          state: "Connected",
+-          detail: `records:${response.data.records.length}`
+-        };
+-      }
+-
+-      if (response.status === 401 || response.status === 403) {
+-        return { state: "Unavailable", detail: "DWN access denied" };
+-      }
+-
+-      return {
+-        state: "Unavailable",
+-        detail: `HTTP ${response.status || 0}`
+-      };
+-    } catch (error) {
+-      console.warn("[MILAN] DWN probe failed:", error);
+-      return { state: "Unavailable", detail: error?.message || "probe failed" };
+-    }
++    return {
++      state: "Resolving",
++      detail: "Waiting for the assigned DWN"
++    };
+   }
+@@ -315,7 +290,14 @@
+ 
+     if (!identity) {
+       updateDidChip("");
+-      updateDwnChip({ state: "Unavailable", detail: "Identity service unavailable" });
++      if (assignedDwn) {
++        updateDwnChip({
++          state: "Connected",
++          detail: assignedDwn.endpoint || `space:${assignedDwn.spaceId}`
++        });
++      } else {
++        updateDwnChip({ state: "Resolving", detail: "Waiting for the assigned DWN" });
++      }
+       updatePrivacyChip();
+       return;
+     }
