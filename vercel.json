@@ -3,11 +3,15 @@
   "rewrites": [
     {
       "source": "/api/auth/:action",
-      "destination": "/api/auth.js"
+      "destination": "https://milan-app-pzhf.onrender.com/api/auth/:action"
     },
     {
       "source": "/api/profile",
       "destination": "https://milan-app-pzhf.onrender.com/api/profile"
+    },
+    {
+      "source": "/api/cloud-dwn/:path*",
+      "destination": "https://milan-app-pzhf.onrender.com/api/cloud-dwn/:path*"
     },
     {
       "source": "/api/:path*",
