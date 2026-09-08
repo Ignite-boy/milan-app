@@ -14,7 +14,7 @@
 MILAN is a modern social platform designed around a simple principle:
 
 > **One User = One DID = One Isolated DWN Space**
-
+>
 The application combines a polished social experience with an ownership-oriented data model. Identity is DID-based, user profile data is persisted through the production DWN node, and Mini-DWN uses PostgreSQL for durable record storage.
 
 ### Production
@@ -53,15 +53,9 @@ The application combines a polished social experience with an ownership-oriented
 
 The application keeps the authoritative profile record on the production DWN node rather than depending solely on browser-local state. This includes profile pictures: upload, read-back, logout, and login restore all use the persisted DWN record path.
 
-## Identity & Data Ownership
+### Registration reliability
 
-MILAN is built around DID-based identity and isolated user storage.
-
-- One registered user receives one DID-backed identity.
-- Profile records are addressed using the user's DID.
-- Profile media is stored as a DWN record and read back from the DWN node.
-- Access control supports private, public, and DID-based sharing models.
-- The architecture is designed so storage infrastructure can evolve without rewriting the frontend permission model.
+Core account creation is intentionally independent of optional DWN metadata columns. Registration still mints a DID when available, with a bounded fallback identity path so a temporary local DWN initialization failure does not block account creation. The authoritative account row requires only the core authentication fields.
 
 ### Profile picture persistence
 
@@ -86,6 +80,16 @@ Read after logout/login
   ↓
 Profile restored
 ```
+
+## Identity & Data Ownership
+
+MILAN is built around DID-based identity and isolated user storage.
+
+- One registered user receives one DID-backed identity.
+- Profile records are addressed using the user's DID.
+- Profile media is stored as a DWN record and read back from the DWN node.
+- Access control supports private, public, and DID-based sharing models.
+- The architecture is designed so storage infrastructure can evolve without rewriting the frontend permission model.
 
 ## Product Surface
 
@@ -222,6 +226,7 @@ After a production deployment:
 [ ] DP upload succeeds
 [ ] Logout succeeds
 [ ] Login restores the persisted DP
+[ ] Registration returns 201 for a new account
 ```
 
 ## Roadmap
