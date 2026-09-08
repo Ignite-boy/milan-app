@@ -69,7 +69,7 @@ function nodeStoreRoot(spaceId) {
   return path.join(persistRoot(), safeName(spaceId));
 }
 
-async function resolveUserDid({ dids }, { spaceId }) {
+async function resolveUserDid({ dids }, { spaceId, knownDidUri }) {
   const { DidKey } = dids;
   const portableFile = path.join(nodeStoreRoot(spaceId), 'portable-did.json');
 
@@ -77,9 +77,21 @@ async function resolveUserDid({ dids }, { spaceId }) {
     if (fs.existsSync(portableFile)) {
       const portable = JSON.parse(fs.readFileSync(portableFile, 'utf8'));
       const didApi = await DidKey.import({ portableDid: portable });
+      if (knownDidUri && didApi.uri !== knownDidUri) {
+        throw new Error(`Persisted DWN DID mismatch: expected ${knownDidUri}, found ${didApi.uri}`);
+      }
       return await asSignable(didApi);
     }
-  } catch (_) {}
+  } catch (err) {
+    if (knownDidUri && /Persisted DWN DID mismatch:/.test(err.message)) throw err;
+  }
+
+  // A user-backed DWN must never silently receive a replacement DID.
+  // Without the original portable identity, fail closed instead of
+  // creating a new tenant and making the user's existing records orphaned.
+  if (knownDidUri) {
+    throw new Error('Persisted DWN identity is unavailable for the known user DID.');
+  }
 
   const didApi = await DidKey.create();
   const portable = await didApi.export();
@@ -136,7 +148,7 @@ async function openNode({ spaceId, rawSeedHex, knownDidUri }) {
       });
 
       const dwn = await Dwn.create({ messageStore, dataStore, eventLog, resumableTaskStore });
-      const { uri, signer, didApi } = await resolveUserDid({ dids }, { spaceId, knownDidUri });
+      const { uri, signer, didApi } = await resolveUserDid({ dids }, { spaceId, rawSeedHex, knownDidUri });
 
       const node = {
         spaceId,
