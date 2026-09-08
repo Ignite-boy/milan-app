@@ -1,0 +1,40 @@
+name: Apply DWN Always Connected Fix
+
+on:
+  push:
+    branches:
+      - fix/dwn-always-connected
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    if: github.event.head_commit.message != 'fix: apply assigned DWN always-connected fix'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reset staging branch to verified base
+        run: |
+          git reset --hard 76a517acf72c136c424a24b0707a6d747a65e930
+
+      - name: Apply DWN patch
+        run: git apply --check dwn-always-connected.patch && git apply dwn-always-connected.patch
+
+      - name: Validate changed JavaScript
+        run: |
+          node --check backend/routes/auth.js
+          node --check frontend/assets/js/milan-identity-intelligence.js
+
+      - name: Commit final fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f dwn-always-connected.patch .github/workflows/apply-dwn-fix.yml
+          git add backend/routes/auth.js frontend/app.html frontend/assets/js/milan-identity-intelligence.js
+          git commit -m "fix: apply assigned DWN always-connected fix"
+          git push origin HEAD:fix/dwn-always-connected --force
