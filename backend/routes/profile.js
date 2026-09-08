@@ -92,7 +92,8 @@ function dataUrlToDwn(dataUrl) {
 async function writeProfilePictureToUserDwn(user, dataUrl, recordId) {
   const info = getDwnInfo(user);
   if (!info?.spaceId) throw new Error('User isolated DWN space is not available.');
-  if (!user?.raw_seed) throw new Error('User isolated DWN identity seed is not available.');
+  // realDwnEngine resolves/imports the persisted DID key material
+  // from the user's isolated DWN node store for this space.
 
   const record = {
     id: recordId,
@@ -138,7 +139,7 @@ async function writeProfilePictureToUserDwn(user, dataUrl, recordId) {
 
 async function readProfilePictureFromUserDwn(user, recordId) {
   const info = getDwnInfo(user);
-  if (!info?.spaceId || !user?.raw_seed) return null;
+  if (!info?.spaceId) return null;
 
   const result = await realDwnEngine.readRecord(
     {

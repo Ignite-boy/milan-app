@@ -167,13 +167,8 @@
       // Compress before upload to keep the request fast.
       const optimized = await compressProfileImage(file);
 
-      // Persist the real data URL immediately — never persist a temporary blob: URL.
-      try {
-        localStorage.setItem("milanAvatar", optimized.dataUrl);
-      } catch {}
-
-      // One network write only. No extra verification GET.
-      const response = await fetch("https://milan-app-pzhf.onrender.com/api/profile", {
+      // Persist locally only after the DWN/server confirms the save.
+      const response = await fetch("/api/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -328,7 +323,7 @@
     }
 
     try {
-      const response = await fetch("https://milan-app-pzhf.onrender.com/api/profile", {
+      const response = await fetch("/api/profile", {
         headers,
         cache: "no-store"
       });
@@ -356,22 +351,17 @@
       profile ||
       {};
 
-    // Use the server/DWN avatar when available; otherwise fall back
-    // to the locally persisted avatar.
+    // DWN/server is authoritative. localStorage is only a fast
+    // fallback while the authoritative profile is unavailable.
     let localAvatar = "";
     try {
       localAvatar = localStorage.getItem("milanAvatar") || "";
     } catch {}
 
     const remoteAvatar = String(profileData.avatar || "").trim();
+    const restoredAvatar = remoteAvatar || localAvatar;
 
-    // IMPORTANT:
-    // Once this browser has a successfully saved DP, NEVER replace it
-    // during reload with an older/stale remote avatar response.
-    // The remote avatar may be used only when there is no local DP yet.
-    if (localAvatar) {
-      profileData.avatar = localAvatar;
-    } else if (remoteAvatar) {
+    if (remoteAvatar) {
       localAvatar = remoteAvatar;
 
       try {
@@ -379,11 +369,9 @@
       } catch {}
 
       profileData.avatar = remoteAvatar;
+    } else if (localAvatar) {
+      profileData.avatar = localAvatar;
     }
-
-    const restoredAvatar = String(
-      localAvatar || profileData.avatar || ""
-    ).trim();
 
     if (restoredAvatar) {
       profileData.avatar = restoredAvatar;
