@@ -12,11 +12,13 @@
   };
 
   async function passwordLogin(event) {
+    const loginBtn = document.getElementById("loginBtn");
+    if (!loginBtn || !event.target.closest || !event.target.closest("#loginBtn")) return;
+
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
 
-    const button = document.getElementById("loginBtn");
     const email = getEmail();
     const password = getPassword();
 
@@ -25,10 +27,8 @@
       return;
     }
 
-    if (button) {
-      button.disabled = true;
-      button.textContent = "Logging in...";
-    }
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Logging in...";
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -39,17 +39,12 @@
       });
 
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || `Login failed (${response.status})`);
-      }
-      if (!data.token) {
-        throw new Error("No login token received.");
-      }
+      if (!response.ok) throw new Error(data.error || `Login failed (${response.status})`);
+      if (!data.token) throw new Error("No login token received.");
 
       localStorage.setItem("milan_token", data.token);
       localStorage.removeItem("milanBootCache");
 
-      // Best-effort profile hydration; login must not be blocked by it.
       try {
         const profileResponse = await fetch("/api/profile", {
           headers: { Accept: "application/json", Authorization: "Bearer " + data.token },
@@ -65,17 +60,14 @@
       localStorage.removeItem("milan_token");
       show(error.message || "Login failed.", true);
     } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = "Login →";
-      }
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login →";
     }
   }
 
   function bindLoginPageActions() {
     const toggleBtn = document.getElementById("togglePasswordBtn");
     const password = document.getElementById("loginPass");
-
     if (toggleBtn && password && !toggleBtn.dataset.bound) {
       toggleBtn.dataset.bound = "1";
       toggleBtn.addEventListener("click", function () {
@@ -96,8 +88,7 @@
     const loginBtn = document.getElementById("loginBtn");
     if (loginBtn && !window.__milanPasswordLoginHotfix) {
       window.__milanPasswordLoginHotfix = true;
-      // Capture before login.js's target listener so the old optional-ID3 gate
-      // cannot intercept a normal password login.
+      // Capture only the password-login button, before login.js's old handler.
       document.addEventListener("click", passwordLogin, true);
     }
   }
