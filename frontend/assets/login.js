@@ -18,10 +18,23 @@ function setToken(token) {
 
 function clearToken() { localStorage.removeItem("milan_token"); }
 
+function formatError(value, fallback = "Request failed") {
+  if (value instanceof Error && value.message) return String(value.message);
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (value?.message && typeof value.message === "string") return value.message;
+  if (value?.error?.message && typeof value.error.message === "string") return value.error.message;
+  if (value?.error && typeof value.error === "string") return value.error;
+  try {
+    const json = JSON.stringify(value);
+    if (json && json !== "{}" && json !== "null") return json;
+  } catch (_) {}
+  return fallback;
+}
+
 function showMessage(message, isError = true) {
   const el = document.getElementById("authMsg");
   if (!el) return;
-  el.innerText = message;
+  el.textContent = formatError(message, "");
   el.style.color = isError ? "#e5484d" : "#10b981";
 }
 
@@ -48,7 +61,7 @@ async function api(path, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(data.error || `Request failed (${response.status})`);
+    const error = new Error(formatError(data?.error ?? data, `Request failed (${response.status})`));
     error.status = response.status;
     throw error;
   }
@@ -77,12 +90,15 @@ window.togglePasswordVisibility = function () {
 };
 
 async function loginWithID3() {
+  const didBtn = document.getElementById("didLoginBtn");
+  if (didBtn) didBtn.disabled = true;
   showMessage("ID3 login is loading...", false);
-  // Keep ID3 available through the current backend without blocking normal login.
   try {
     const options = await api("/did/passkey/login/options");
     const lib = await loadSimpleWebAuthnBrowser();
-    if (lib.browserSupportsWebAuthn && !lib.browserSupportsWebAuthn()) throw new Error("This browser does not support ID3/passkeys.");
+    if (lib.browserSupportsWebAuthn && !lib.browserSupportsWebAuthn()) {
+      throw new Error("This browser does not support ID3/passkeys.");
+    }
     const assertion = await lib.startAuthentication({ optionsJSON: options });
     const result = await api("/did/passkey/login/verify", {
       method: "POST",
@@ -93,7 +109,8 @@ async function loginWithID3() {
     setToken(result.token);
     window.location.replace("/app?login=" + Date.now());
   } catch (error) {
-    showMessage(error.message || "ID3 login failed.", true);
+    showMessage(formatError(error, "ID3 login failed."), true);
+    if (didBtn) didBtn.disabled = false;
   }
 }
 
@@ -103,9 +120,11 @@ function loadSimpleWebAuthnBrowser() {
   if (simpleWebAuthnPromise) return simpleWebAuthnPromise;
   simpleWebAuthnPromise = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "/assets/simplewebauthn-browser.min.js";
+    script.src = "/assets/simplewebauthn-browser.min.js?v=id3-20260908-2";
     script.async = true;
-    script.onload = () => window.SimpleWebAuthnBrowser ? resolve(window.SimpleWebAuthnBrowser) : reject(new Error("ID3 security module unavailable"));
+    script.onload = () => window.SimpleWebAuthnBrowser
+      ? resolve(window.SimpleWebAuthnBrowser)
+      : reject(new Error("ID3 security module unavailable"));
     script.onerror = () => reject(new Error("Could not load ID3 security module"));
     document.head.appendChild(script);
   });
@@ -148,7 +167,7 @@ function bind() {
         if (loginPass) loginPass.value = "";
         showMessage("✅ Registration successful. Please login.", false);
       } catch (error) {
-        showMessage(error.message || "Registration failed.", true);
+        showMessage(formatError(error, "Registration failed."), true);
       } finally {
         registerBtn.disabled = false;
         registerBtn.textContent = "Create my MILAN space";
@@ -170,11 +189,11 @@ function bind() {
         const data = await loginUser(email, password);
         if (!data.token) throw new Error("No token received.");
         setToken(data.token);
-        // Do not wait for profile, ID3, DWN, or any secondary service.
+        showMessage("✅ Login successful. Opening MILAN...", false);
         window.location.replace("/app?login=" + Date.now());
       } catch (error) {
         clearToken();
-        showMessage(error.message || "Login failed.", true);
+        showMessage(formatError(error, "Login failed."), true);
         loginBtn.disabled = false;
         loginBtn.textContent = "Login →";
       }
