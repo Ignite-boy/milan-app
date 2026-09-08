@@ -14,7 +14,8 @@ const {
   isolatedRoot,
   persistenceInfo,
   cloudApiKey,
-  storageRootFor
+  storageRootFor,
+  realDwnEngine
 } = require('../services/cloudDwnRegistry');
 
 const router = express.Router();
