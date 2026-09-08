@@ -27,7 +27,7 @@
 
       <div class="milan-identity-status-chip dwn">
         <span class="label">DWN</span>
-        <span class="value">Connected</span>
+        <span class="value" data-dwn-live-state="1">Connecting…</span>
       </div>
 
       <div class="milan-identity-status-chip privacy">
@@ -58,7 +58,18 @@
       // Never expose the old transient "Resolving" state in the UI.
       didValue.textContent = "Active";
 
-      dwnValue.textContent = dwnText || "Connected";
+      const liveState =
+        document.getElementById("myDwn")?.dataset?.dwnConnection || "";
+
+      dwnValue.textContent =
+        liveState === "connected"
+          ? "Connected"
+          : liveState === "reconnecting"
+            ? "Reconnecting…"
+            : liveState === "connecting"
+              ? "Connecting…"
+              : (dwnText || "Disconnected");
+
       privacyValue.textContent = privacyText || "—";
     };
 
