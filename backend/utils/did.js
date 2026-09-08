@@ -20,18 +20,16 @@ function generateDIDAndRawSeed() {
  *   - spaceId: stable per-user namespace for the user's isolated DWN node.
  *   - did: a real did:key (Ed25519) whose signing key lives in that node.
  *
- * The real DID is created and persisted by the DWN engine itself, so the
- * value stored on the user record is exactly the DID that signs the user's
- * real DWN protocol messages. Falls back to the legacy identifier only if
- * the engine/SDK is unavailable, so registration can never hard-fail.
+ * The real DID is created and persisted by the DWN engine itself.
+ * If the local DWN engine is temporarily unavailable, registration falls
+ * back to the legacy identity so account creation is not blocked. The
+ * returned `real` flag tells callers which mode was used.
  *
  * @param {{ userId:string, email:string }} args
  * @returns {Promise<{ did:string, rawSeedHex:string, spaceId:string, real:boolean }>}
  */
 async function mintRealUserIdentity({ userId = '', email = '' } = {}) {
   const rawSeedHex = crypto.randomBytes(32).toString('hex');
-  // spaceId is derived from a stable random seed (NOT the DID), so the user's
-  // node namespace is fixed before the DID exists.
   const seed = `${userId}|${rawSeedHex}|${email}`;
   const hash = crypto.createHash('sha256').update(seed).digest('hex');
   const spaceId = `milan-${(userId || hash).replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 40)}-${hash.slice(0, 8)}`;
@@ -43,14 +41,18 @@ async function mintRealUserIdentity({ userId = '', email = '' } = {}) {
       if (opened.ok && opened.node && opened.node.tenantDid) {
         return { did: opened.node.tenantDid, rawSeedHex, spaceId, real: true };
       }
+      console.warn('[auth] real DID engine did not return a tenant DID; using registration fallback identity');
     }
   } catch (error) {
-    throw new Error(
-      `Real DID engine unavailable: ${error?.message || "identity mint failed"}`
-    );
+    console.warn('[auth] real DID engine unavailable during registration; using fallback identity:', error?.message || 'identity mint failed');
   }
 
-  throw new Error("Real DID engine unavailable: no tenant DID returned");
+  return {
+    did: `did:milan:${Date.now()}-${crypto.randomBytes(6).toString('hex')}`,
+    rawSeedHex,
+    spaceId,
+    real: false
+  };
 }
 
 module.exports = { generateDIDAndRawSeed, mintRealUserIdentity };
