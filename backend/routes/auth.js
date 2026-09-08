@@ -110,15 +110,20 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   const id = uuidv4();
   const passwordHash = await bcrypt.hash(password, 10);
   const displayName = name || email.split('@')[0];
-  const identity = await mintRealUserIdentity({ userId: id, email });
-  const did = identity.did; const spaceId = identity.spaceId; const identityReal = identity.real;
+
+  // Registration should be fast and dependable: generate the user's DID locally
+  // instead of waiting on remote DWN provisioning. The DID is then stored with
+  // the account in Supabase. DWN provisioning can happen after the account exists.
+  const { did: localDid, rawSeedHex } = generateDIDAndRawSeed();
+  const did = localDid;
+  const spaceId = `milan-${id.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const identityReal = false;
 
   const { data: existingUser, error: lookupError } = await supabaseDb.from('users').select('id').eq('email', email).maybeSingle();
   if (lookupError) return res.status(500).json({ error: 'Account database unavailable', details: lookupError.message, code: lookupError.code });
   if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
   // Core account registration must not depend on optional DWN metadata columns.
-  // Supabase account creation is authoritative; DWN metadata is best-effort.
   const { error: insertError } = await supabaseDb.from('users').insert({
     id,
     email,
@@ -127,6 +132,19 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
     did
   });
   if (insertError) return res.status(500).json({ error: 'Account database registration failed', details: insertError.message, code: insertError.code });
+
+  // Best-effort DWN provisioning happens after the account is committed so it
+  // can never block or invalidate successful signup.
+  Promise.resolve().then(async () => {
+    try {
+      const identity = await mintRealUserIdentity({ userId: id, email });
+      if (identity?.real && identity.did && identity.did !== did) {
+        console.log('[auth] post-registration real DWN identity available:', email, identity.did);
+      }
+    } catch (err) {
+      console.warn('[auth] post-registration DWN provisioning skipped:', err?.message || 'unknown error');
+    }
+  }).catch(() => {});
 
   console.log('[auth] account created in Supabase:', email, id);
   return res.status(201).json({ message: 'Registered successfully', id, email, name: displayName, did, spaceId, real: identityReal });
@@ -174,27 +192,17 @@ router.post('/verify-email', asyncRoute(async (req, res) => {
 }));
 
 router.post('/resend-verification', authThrottle(6, 60_000), asyncRoute(async (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase(); if (!email) return res.status(400).json({ error: 'Email required' });
-  const { users } = await loadUsersFromDwnDetailed(); const entry = findUserEntryByEmail(users, email); if (!entry) return res.json({ ok: true, message: 'If that account exists, a verification email has been sent.' });
-  const [, user] = entry; if (user.emailVerified) return res.json({ ok: true, alreadyVerified: true, message: 'Email already verified' });
-  const tokenRaw = makeToken(); const codeRaw = sixDigit(); user.emailVerification = { tokenHash: sha256(tokenRaw), codeHash: sha256(codeRaw), expires: Date.now() + 24 * 60 * 60 * 1000 }; users[email] = user; await persistUsersAuthoritatively(users);
-  const verifyUrl = `${APP_URL()}/verify-email?token=${tokenRaw}&email=${encodeURIComponent(email)}`; sendVerificationEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], verifyUrl, code: codeRaw }).catch(err => console.warn('[MILAN mail] resend verification error:', err.message)); res.json({ ok: true, message: 'If that account exists, a verification email has been sent.' });
+  const email = String(req.body.email || '').trim().toLowerCase(); if (!email) return res.status(400).json({ error: 'Email required' }); const { users } = await loadUsersFromDwnDetailed(); const entry = findUserEntryByEmail(users, email); if (!entry) return res.json({ ok: true, message: 'If that account exists, a verification email has been sent.' }); const [, user] = entry; if (user.emailVerified) return res.json({ ok: true, alreadyVerified: true, message: 'Email already verified' }); const tokenRaw = makeToken(); const codeRaw = sixDigit(); user.emailVerification = { tokenHash: sha256(tokenRaw), codeHash: sha256(codeRaw), expires: Date.now() + 24 * 60 * 60 * 1000 }; users[email] = user; await persistUsersAuthoritatively(users); const verifyUrl = `${APP_URL()}/verify-email?token=${tokenRaw}&email=${encodeURIComponent(email)}`; sendVerificationEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], verifyUrl, code: codeRaw }).catch(err => console.warn('[MILAN mail] resend verification error:', err.message)); res.json({ ok: true, message: 'If that account exists, a verification email has been sent.' });
 }));
 
 router.post('/forgot-password', authThrottle(8, 60_000), asyncRoute(async (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase(); if (!email || !/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
-  const { users } = await loadUsersFromDwnDetailed(); const entry = findUserEntryByEmail(users, email);
-  if (entry) { const [, user] = entry; const tokenRaw = makeToken(); const codeRaw = sixDigit(); user.passwordReset = { tokenHash: sha256(tokenRaw), codeHash: sha256(codeRaw), expires: Date.now() + 60 * 60 * 1000 }; users[email] = user; await persistUsersAuthoritatively(users); addActivity(user.id, 'auth.password_reset_requested', { email }); const resetUrl = `${APP_URL()}/reset-password?token=${tokenRaw}&email=${encodeURIComponent(email)}`; sendPasswordResetEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], resetUrl, code: codeRaw }).catch(err => console.warn('[MILAN mail] reset email error:', err.message)); }
-  res.json({ ok: true, message: 'If that account exists, a password-reset email has been sent.' });
+  const email = String(req.body.email || '').trim().toLowerCase(); if (!email || !/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Valid email required' }); const { users } = await loadUsersFromDwnDetailed(); const entry = findUserEntryByEmail(users, email); if (entry) { const [, user] = entry; const tokenRaw = makeToken(); const codeRaw = sixDigit(); user.passwordReset = { tokenHash: sha256(tokenRaw), codeHash: sha256(codeRaw), expires: Date.now() + 60 * 60 * 1000 }; users[email] = user; await persistUsersAuthoritatively(users); addActivity(user.id, 'auth.password_reset_requested', { email }); const resetUrl = `${APP_URL()}/reset-password?token=${tokenRaw}&email=${encodeURIComponent(email)}`; sendPasswordResetEmail({ to: email, name: user.profile?.display_name || email.split('@')[0], resetUrl, code: codeRaw }).catch(err => console.warn('[MILAN mail] reset email error:', err.message)); } res.json({ ok: true, message: 'If that account exists, a password-reset email has been sent.' });
 }));
 
 router.post('/reset-password', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase(); const token = String(req.body.token || ''); const code = String(req.body.code || '').trim(); const password = String(req.body.password || '');
   if (!email || (!token && !code)) return res.status(400).json({ error: 'Email and reset token or code required' }); if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
-  const { users } = await loadUsersFromDwnDetailed(); const entry = findUserEntryByEmail(users, email); if (!entry) return res.status(400).json({ error: 'Invalid or expired reset link' }); const [, user] = entry; const pr = user.passwordReset;
-  if (!pr || !pr.expires || Date.now() > pr.expires) return res.status(400).json({ error: 'Reset link expired. Please request a new one.' }); const ok = (token && safeEqual(pr.tokenHash, sha256(token))) || (code && safeEqual(pr.codeHash, sha256(code))); if (!ok) return res.status(400).json({ error: 'Invalid reset token or code' });
-  user.password_hash = await bcrypt.hash(password, 10); delete user.passwordReset; user.emailVerified = true; user.passwordChangedAt = new Date().toISOString(); users[email] = user; await persistUsersAuthoritatively(users); addActivity(user.id, 'auth.password_reset', { email }); res.json({ ok: true, message: 'Password updated. You can now sign in with your new password.' });
+  const { users } = await loadUsersFromDwnDetailed(); const entry = findUserEntryByEmail(users, email); if (!entry) return res.status(400).json({ error: 'Invalid or expired reset link' }); const [, user] = entry; const pr = user.passwordReset; if (!pr || !pr.expires || Date.now() > pr.expires) return res.status(400).json({ error: 'Reset link expired. Please request a new one.' }); const ok = (token && safeEqual(pr.tokenHash, sha256(token))) || (code && safeEqual(pr.codeHash, sha256(code))); if (!ok) return res.status(400).json({ error: 'Invalid password reset token or code' }); user.password_hash = await bcrypt.hash(password, 10); delete user.passwordReset; users[email] = user; await persistUsersAuthoritatively(users); addActivity(user.id, 'auth.password_reset', { email }); res.json({ ok: true, message: 'Password reset successfully' });
 }));
 
-router.use((err, _req, res, _next) => { console.error('Auth route failed:', err.message); res.status(err.status || 500).json({ error: err.message || 'Auth request failed' }); });
 module.exports = router;
