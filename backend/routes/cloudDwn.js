@@ -76,6 +76,88 @@ router.get('/resolve/:did', auth, (req, res) => {
   res.json({ exists: true, did, email: found.email, display_name: found.user.profile?.display_name || '', dwn: getDwnInfo(found.user) });
 });
 
+router.get('/health', auth, async (req, res) => {
+  try {
+    const users = readJson(global.usersFile, {});
+    const found = findUserById(users, req.userId);
+
+    if (!found || !found.user?.did) {
+      return res.status(404).json({
+        ok: false,
+        state: 'disconnected',
+        reason: 'user-dwn-not-found'
+      });
+    }
+
+    const info = getDwnInfo(found.user);
+
+    if (!info?.spaceId) {
+      return res.status(503).json({
+        ok: false,
+        state: 'disconnected',
+        reason: 'missing-space-id'
+      });
+    }
+
+    const opened = await realDwnEngine.openNode({
+      spaceId: info.spaceId,
+      knownDidUri: found.user.did
+    });
+
+    if (!opened?.ok || !opened?.node) {
+      return res.status(503).json({
+        ok: false,
+        state: 'disconnected',
+        did: found.user.did,
+        spaceId: info.spaceId,
+        reason: opened?.error || opened?.reason || 'DWN node unavailable',
+        checkedAt: new Date().toISOString()
+      });
+    }
+
+    const remoteNode = await realDwn.ping().catch(error => ({
+      ok: false,
+      error: error.message
+    }));
+
+    const remoteConfigured = !!persistenceInfo().remoteEndpoint;
+
+    if (remoteConfigured && remoteNode.ok === false) {
+      return res.status(503).json({
+        ok: false,
+        state: 'disconnected',
+        did: found.user.did,
+        spaceId: info.spaceId,
+        reason: remoteNode.error || 'DWN remote endpoint unavailable',
+        checkedAt: new Date().toISOString()
+      });
+    }
+
+    return res.json({
+      ok: true,
+      state: 'connected',
+      did: found.user.did,
+      spaceId: info.spaceId,
+      dwn: {
+        nodeReady: true,
+        remoteConfigured,
+        remoteReachable: remoteConfigured ? true : null,
+        endpoint: info.endpoint || persistenceInfo().remoteEndpoint || null,
+        mode: info.mode || persistenceInfo().mode || null
+      },
+      checkedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.warn('[cloudDwn] per-user DWN health check failed:', error.message);
+    return res.status(503).json({
+      ok: false,
+      state: 'disconnected',
+      reason: error.message,
+      checkedAt: new Date().toISOString()
+    });
+  }
+});
+
 router.get('/status', async (_req, res) => {
   const p = persistenceInfo();
   const remoteNode = await realDwn.ping().catch(err => ({ ok: false, error: err.message }));

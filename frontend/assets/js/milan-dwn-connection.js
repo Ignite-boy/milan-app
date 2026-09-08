@@ -3,6 +3,7 @@
 (() => {
   const AVATAR_KEY = "milanAvatar";
   const STATUS_ID = "myDwn";
+  const HEALTH_URL = "/api/cloud-dwn/health";
   const PROFILE_URL = "/api/profile";
 
   let timer = null;
@@ -107,7 +108,7 @@
     setStatus("connecting");
 
     try {
-      const response = await fetch(PROFILE_URL, {
+      const response = await fetch(HEALTH_URL, {
         method: "GET",
         cache: "no-store",
         headers: {
@@ -117,19 +118,42 @@
         }
       });
 
-      const data = await response.json().catch(() => ({}));
+      const health = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
+      if (
+        !response.ok ||
+        health?.state !== "connected" ||
+        health?.dwn?.nodeReady !== true
+      ) {
         throw new Error(
-          data.detail ||
-          data.error ||
-          ("DWN profile read failed: " + response.status)
+          health?.reason ||
+          ("DWN health check failed: " + response.status)
+        );
+      }
+
+      const profileResponse = await fetch(PROFILE_URL, {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          Authorization: "Bearer " + auth,
+          Accept: "application/json",
+          "Cache-Control": "no-cache"
+        }
+      });
+
+      const profile = await profileResponse.json().catch(() => ({}));
+
+      if (!profileResponse.ok) {
+        throw new Error(
+          profile?.detail ||
+          profile?.error ||
+          ("Profile sync failed: " + profileResponse.status)
         );
       }
 
       const avatar =
-        data?.avatar ||
-        data?.profile?.avatar ||
+        profile?.avatar ||
+        profile?.profile?.avatar ||
         "";
 
       if (avatar) {
