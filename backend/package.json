@@ -1,14 +1,14 @@
 {
   "name": "milan-decentralized-social-space",
   "version": "70.0.0",
-  "description": "MILAN V7 — Sober premium UI, GEO/AI SEO (founder Nitesh Pandey), welcome email (support@milanlife.in), modern media upload, AI writing assist, premium About/Privacy/Terms/Admin",
+  "description": "MILAN V7 \u2014 Sober premium UI, GEO/AI SEO (founder Nitesh Pandey), welcome email (support@milanlife.in), modern media upload, AI writing assist, premium About/Privacy/Terms/Admin",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
     "mail:test": "node scripts/test-mail.js",
     "mail:diagnose": "node scripts/smtp-diagnose.js",
-    "build": "node -e \"console.log('MILAN V3 Engagement Engine — 500 Techniques Active ✦')\""
+    "build": "node -e \"console.log('MILAN V3 Engagement Engine \u2014 500 Techniques Active \u2726')\""
   },
   "dependencies": {
     "@simplewebauthn/server": "^13.3.2",
@@ -27,10 +27,12 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.14",
-    "ws": "^8.21.0"
+    "ws": "^8.21.0",
+    "ipfs-unixfs-exporter": "13.4.0"
   },
   "overrides": {
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "ipfs-unixfs-exporter": "13.4.0"
   },
   "engines": {
     "node": ">=18.0.0"
