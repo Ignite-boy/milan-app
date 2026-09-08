@@ -61,5 +61,6 @@
       "source": "/(.*)",
       "destination": "/$1"
     }
-  ]
+  ],
+  "trailingSlash": false
 }
