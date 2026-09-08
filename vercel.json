@@ -3,19 +3,19 @@
   "rewrites": [
     {
       "source": "/api/auth/:action",
-      "destination": "https://milan-app-pzhf.onrender.com/api/auth/:action"
+      "destination": "https://milan-api-4n3n.onrender.com/api/auth/:action"
     },
     {
       "source": "/api/profile",
-      "destination": "https://milan-app-pzhf.onrender.com/api/profile"
+      "destination": "https://milan-api-4n3n.onrender.com/api/profile"
     },
     {
       "source": "/api/cloud-dwn/:path*",
-      "destination": "https://milan-app-pzhf.onrender.com/api/cloud-dwn/:path*"
+      "destination": "https://milan-api-4n3n.onrender.com/api/cloud-dwn/:path*"
     },
     {
       "source": "/api/dwn/:path*",
-      "destination": "https://milan-app-pzhf.onrender.com/api/dwn/:path*"
+      "destination": "https://milan-api-4n3n.onrender.com/api/dwn/:path*"
     },
     {
       "source": "/api/:path*",
