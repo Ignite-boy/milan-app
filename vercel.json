@@ -18,6 +18,14 @@
       "destination": "https://milan-api-4n3n.onrender.com/api/dwn/:path*"
     },
     {
+      "source": "/assets/login.js",
+      "destination": "/assets/login-live.js"
+    },
+    {
+      "source": "/assets/js/login-actions.js",
+      "destination": "/assets/js/login-actions-live.js"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index.js"
     },
