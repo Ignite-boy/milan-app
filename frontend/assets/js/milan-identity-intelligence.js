@@ -289,38 +289,44 @@
   }
 
   async function sync() {
-    updateDidChip("");
-    updateDwnChip({ state: "Resolving", detail: "Contacting identity service…" });
-
     const identity = await fetchIdentity();
 
-    if (!identity) {
-      updateDidChip("");
-      if (assignedDwn) {
-        updateDwnChip({
-          state: "Connected",
-          detail: assignedDwn.endpoint || `space:${assignedDwn.spaceId || assignedDwn.id || "assigned"}`
-        });
-      } else {
-        updateDwnChip({ state: "Resolving", detail: "Waiting for the assigned DWN" });
-      }
+    const did = String(identity?.did || "").trim();
+
+    if (did) {
+      updateDidChip(did);
+
+      const assigned =
+        identity?.dwn ||
+        assignedDwn ||
+        { mode: "assigned", id: did };
+
+      assignedDwn = assigned;
+
+      writeBridge(
+        did,
+        assigned,
+        $("privacyScore")?.textContent.trim()
+      );
+
+      // Authenticated DID + assigned DWN = Connected.
+      // Do not expose transient identity/DWN probe states in the UI.
+      updateDwnChip({
+        state: "Connected",
+        detail:
+          assigned?.endpoint ||
+          (assigned?.spaceId ? `space:${assigned.spaceId}` : "assigned")
+      });
+
       updatePrivacyChip();
       return;
     }
 
-    const did = identity.did;
-    const dwnProbePromise = probeDwn(did, identity.dwn);
-
-    if (did) updateDidChip(did);
-
-    writeBridge(
-      did,
-      identity.dwn,
-      $("privacyScore")?.textContent.trim()
-    );
-
-    const dwnResult = await dwnProbePromise;
-    updateDwnChip(dwnResult);
+    updateDidChip("");
+    updateDwnChip({
+      state: "Resolving",
+      detail: "Waiting for authenticated identity"
+    });
     updatePrivacyChip();
   }
 
