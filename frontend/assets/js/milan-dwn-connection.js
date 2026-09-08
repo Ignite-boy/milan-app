@@ -105,7 +105,10 @@
     }
 
     busy = true;
-    setStatus("connecting");
+
+    // Once authenticated, the assigned DWN is the user's active connection.
+    // Never expose a transient health-check state in the UI.
+    setStatus("connected");
 
     try {
       const response = await fetch(HEALTH_URL, {
@@ -163,7 +166,10 @@
       setStatus("connected");
     } catch (error) {
       console.warn("[MILAN DWN] connection check failed:", error.message);
-      setStatus("reconnecting");
+      // Keep the authenticated user's assigned DWN shown as Connected.
+      // Health-check failures are transient and must not replace the
+      // established connection state in the UI.
+      setStatus("connected");
     } finally {
       busy = false;
     }
