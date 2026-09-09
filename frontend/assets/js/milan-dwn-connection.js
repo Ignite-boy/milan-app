@@ -243,7 +243,13 @@
   function start() {
     stopped = false;
     installAvatarPersistenceGuard();
-    check().finally(schedule);
+
+    // Do not block the initial app view on DWN health.
+    // Let the app render first, then perform the connection check in background.
+    enforceSavedAvatar();
+    setTimeout(() => {
+      if (!stopped) check().finally(schedule);
+    }, 1200);
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {

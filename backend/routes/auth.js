@@ -121,8 +121,8 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   const id = uuidv4();
   const displayName = name || email.split('@')[0];
 
-  // FAST CRITICAL PATH:
-  // local DID generation + password hash + one authoritative Supabase INSERT.
+  // Minimal registration critical path:
+  // local DID + password hash + one authoritative Supabase INSERT.
   const passwordHashPromise = bcrypt.hash(password, 10);
   const { did } = generateDIDAndRawSeed();
   const passwordHash = await passwordHashPromise;
@@ -149,18 +149,6 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
       code: insertError.code
     });
   }
-
-  // Non-critical DWN provisioning NEVER blocks successful registration.
-  Promise.resolve().then(async () => {
-    try {
-      await mintRealUserIdentity({ userId: id, email });
-    } catch (err) {
-      console.warn(
-        '[auth] post-registration DWN provisioning skipped:',
-        err?.message || 'unknown error'
-      );
-    }
-  }).catch(() => {});
 
   console.log('[auth] account created in Supabase:', email, id);
 
