@@ -338,22 +338,24 @@ async function registerID3() {
       event.preventDefault();
 
       try {
+        if (!getToken()) {
+          // No password session: discoverable ID3 login must run directly.
+          await loginWithID3();
+          return;
+        }
+
         const status = await api("/did/passkey/status");
+
         if (status?.registered) {
           await loginWithID3();
-        } else if (getToken()) {
-          await registerID3();
         } else {
-          showMessage(
-            "Please sign in once with your password to enable ID3.",
-            true
-          );
+          await registerID3();
         }
       } catch (error) {
         showMessage(
           error?.message ||
           String(error) ||
-          "Could not check ID3 status. Please try again.",
+          "Could not start ID3. Please try again.",
           true
         );
       }
