@@ -180,10 +180,134 @@ function bind() {
     });
   }
 
+async function registerID3() {
+    const didBtn =
+        document.getElementById(
+            "didLoginBtn"
+        );
+
+    if (!getToken()) {
+        showMessage(
+            "Sign in once with your password to enable ID3 on this device.",
+            true
+        );
+        return;
+    }
+
+    try {
+        didBtn.disabled = true;
+        didBtn.innerHTML =
+            '<span class="did-badge">did</span> Enabling ID3...';
+
+        showMessage(
+            "Create your secure ID3 passkey on this device...",
+            false
+        );
+
+        const {
+            startRegistration,
+            browserSupportsWebAuthn
+        } =
+            await loadSimpleWebAuthnBrowser();
+
+        if (
+            browserSupportsWebAuthn &&
+            !browserSupportsWebAuthn()
+        ) {
+            throw new Error(
+                "This browser does not support secure ID3/passkey login."
+            );
+        }
+
+        const options =
+            await authenticatedJson(
+                "/api/did/passkey/register/options"
+            );
+
+        const registrationResponse =
+            await startRegistration({
+                optionsJSON: options
+            });
+
+        const verification =
+            await authenticatedJson(
+                "/api/did/passkey/register/verify",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:
+                        JSON.stringify(
+                            registrationResponse
+                        )
+                }
+            );
+
+        if (!verification.verified) {
+            throw new Error(
+                "ID3 registration was not verified."
+            );
+        }
+
+        didBtn.innerHTML =
+            '<span class="did-badge">did</span> Sign with ID3';
+
+        showMessage(
+            "✅ ID3 enabled. You can now sign in with one click.",
+            false
+        );
+
+        setTimeout(() => {
+            window.location.replace(
+                "/app?login=" +
+                Date.now()
+            );
+        }, 900);
+
+    } catch (error) {
+        console.error(
+            "[MILAN ID3] registration failed:",
+            error
+        );
+
+        didBtn.disabled = false;
+
+        didBtn.innerHTML =
+            '<span class="did-badge">did</span> Sign with ID3';
+
+        if (
+            error?.name ===
+            "NotAllowedError"
+        ) {
+            showMessage(
+                "ID3 setup was cancelled.",
+                true
+            );
+        } else {
+            showMessage(
+                error.message ||
+                "Could not enable ID3.",
+                true
+            );
+        }
+    }
+}
+
+
   const didBtn = document.getElementById("didLoginBtn");
   if (didBtn && !didBtn.dataset.milanAuthBound) {
     didBtn.dataset.milanAuthBound = "1";
-    didBtn.addEventListener("click", loginWithID3);
+    didBtn.addEventListener("click", async event => {
+      event.preventDefault();
+
+      if (getToken()) {
+        await registerID3();
+      } else {
+        await loginWithID3();
+      }
+    });
   }
 
   try {
