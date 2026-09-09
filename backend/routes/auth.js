@@ -103,51 +103,76 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   const name = String(req.body.name || '').trim();
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
-  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters for production use' });
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ error: 'Valid email required' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({
+      error: 'Password must be at least 8 characters for production use'
+    });
+  }
 
   const id = uuidv4();
-  const passwordHash = await bcrypt.hash(password, 10);
   const displayName = name || email.split('@')[0];
 
-  // Registration should be fast and dependable: generate the user's DID locally
-  // instead of waiting on remote DWN provisioning. The DID is then stored with
-  // the account in Supabase. DWN provisioning can happen after the account exists.
-  const { did: localDid, rawSeedHex } = generateDIDAndRawSeed();
-  const did = localDid;
-  const spaceId = `milan-${id.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-  const identityReal = false;
+  // FAST CRITICAL PATH:
+  // local DID generation + password hash + one authoritative Supabase INSERT.
+  const passwordHashPromise = bcrypt.hash(password, 10);
+  const { did } = generateDIDAndRawSeed();
+  const passwordHash = await passwordHashPromise;
 
-  const { data: existingUser, error: lookupError } = await supabaseDb.from('users').select('id').eq('email', email).maybeSingle();
-  if (lookupError) return res.status(500).json({ error: 'Account database unavailable', details: lookupError.message, code: lookupError.code });
-  if (existingUser) return res.status(400).json({ error: 'Email already exists' });
+  const { error: insertError } = await supabaseDb
+    .from('users')
+    .insert({
+      id,
+      email,
+      password_hash: passwordHash,
+      name: displayName,
+      did
+    });
 
-  // Core account registration must not depend on optional DWN metadata columns.
-  const { error: insertError } = await supabaseDb.from('users').insert({
-    id,
-    email,
-    password_hash: passwordHash,
-    name: displayName,
-    did
-  });
-  if (insertError) return res.status(500).json({ error: 'Account database registration failed', details: insertError.message, code: insertError.code });
+  if (insertError) {
+    if (insertError.code === '23505') {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
 
-  // Best-effort DWN provisioning happens after the account is committed so it
-  // can never block or invalidate successful signup.
+    console.error('[auth] Supabase users insert failed:', insertError);
+    return res.status(500).json({
+      error: 'Account database registration failed',
+      details: insertError.message,
+      code: insertError.code
+    });
+  }
+
+  // Non-critical DWN provisioning NEVER blocks successful registration.
   Promise.resolve().then(async () => {
     try {
-      const identity = await mintRealUserIdentity({ userId: id, email });
-      if (identity?.real && identity.did && identity.did !== did) {
-        console.log('[auth] post-registration real DWN identity available:', email, identity.did);
-      }
+      await mintRealUserIdentity({ userId: id, email });
     } catch (err) {
-      console.warn('[auth] post-registration DWN provisioning skipped:', err?.message || 'unknown error');
+      console.warn(
+        '[auth] post-registration DWN provisioning skipped:',
+        err?.message || 'unknown error'
+      );
     }
   }).catch(() => {});
 
   console.log('[auth] account created in Supabase:', email, id);
-  return res.status(201).json({ message: 'Registered successfully', id, email, name: displayName, did, spaceId, real: identityReal });
+
+  return res.status(201).json({
+    message: 'Registered successfully',
+    id,
+    email,
+    name: displayName,
+    did,
+    spaceId: `milan-${id}`,
+    real: false
+  });
 }));
 
 router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
