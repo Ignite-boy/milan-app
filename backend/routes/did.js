@@ -313,6 +313,8 @@ router.get(
         }
       });
 
+    console.log('[ID3 TRACE] inserting authentication challenge');
+
     const { error: challengeError } =
       await supabaseDb
         .from('webauthn_challenges')
@@ -505,6 +507,7 @@ router.post(
 router.get(
   '/passkey/login/options',
   async (_req, res) => {
+    console.log('[ID3 TRACE] login/options START');
     const { count, error } =
       await supabaseDb
         .from('webauthn_credentials')
@@ -514,11 +517,14 @@ router.get(
         });
 
     if (error) {
+      console.error('[ID3 TRACE] credential count ERROR:', error.message);
       return res.status(500).json({
         error:
           'ID3 authentication database unavailable'
       });
     }
+
+    console.log('[ID3 TRACE] credential count OK:', Number(count || 0));
 
     if (!Number(count || 0)) {
       return res.status(409).json({
@@ -530,12 +536,18 @@ router.get(
     const { rpID } =
       webauthnConfig(_req);
 
+    console.log('[ID3 TRACE] generating authentication options', {
+      rpID
+    });
+
     const options =
       await generateAuthenticationOptions({
         rpID,
         userVerification: 'required',
         timeout: 60000
       });
+
+    console.log('[ID3 TRACE] authentication options generated');
 
     const { error: challengeError } =
       await supabaseDb
@@ -549,11 +561,14 @@ router.get(
         });
 
     if (challengeError) {
+      console.error('[ID3 TRACE] challenge insert ERROR:', challengeError.message);
       return res.status(500).json({
         error:
           'Could not store ID3 authentication challenge'
       });
     }
+
+    console.log('[ID3 TRACE] login/options COMPLETE');
 
     res.setHeader(
       'Cache-Control',
