@@ -18,6 +18,7 @@ let seq = 0;
 const pending = new Map(); // id -> { resolve, timer, task }
 
 function spawn() {
+  if (worker) return;
   const { Worker } = require('worker_threads');
   worker = new Worker(path.join(__dirname, 'cryptoWorker.js'));
   worker.unref();
@@ -62,6 +63,10 @@ function run(task) {
     return inline(task);
   }
 }
+
+// Pre-start the worker during application boot so the first registration does
+// not pay worker creation/module-load latency on the request critical path.
+spawn();
 
 module.exports = {
   hash: (password, rounds) => run({ op: 'hash', a: password, b: rounds }),
