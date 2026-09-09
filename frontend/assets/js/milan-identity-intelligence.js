@@ -331,7 +331,11 @@
   }
 
   function start() {
-    sync();
+    // Password login should open the app first.
+    // Identity/ID3 status is non-critical and runs in the background.
+    setTimeout(() => {
+      if (token()) sync();
+    }, 2000);
 
     let running = false;
     const tick = async () => {
