@@ -308,6 +308,7 @@ router.get(
             })
           ),
         authenticatorSelection: {
+          authenticatorAttachment: 'platform',
           residentKey: 'required',
           userVerification: 'required'
         }

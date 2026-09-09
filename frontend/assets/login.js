@@ -344,7 +344,7 @@ async function registerID3() {
           return;
         }
 
-        const status = await api("/did/passkey/status");
+        const status = await authenticatedJson("/api/did/passkey/status");
 
         if (status?.registered) {
           await loginWithID3();
