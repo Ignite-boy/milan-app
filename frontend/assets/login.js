@@ -141,12 +141,27 @@ function bind() {
       registerBtn.textContent = "Creating account...";
       try {
         await registerUser(name, email, password);
-        setActiveTab("login");
+
+        // Registration is complete. Sign the user in immediately so
+        // "Sign with ID3" can create their first passkey without asking
+        // for the password again.
+        const loginData = await loginUser(email, password);
+        if (!loginData.token) {
+          throw new Error("Account created, but automatic sign-in failed.");
+        }
+
+        setToken(loginData.token);
+
         const loginEmail = document.getElementById("loginEmail");
         if (loginEmail) loginEmail.value = email;
+
         const loginPass = document.getElementById("loginPass");
         if (loginPass) loginPass.value = "";
-        showMessage("✅ Registration successful. Please login.", false);
+
+        showMessage(
+          "✅ Account created. Your ID3 passkey is ready to be set up.",
+          false
+        );
       } catch (error) {
         showMessage(error?.message || String(error) || "Registration failed.", true);
       } finally {
@@ -261,7 +276,7 @@ async function registerID3() {
 
         setTimeout(() => {
             window.location.replace(
-                "/app?login=" +
+                "/app.html?login=" +
                 Date.now()
             );
         }, 900);
@@ -277,18 +292,38 @@ async function registerID3() {
         didBtn.innerHTML =
             '<span class="did-badge">did</span> Sign with ID3';
 
-        if (
-            error?.name ===
-            "NotAllowedError"
+        const name = String(error?.name || "").trim();
+        const message =
+            typeof error?.message === "string"
+                ? error.message.trim()
+                : "";
+
+        if (name === "NotAllowedError") {
+            showMessage(
+                "Passkey setup was cancelled or timed out. Please try again.",
+                true
+            );
+        } else if (
+            name === "InvalidStateError" ||
+            /previously registered/i.test(message)
         ) {
             showMessage(
-                "ID3 setup was cancelled.",
+                "This device already has a MILAN passkey. Try Sign with ID3.",
+                true
+            );
+        } else if (name === "SecurityError") {
+            showMessage(
+                "MILAN could not verify this passkey request. Please try again from milanlife.in.",
+                true
+            );
+        } else if (name === "AbortError") {
+            showMessage(
+                "Passkey setup was interrupted. Please try again.",
                 true
             );
         } else {
             showMessage(
-                error.message ||
-                "Could not enable ID3.",
+                message || "Could not enable ID3. Please try again.",
                 true
             );
         }
@@ -302,10 +337,25 @@ async function registerID3() {
     didBtn.addEventListener("click", async event => {
       event.preventDefault();
 
-      if (getToken()) {
-        await registerID3();
-      } else {
-        await loginWithID3();
+      try {
+        const status = await api("/did/passkey/status");
+        if (status?.registered) {
+          await loginWithID3();
+        } else if (getToken()) {
+          await registerID3();
+        } else {
+          showMessage(
+            "Please sign in once with your password to enable ID3.",
+            true
+          );
+        }
+      } catch (error) {
+        showMessage(
+          error?.message ||
+          String(error) ||
+          "Could not check ID3 status. Please try again.",
+          true
+        );
       }
     });
   }
