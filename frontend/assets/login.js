@@ -90,7 +90,7 @@ async function loginWithID3() {
     });
     if (!result.token) throw new Error("No MILAN token received.");
     setToken(result.token);
-    window.location.replace("/app?login=" + Date.now());
+    window.location.replace("/app.html?login=" + Date.now());
   } catch (error) {
     showMessage(error?.message || String(error) || "ID3 login failed.", true);
   }
@@ -170,7 +170,7 @@ function bind() {
         const data = await loginUser(email, password);
         if (!data.token) throw new Error("No token received.");
         setToken(data.token);
-        window.location.replace("/app?login=" + Date.now());
+        window.location.replace("/app.html?login=" + Date.now());
       } catch (error) {
         clearToken();
         showMessage(error?.message || String(error) || "Login failed.", true);
@@ -187,7 +187,7 @@ function bind() {
   }
 
   try {
-    if (getToken()) window.location.replace("/app");
+    if (getToken()) window.location.replace("/app.html");
   } catch (_) {}
 }
 
