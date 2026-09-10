@@ -350,7 +350,165 @@
     },180);
   }
   /* ── Real-YouTube-style autocomplete (free suggestions, no quota) ── */
-  var sugT, sugItems=[], sugIdx=-1;
+
+  var sugT;
+  var sugItems=[];
+  var sugIdx=-1;
+
+  function hideSug(){
+    var box=$("mzsug");
+    if(!box)return;
+    box.classList.remove("show");
+    box.innerHTML="";
+    sugItems=[];
+    sugIdx=-1;
+  }
+
+  function escSug(v){
+    return String(v||"")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function renderSug(list){
+    var box=$("mzsug");
+    if(!box)return;
+
+    sugItems=Array.isArray(list)
+      ? list.filter(function(x){
+          return typeof x==="string" && x.trim();
+        }).slice(0,10)
+      : [];
+
+    sugIdx=-1;
+
+    if(!sugItems.length){
+      hideSug();
+      return;
+    }
+
+    box.innerHTML=sugItems.map(function(item,i){
+      return '<button type="button" class="mz-sug-item" data-sug-index="'+i+'">' +
+        '<span class="si">⌕</span>' +
+        '<span>'+escSug(item)+'</span>' +
+      '</button>';
+    }).join("");
+
+    box.classList.add("show");
+
+    var buttons=box.querySelectorAll(".mz-sug-item");
+
+    for(var i=0;i<buttons.length;i++){
+      buttons[i].addEventListener("click",function(e){
+        var idx=Number(e.currentTarget.getAttribute("data-sug-index"));
+        pickSug(idx);
+      });
+    }
+  }
+
+  function hlSug(){
+    var box=$("mzsug");
+    if(!box)return;
+
+    var buttons=box.querySelectorAll(".mz-sug-item");
+
+    for(var i=0;i<buttons.length;i++){
+      buttons[i].classList.toggle("active",i===sugIdx);
+    }
+
+    if(sugIdx>=0 && sugItems[sugIdx]){
+      $("q").value=sugItems[sugIdx];
+    }
+  }
+
+  function pickSug(i){
+    if(i<0 || i>=sugItems.length)return;
+
+    var value=sugItems[i];
+
+    $("q").value=value;
+    hideSug();
+
+    // Selecting a YouTube suggestion should immediately perform
+    // the real search for that exact phrase.
+    runSearch(value);
+  }
+
+  function fetchSug(q){
+    clearTimeout(sugT);
+
+    q=(q||"").trim();
+
+    if(q.length<2){
+      hideSug();
+      return;
+    }
+
+    sugT=setTimeout(function(){
+
+      fetch("/api/music/suggest?q="+encodeURIComponent(q),{
+        credentials:"same-origin",
+        cache:"no-store"
+      })
+      .then(function(r){
+        if(!r.ok)throw new Error("autocomplete http "+r.status);
+        return r.json();
+      })
+      .then(function(j){
+        if(document.activeElement===$("q")){
+          renderSug(j.suggestions||[]);
+        }
+      })
+      .catch(function(){
+        hideSug();
+      });
+
+    },180);
+  }
+
+  $("q").addEventListener("input",function(){
+    fetchSug(this.value);
+  });
+
+  $("q").addEventListener("keydown",function(e){
+    if(!sugItems.length)return;
+
+    if(e.key==="ArrowDown"){
+      e.preventDefault();
+      sugIdx=Math.min(sugItems.length-1,sugIdx+1);
+      hlSug();
+    }
+    else if(e.key==="ArrowUp"){
+      e.preventDefault();
+      sugIdx=Math.max(0,sugIdx-1);
+      hlSug();
+    }
+    else if(e.key==="Escape"){
+      hideSug();
+    }
+    else if(e.key==="Enter"){
+      e.preventDefault();
+
+      if(sugIdx>=0 && sugItems[sugIdx]){
+        pickSug(sugIdx);
+      }else{
+        hideSug();
+        runSearch(this.value);
+      }
+    }
+  });
+
+  document.addEventListener("click",function(e){
+    var box=$("mzsug");
+    var search=e.target.closest(".mz-search");
+    if(box && !search){
+      hideSug();
+    }
+  });
+
   function runSearch(q){
     q=(q||"").trim();
 
