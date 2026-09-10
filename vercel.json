@@ -66,6 +66,10 @@
       "destination": "/web5-ecosystem.html"
     },
     {
+      "source": "/chat",
+      "destination": "/chat/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/$1"
     }
