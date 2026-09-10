@@ -984,3 +984,72 @@ a{
     animation:none !important;
   }
 }
+
+
+/* ============================================================
+   PERFORMANCE LAYER
+   ============================================================ */
+
+.hero-player-card{
+  contain:layout paint;
+}
+
+.music-grid{
+  contain:layout style;
+}
+
+.mz-card,
+.music-links a{
+  contain:layout paint style;
+}
+
+@media(max-width:900px){
+  .music-hero,
+  .hero-player-card,
+  .music-player{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  .music-hero{
+    background:
+      linear-gradient(145deg,rgba(255,255,255,.025),rgba(255,255,255,.007));
+  }
+
+  .hero-player-card{
+    box-shadow:0 20px 55px rgba(0,0,0,.24);
+  }
+
+  .music-player{
+    box-shadow:0 16px 50px rgba(0,0,0,.38);
+  }
+}
+
+@media(max-width:650px){
+  .hero-player-card{
+    min-height:360px;
+  }
+
+  .hero-disc{
+    width:175px;
+    height:175px;
+  }
+
+  .music-grid{
+    content-visibility:auto;
+    contain-intrinsic-size:900px;
+  }
+
+  .music-links{
+    content-visibility:auto;
+    contain-intrinsic-size:500px;
+  }
+
+  .mz-card:hover{
+    transform:none;
+  }
+
+  .music-links a:hover{
+    transform:none;
+  }
+}

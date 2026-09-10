@@ -128,10 +128,12 @@
     else if(audio.duration){ audio.currentTime=x*audio.duration; }
     $("fill").style.width=(x*100)+"%"; $("dot").style.left=(x*100)+"%"; }
   $("bar").addEventListener("mousedown",function(e){seeking=true;seekEv(e);});
-  document.addEventListener("mousemove",function(e){if(seeking)seekEv(e);});
+  document.addEventListener("mousemove",function(e){if(seeking)seekEv(e);},{passive:true});
   document.addEventListener("mouseup",function(){seeking=false;});
   $("bar").addEventListener("click",seekEv);
-  document.addEventListener("keydown",function(e){ if(/input|textarea/i.test((e.target.tagName||"")))return;
+  document.addEventListener("keydown",function(e){
+    if(e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)return;
+    if(/input|textarea|select|button/i.test((e.target.tagName||"")))return;
     if(e.code==="Space"){e.preventDefault();toggle();} else if(e.key==="n")next(); else if(e.key==="p")prev(); });
 
   /* ── Search / browse ──────────────────────────────────── */

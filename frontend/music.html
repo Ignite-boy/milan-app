@@ -238,41 +238,6 @@
 
 
 
-<script>
-(() => {
-  const heroPlay = document.getElementById("heroPlay");
-  const heroTrack = document.getElementById("heroTrack");
-  const heroArtist = document.getElementById("heroArtist");
-
-  if (heroPlay) {
-    heroPlay.addEventListener("click", () => {
-      const first = document.querySelector(".mz-card");
-      if (first) first.click();
-    }, {passive:true});
-  }
-
-  const observer = new MutationObserver(() => {
-    const title = document.getElementById("npTitle");
-    const artist = document.getElementById("npArtist");
-
-    if (title && heroTrack && title.textContent.trim()) {
-      heroTrack.textContent = title.textContent.trim();
-    }
-
-    if (artist && heroArtist && artist.textContent.trim()) {
-      heroArtist.textContent = artist.textContent.trim();
-    }
-  });
-
-  observer.observe(document.body, {
-    subtree:true,
-    childList:true,
-    characterData:true
-  });
-})();
-</script>
-
-
 <script src="/milan-core.js?v=20260627" defer></script>
 <script src="/milan-v100-background-audio.js?v=20260710" defer></script>
 
