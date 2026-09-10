@@ -58,6 +58,14 @@
       "destination": "/best-social-media-apps.html"
     },
     {
+      "source": "/decentralized-social-network",
+      "destination": "/decentralized-social-network.html"
+    },
+    {
+      "source": "/web5-ecosystem",
+      "destination": "/web5-ecosystem.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/$1"
     }
