@@ -1363,6 +1363,349 @@ main{
   }
 }
 
+
+/* ============================================================
+   FULL-WIDTH PRODUCT EXPERIENCE
+   ============================================================ */
+
+.dsn-page{
+  width:min(1500px,calc(100% - 28px)) !important;
+}
+
+.dsn-hero{
+  width:100% !important;
+  min-height:720px !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:28px !important;
+  padding:52px 18px 72px !important;
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.08);
+  border-radius:34px;
+  background:
+    radial-gradient(620px 420px at 78% 44%,rgba(217,70,239,.09),transparent 68%),
+    radial-gradient(620px 420px at 24% 52%,rgba(79,124,255,.08),transparent 68%),
+    linear-gradient(145deg,rgba(255,255,255,.025),rgba(255,255,255,.008));
+}
+
+.dsn-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.28;
+  background-image:
+    linear-gradient(rgba(148,163,184,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(148,163,184,.045) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(90deg,black,transparent 88%);
+}
+
+.hero-copy{
+  position:relative;
+  z-index:5;
+  max-width:760px;
+  align-self:center;
+  padding:10px 20px 10px 10px;
+}
+
+.hero-copy h1{
+  font-size:clamp(4rem,7vw,7.2rem) !important;
+}
+
+.hero-sub{
+  max-width:760px !important;
+  font-size:clamp(1.25rem,2vw,1.65rem) !important;
+}
+
+.hero-body{
+  max-width:720px !important;
+  font-size:16px !important;
+}
+
+.architecture{
+  width:100% !important;
+  min-height:620px !important;
+  align-self:stretch;
+  position:relative;
+  isolation:isolate;
+}
+
+.architecture::before{
+  content:"";
+  position:absolute;
+  inset:8% 4% 8% 4%;
+  border-radius:38px;
+  border:1px solid rgba(148,163,184,.09);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(79,124,255,.08),transparent 44%),
+    linear-gradient(145deg,rgba(255,255,255,.028),rgba(255,255,255,.008));
+  box-shadow:inset 0 1px rgba(255,255,255,.05);
+}
+
+.ring-a{
+  width:520px !important;
+  height:520px !important;
+}
+
+.ring-b{
+  width:350px !important;
+  height:350px !important;
+}
+
+.arch-center{
+  width:220px !important;
+  height:220px !important;
+  border-radius:40px !important;
+  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.035)) !important;
+  box-shadow:
+    0 35px 110px rgba(79,124,255,.20),
+    inset 0 1px rgba(255,255,255,.08) !important;
+}
+
+.arch-logo{
+  width:68px !important;
+  height:68px !important;
+  border-radius:20px !important;
+}
+
+.arch-center strong{
+  font-size:28px !important;
+}
+
+.arch-node{
+  width:128px !important;
+  height:128px !important;
+  border-radius:30px !important;
+  background:linear-gradient(145deg,rgba(15,27,54,.96),rgba(8,16,35,.88)) !important;
+}
+
+.node-did{
+  top:6% !important;
+  left:5% !important;
+}
+
+.node-dwn{
+  right:3% !important;
+  top:39% !important;
+}
+
+.node-perm{
+  bottom:4% !important;
+  left:31% !important;
+}
+
+.node-user{
+  left:4% !important;
+  bottom:18% !important;
+}
+
+.arch-line{
+  z-index:2 !important;
+}
+
+.line-a{
+  width:185px !important;
+  left:27% !important;
+  top:27% !important;
+}
+
+.line-b{
+  width:195px !important;
+  left:56% !important;
+  top:48% !important;
+}
+
+.line-c{
+  width:205px !important;
+  left:40% !important;
+  top:69% !important;
+}
+
+/* Full-width section shells */
+.intro-grid,
+.system-grid,
+.flow-track,
+.compare-table,
+.benefit-grid,
+.faq-grid,
+.final-cta{
+  width:100% !important;
+}
+
+.intro-card{
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.stat-card{
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.system-card{
+  min-height:290px !important;
+}
+
+.benefit-grid article{
+  min-height:250px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.usecases-section{
+  width:100% !important;
+  min-height:500px !important;
+  padding:42px !important;
+  border:1px solid var(--line);
+  border-radius:28px;
+  background:
+    radial-gradient(500px 300px at 85% 40%,rgba(217,70,239,.09),transparent 70%),
+    rgba(255,255,255,.025);
+}
+
+.usecases-visual{
+  min-height:340px;
+  align-content:center;
+}
+
+.signal-card{
+  min-height:82px;
+}
+
+.compare-section .section-head,
+.system-section .section-head,
+.flow-section .section-head,
+.benefit-section .section-head,
+.faq-section .section-head{
+  max-width:920px !important;
+}
+
+.final-cta{
+  min-height:220px;
+  padding:42px !important;
+}
+
+/* Give the page a true application/dashboard rhythm */
+.system-section,
+.flow-section,
+.compare-section,
+.benefit-section,
+.usecases-section,
+.faq-section{
+  margin-top:24px;
+}
+
+.system-section,
+.flow-section,
+.compare-section,
+.benefit-section,
+.faq-section{
+  padding-top:74px !important;
+}
+
+@media(max-width:1100px){
+  .dsn-hero{
+    grid-template-columns:1fr !important;
+    min-height:auto !important;
+  }
+
+  .hero-copy{
+    max-width:900px;
+    padding-right:0;
+  }
+
+  .architecture{
+    min-height:560px !important;
+  }
+
+  .system-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  .intro-grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+
+  .intro-card{
+    grid-column:1/-1;
+  }
+}
+
+@media(max-width:760px){
+  .dsn-page{
+    width:min(100% - 16px,1500px) !important;
+  }
+
+  .dsn-hero{
+    padding:34px 12px 48px !important;
+    border-radius:24px;
+  }
+
+  .hero-copy{
+    padding:0;
+  }
+
+  .architecture{
+    min-height:390px !important;
+    transform:none !important;
+  }
+
+  .ring-a{
+    width:340px !important;
+    height:340px !important;
+  }
+
+  .ring-b{
+    width:235px !important;
+    height:235px !important;
+  }
+
+  .arch-center{
+    width:150px !important;
+    height:150px !important;
+  }
+
+  .arch-node{
+    width:88px !important;
+    height:88px !important;
+    border-radius:22px !important;
+  }
+
+  .arch-logo{
+    width:42px !important;
+    height:42px !important;
+  }
+
+  .arch-center strong{
+    font-size:20px !important;
+  }
+
+  .system-grid,
+  .intro-grid,
+  .benefit-grid,
+  .faq-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .intro-card{
+    grid-column:auto;
+  }
+
+  .usecases-section{
+    padding:26px 18px !important;
+  }
+
+  .final-cta{
+    padding:28px 20px !important;
+  }
+}
+
 </style>
 
 <script>
