@@ -41,10 +41,32 @@
     },500); }
 
   /* ── Audius ───────────────────────────────────────────── */
-  function audiusPick(){ if(audiusHost)return Promise.resolve(audiusHost);
-    return fetch("https://api.audius.co").then(function(r){return r.json();}).then(function(j){
-      var l=(j&&j.data&&j.data.length)?j.data:AUDIUS_HOSTS; audiusHost=l[Math.floor(Math.random()*l.length)]; return audiusHost;
-    }).catch(function(){audiusHost=AUDIUS_HOSTS[0];return audiusHost;}); }
+  function audiusPick(){
+    if(audiusHost)return Promise.resolve(audiusHost);
+
+    // Prefer the known fast discovery provider. If it fails,
+    // move through the configured Audius providers.
+    var hosts=AUDIUS_HOSTS.slice();
+
+    function tryHost(i){
+      if(i>=hosts.length){
+        audiusHost=AUDIUS_HOSTS[0];
+        return Promise.resolve(audiusHost);
+      }
+
+      return fetch(hosts[i]+"/v1/tracks/trending?app_name="+APP,{cache:"no-store"})
+        .then(function(r){
+          if(!r.ok)throw 0;
+          audiusHost=hosts[i];
+          return audiusHost;
+        })
+        .catch(function(){
+          return tryHost(i+1);
+        });
+    }
+
+    return tryHost(0);
+  }
   function audiusApi(path){ return audiusPick().then(function(h){var s=path.indexOf("?")>=0?"&":"?";
     return fetch(h+path+s+"app_name="+APP).then(function(r){if(!r.ok)throw 0;return r.json();});}); }
   function audiusArt(t){var a=t&&t.artwork;return(a&&(a["480x480"]||a["150x150"]))||"";}
@@ -68,28 +90,121 @@
   function showEngineUI(){ $("ytwrap").style.display=engine==="youtube"?"block":"none"; $("thumb").style.display=engine==="youtube"?"none":"block"; }
   function stopYt(){ try{ if(yt&&yt.pauseVideo)yt.pauseVideo(); }catch(e){} }
   function play(i){
-    if(i<0||i>=tracks.length)return; idx=i; var t=tracks[i];
-    // Every track now plays through the page's own <audio> element — Audius
-    // tracks stream directly, YouTube tracks stream via /api/music/stream/:id
-    // (server-side audio proxy). A page-owned <audio> is the ONLY thing mobile
-    // browsers keep playing when the app is backgrounded or the screen locks;
-    // the YouTube IFrame gets force-paused there and cannot be resumed by JS.
-    // The IFrame player remains as an automatic fallback (see "error" below).
+    if(i<0 || i>=tracks.length)return;
+
+    idx=i;
+    var t=tracks[i];
+
     engine="audius";
-    $("npTitle").textContent=t.title; $("npArtist").textContent=t.artist;
-    document.title=t.title+" · MILAN Music"; showEngineUI(); stopYt();
-    audio.src = t.stream ? t.stream : ("/api/music/stream/"+t.id);
-    audio.play().catch(function(){});
-    $("npArt").src=t.thumb||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
-    if(t.duration)$("dur").textContent=fmt(t.duration);
-    mark(); setMedia(t);
+
+    $("npTitle").textContent=t.title||"";
+    $("npArtist").textContent=t.artist||"";
+    document.title=(t.title||"MILAN Music")+" · MILAN Music";
+
+    showEngineUI();
+    stopYt();
+
+    if($("npArt")){
+      $("npArt").src=t.thumb||"/assets/milan-logo-circle.png";
+    }
+
+    if(t.duration){
+      $("dur").textContent=fmt(t.duration);
+    }
+
+    mark();
+    setMedia(t);
+
+    var proxy="/api/music/stream/"+encodeURIComponent(t.id);
+    var direct=t.stream||"";
+
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+
+    function trySource(url){
+      return new Promise(function(resolve,reject){
+        if(!url){
+          reject(new Error("missing source"));
+          return;
+        }
+
+        var settled=false;
+
+        function cleanup(){
+          audio.removeEventListener("playing",ok);
+          audio.removeEventListener("error",fail);
+        }
+
+        function ok(){
+          if(settled)return;
+          settled=true;
+          cleanup();
+          resolve();
+        }
+
+        function fail(){
+          if(settled)return;
+          settled=true;
+          cleanup();
+          reject(new Error("audio error"));
+        }
+
+        audio.addEventListener("playing",ok,{once:true});
+        audio.addEventListener("error",fail,{once:true});
+
+        audio.src=url;
+        audio.load();
+
+        var p=audio.play();
+
+        if(p && typeof p.catch==="function"){
+          p.catch(function(){
+            if(settled)return;
+            settled=true;
+            cleanup();
+            reject(new Error("play rejected"));
+          });
+        }
+      });
+    }
+
+    // The server proxy is the stable playback path because direct
+    // Audius stream requests may reject browser/HEAD requests.
+    trySource(proxy)
+      .catch(function(){
+        return trySource(direct);
+      })
+      .catch(function(err){
+        console.warn("[MILAN Music] Playback failed",err);
+
+        var note=$("note");
+        if(note){
+          note.style.display="block";
+          note.innerHTML='🎵 <b>This track could not be played right now.</b> Try another track.';
+        }
+      });
   }
   // Audio proxy failed for a YouTube track -> fall back to the IFrame player.
   audio.addEventListener("error", function(){
     var t=tracks[idx];
-    if(!t||t.stream||engine==="youtube")return;
-    if(audio.currentTime>3)return; // mid-play blip: keep the audio engine
-    engine="youtube"; showEngineUI(); ytLoad(t.id); mark(); setMedia(t);
+    if(!t)return;
+
+    if(engine==="audius" && t.stream){
+      var proxy="/api/music/stream/"+encodeURIComponent(t.id);
+
+      if(audio.src!==new URL(proxy,window.location.origin).href){
+        audio.src=proxy;
+        audio.load();
+        audio.play().catch(function(){
+          var note=$("note");
+          if(note){
+            note.style.display="block";
+            note.textContent="Playback unavailable for this track.";
+          }
+        });
+      }
+    }
   });
   // Lock-screen / background controls. HTML5 audio (Audius) keeps playing when the phone
   // locks; YouTube embeds may pause on lock (mobile browser policy).
@@ -154,8 +269,26 @@
   }
   function audiusSearch(q){ skel(12);
     audiusApi("/v1/tracks/search?query="+encodeURIComponent(q)).then(function(j){
-      render((j.data||[]).slice(0,30).map(function(t){return {id:t.id,title:t.title,artist:(t.user&&t.user.name)||"Unknown",thumb:audiusArt(t),duration:t.duration,stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP};}));
-    }).catch(function(){$("results").innerHTML='<div class="mz-empty">Search failed.</div>';});
+      engine="audius";
+      var items=(j.data||[]).slice(0,30).map(function(t){
+        return {
+          id:t.id,
+          title:t.title,
+          artist:(t.user&&t.user.name)||"Unknown",
+          thumb:audiusArt(t),
+          duration:t.duration,
+          stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP
+        };
+      });
+
+      render(items);
+
+      if(!items.length){
+        $("results").innerHTML='<div class="mz-empty">No songs found. Try another search.</div>';
+      }
+    }).catch(function(){
+      $("results").innerHTML='<div class="mz-empty">Music search is temporarily unavailable.</div>';
+    });
   }
   function audiusTrending(){ skel(12); setTitle("🔥 Trending","via Audius · decentralized");
     withTimeout(audiusApi("/v1/tracks/trending"),4000).then(function(j){
@@ -163,12 +296,19 @@
     }).catch(function(){$("results").innerHTML='<div class="mz-empty">Could not reach music network.</div>';});
   }
   var searchT, ytAvailable=false;
-  function doSearch(q){ clearTimeout(searchT);
-    if(!q.trim()){ audiusTrending(); return; }   // empty -> free Audius browse
+  function doSearch(q){
+    clearTimeout(searchT);
+    q=(q||"").trim();
+
+    if(!q){
+      audiusTrending();
+      return;
+    }
+
     searchT=setTimeout(function(){
-      if(ytAvailable){ setTitle('🔎 "'+q+'"',"via YouTube"); ytSearch(q); }   // explicit search uses YouTube
-      else { setTitle('🔎 "'+q+'"',"via Audius"); audiusSearch(q); }
-    },340);
+      setTitle('🔎 "'+q+'"',"via Audius");
+      audiusSearch(q);
+    },180);
   }
   /* ── Real-YouTube-style autocomplete (free suggestions, no quota) ── */
   var sugT, sugItems=[], sugIdx=-1;
@@ -183,7 +323,7 @@
     var bs=box.querySelectorAll("button"); for(var i=0;i<bs.length;i++){ (function(k){ bs[k].addEventListener("click",function(){ pickSug(k); }); })(i); }
     box.classList.add("show"); }
   function fetchSug(q){ clearTimeout(sugT); if(!q.trim()){ hideSug(); return; }
-    sugT=setTimeout(function(){ fetch("/api/music/suggest?q="+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(j){ if(document.activeElement===$("q")) renderSug(j.suggestions||[]); }).catch(function(){ hideSug(); }); },110); }
+    sugT=setTimeout(function(){ fetch("/api/music/suggest?q="+encodeURIComponent(q),{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(j){ if(document.activeElement===$("q")) renderSug(j.suggestions||[]); }).catch(function(){ hideSug(); }); },110); }
   $("q").addEventListener("input",function(){ fetchSug(this.value); });
   $("q").addEventListener("keydown",function(e){
     if(e.key==="ArrowDown"){ e.preventDefault(); if(sugItems.length){ sugIdx=Math.min(sugItems.length-1,sugIdx+1); hlSug(); } }
@@ -211,14 +351,17 @@
     try{ navigator.mediaSession.setActionHandler("seekto",function(d){ if(d&&d.seekTime!=null){ if(engine==="youtube"){yt&&yt.seekTo(d.seekTime,true);}else audio.currentTime=d.seekTime; } }); }catch(e){}
   }catch(e){} }
 
-  /* ── Init: browse on free Audius; YouTube fires only on an explicit search ── */
-  function audiusGenre(g){ if(g==="Trending"){audiusTrending();return;} setTitle("🎧 "+g,"via Audius");
-    withTimeout(audiusApi("/v1/tracks/trending?genre="+encodeURIComponent(g)),4000).then(function(j){ engine="audius"; render((j.data||[]).slice(0,24).map(function(t){return {id:t.id,title:t.title,artist:(t.user&&t.user.name)||"Unknown",thumb:audiusArt(t),duration:t.duration,stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP};})); }); }
-  fetch("/api/music/status").then(function(r){return r.json();}).then(function(s){
-    ytAvailable = !!(s && s.youtube);
-    if(ytAvailable){ loadYTApi(); var n=$("srcInfo"); if(n)n.textContent="· search any song (YouTube)"; }
-    else { showKeyNote(); }
-    buildChips(AUDIUS_CHIPS, audiusGenre);
-    audiusTrending();
-  }).catch(function(){ buildChips(AUDIUS_CHIPS, audiusGenre); audiusTrending(); });
+  /* ── Init: Audius-first, no status dependency ── */
+  buildChips(AUDIUS_CHIPS,audiusGenre);
+
+  if(typeof requestIdleCallback==="function"){
+    requestIdleCallback(function(){
+      audiusTrending();
+    },{timeout:900});
+  }else{
+    setTimeout(function(){
+      audiusTrending();
+    },40);
+  }
+
 })();
