@@ -297,7 +297,7 @@
           title:decode(it.title),
           artist:decode(it.channel),
           thumb:it.thumb,
-          youtube:true
+          youtube:false
         };
       });
 
@@ -530,19 +530,10 @@
       return;
     }
 
-    setTitle('🔎 "'+q+'"',"searching…");
-    skel(12);
-
-    // Primary: MILAN search API (YouTube-backed when configured).
-    // Fallback: direct Audius search, so search never becomes blank.
-    ytSearch(q)
-      .then(function(){
-        setTitle('🔎 "'+q+'"',"via YouTube");
-      })
-      .catch(function(){
-        setTitle('🔎 "'+q+'"',"via Audius");
-        return audiusSearch(q);
-      });
+    setTitle('🔎 "'+q+'"',"via Audius");
+    audiusSearch(q).catch(function(){
+      $("results").innerHTML='<div class="mz-empty">No songs found. Try another search.</div>';
+    });
   }
 
 })();
