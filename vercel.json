@@ -18,6 +18,10 @@
       "destination": "https://milan-api-4n3n.onrender.com/api/dwn/:path*"
     },
     {
+      "source": "/api/music/:path*",
+      "destination": "/api/music/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index.js"
     },
