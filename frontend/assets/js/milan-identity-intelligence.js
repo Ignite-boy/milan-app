@@ -309,13 +309,26 @@
         $("privacyScore")?.textContent.trim()
       );
 
-      // Authenticated DID + assigned DWN = Connected.
-      // Do not expose transient identity/DWN probe states in the UI.
+      // Only show Connected when the authenticated identity has an actual
+      // assigned DWN record/endpoint. A DID alone is not proof of a live DWN.
+      const hasAssignedDwn = Boolean(
+        assigned &&
+        typeof assigned === "object" &&
+        (
+          String(assigned.endpoint || "").trim() ||
+          String(assigned.spaceId || "").trim() ||
+          String(assigned.id || "").trim()
+        )
+      );
+
       updateDwnChip({
-        state: "Connected",
-        detail:
-          assigned?.endpoint ||
-          (assigned?.spaceId ? `space:${assigned.spaceId}` : "assigned")
+        state: hasAssignedDwn ? "Connected" : "Resolving",
+        detail: hasAssignedDwn
+          ? (
+              assigned?.endpoint ||
+              (assigned?.spaceId ? `space:${assigned.spaceId}` : assigned?.id)
+            )
+          : "Waiting for assigned DWN"
       });
 
       updatePrivacyChip();

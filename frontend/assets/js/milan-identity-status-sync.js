@@ -13,7 +13,7 @@
     if (privacyChip) {
       privacyChip.textContent = /^\d+%$/.test(privacy || "")
         ? privacy
-        : "100%";
+        : "—";
     }
 
     const did = $("myDid")?.textContent.trim();

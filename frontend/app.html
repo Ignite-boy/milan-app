@@ -386,7 +386,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     <div class="quickStats">
       <div class="quickStat"><div class="k">People</div><div class="v" id="uiPeopleCount">0</div></div>
       <div class="quickStat"><div class="k">Visible posts</div><div class="v" id="uiPostCount">0</div></div>
-      <div class="quickStat"><div class="k">Privacy</div><div class="v" id="uiPrivacyScore">100%</div></div>
+      <div class="quickStat"><div class="k">Privacy</div><div class="v" id="uiPrivacyScore">—</div></div>
     </div>
   `;
 
@@ -401,7 +401,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const c=document.getElementById("uiPrivacyScore");
     if(a && p) a.textContent=p.textContent;
     if(b && posts) b.textContent=posts.textContent;
-    if(c && privacy) c.textContent=privacy.textContent;
+    if(c && privacy) c.textContent=privacy.textContent || "—";
   };
 
   sync();
