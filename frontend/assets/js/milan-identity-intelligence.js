@@ -270,7 +270,7 @@
     const state = result?.state || "Resolving";
     value.textContent = state;
 
-    chip.classList.remove("connected", "resolving", "isolated", "unavailable");
+    chip.classList.remove("connected", "resolving", "unavailable");
     chip.classList.add(state.toLowerCase());
 
     chip.title = result?.detail
@@ -285,7 +285,7 @@
     const value = chip.querySelector(".value");
     const score = $("privacyScore")?.textContent.trim();
 
-    if (value) value.textContent = score || "100%";
+    if (value) value.textContent = score || "—";
   }
 
   async function sync() {

@@ -2164,7 +2164,7 @@
 
       if (privacyTarget) {
         privacyTarget.textContent =
-          privacyValue || "100%";
+          privacyValue || "—";
       }
 
       if (footer) {
