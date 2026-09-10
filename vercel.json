@@ -22,6 +22,10 @@
       "destination": "/api/music/suggest"
     },
     {
+      "source": "/api/music/search",
+      "destination": "/api/music/search"
+    },
+    {
       "source": "/api/music/:path*",
       "destination": "/api/music/:path*"
     },

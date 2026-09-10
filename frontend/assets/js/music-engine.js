@@ -95,12 +95,37 @@
     idx=i;
     var t=tracks[i];
 
-    engine="audius";
-
     $("npTitle").textContent=t.title||"";
     $("npArtist").textContent=t.artist||"";
     document.title=(t.title||"MILAN Music")+" · MILAN Music";
 
+    mark();
+    setMedia(t);
+
+    // YouTube search results play through the YouTube IFrame.
+    if(t.youtube){
+      engine="youtube";
+      showEngineUI();
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+
+      if($("npArt")){
+        $("npArt").src=t.thumb||"/assets/milan-logo-circle.png";
+      }
+
+      loadYTApi();
+      ytPending=t.id;
+
+      if(ytReady){
+        ytLoad(t.id);
+      }
+
+      return;
+    }
+
+    // Audius tracks continue through the HTML5 audio player.
+    engine="audius";
     showEngineUI();
     stopYt();
 
@@ -112,10 +137,6 @@
       $("dur").textContent=fmt(t.duration);
     }
 
-    mark();
-    setMedia(t);
-
-    var proxy="/api/music/stream/"+encodeURIComponent(t.id);
     var direct=t.stream||"";
 
     audio.pause();
@@ -169,21 +190,13 @@
       });
     }
 
-    // The server proxy is the stable playback path because direct
-    // Audius stream requests may reject browser/HEAD requests.
-    trySource(proxy)
-      .catch(function(){
-        return trySource(direct);
-      })
-      .catch(function(err){
-        console.warn("[MILAN Music] Playback failed",err);
-
-        var note=$("note");
-        if(note){
-          note.style.display="block";
-          note.innerHTML='🎵 <b>This track could not be played right now.</b> Try another track.';
-        }
-      });
+    trySource(direct).catch(function(){
+      var note=$("note");
+      if(note){
+        note.style.display="block";
+        note.textContent="This track could not be played right now.";
+      }
+    });
   }
   // Audio proxy failed for a YouTube track -> fall back to the IFrame player.
   audio.addEventListener("error", function(){
