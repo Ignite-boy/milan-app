@@ -336,3 +336,61 @@ body:not(.native-apk) .composer:not(.composer-expanded) #postText {
   min-height: 42px !important; height: 42px !important; resize: none !important;
 }
 body:not(.native-apk) .composer.composer-expanded #postText { min-height: 88px !important; resize: vertical !important; }
+
+/* MILAN — shared subtle white-hover interaction */
+.milan-hover,
+.card,
+.right-card,
+.sidebar,
+.heroIntro,
+.composer,
+.quickStat,
+.person,
+.post,
+.milan-feed-card,
+.mcc-card,
+.music-links a,
+.genre-chips button,
+.mz-chip {
+  transition:
+    background-color .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .2s ease !important;
+}
+
+.card:hover,
+.right-card:hover,
+.sidebar:hover,
+.heroIntro:hover,
+.composer:hover,
+.quickStat:hover,
+.person:hover,
+.post:hover,
+.milan-feed-card:hover,
+.mcc-card:hover,
+.music-links a:hover,
+.genre-chips button:hover,
+.mz-chip:hover {
+  border-color: rgba(255,255,255,.12) !important;
+  background-color: rgba(255,255,255,.045) !important;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .card:hover,
+  .right-card:hover,
+  .heroIntro:hover,
+  .composer:hover,
+  .person:hover,
+  .post:hover,
+  .milan-feed-card:hover,
+  .mcc-card:hover,
+  .music-links a:hover,
+  .genre-chips button:hover,
+  .mz-chip:hover {
+    transform: translateY(-1px);
+  }
+}
