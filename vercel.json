@@ -74,5 +74,12 @@
       "destination": "/$1"
     }
   ],
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/app.html",
+      "destination": "/app",
+      "permanent": true
+    }
+  ]
 }
