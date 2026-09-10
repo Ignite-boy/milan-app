@@ -141,7 +141,7 @@
   function ytSearch(q){ skel(12);
     var ck="mz_yt_"+q.toLowerCase().replace(/\s+/g," ").trim();
     try{ var c=JSON.parse(localStorage.getItem(ck)||"null"); if(c&&c.items&&Date.now()-c.at<21600000){ render(c.items); return Promise.resolve(); } }catch(e){}
-    return fetch("/api/music/search?q="+encodeURIComponent(q)).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j;});})
+    return withTimeout(fetch("/api/music/search?q="+encodeURIComponent(q),{credentials:"same-origin",cache:"no-store"}),2500).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j;});})
       .then(function(j){ var items=(j.items||[]).map(function(it){return {id:it.id,title:decode(it.title),artist:decode(it.channel),thumb:it.thumb};}); render(items); try{
           localStorage.setItem(ck,JSON.stringify({at:Date.now(),items:items}));
           localStorage.setItem("milanMusicLastResults",JSON.stringify({at:Date.now(),items:items.slice(0,24)}));
@@ -158,7 +158,7 @@
     }).catch(function(){$("results").innerHTML='<div class="mz-empty">Search failed.</div>';});
   }
   function audiusTrending(){ skel(12); setTitle("🔥 Trending","via Audius · decentralized");
-    audiusApi("/v1/tracks/trending").then(function(j){
+    withTimeout(audiusApi("/v1/tracks/trending"),4000).then(function(j){
       render((j.data||[]).slice(0,24).map(function(t){return {id:t.id,title:t.title,artist:(t.user&&t.user.name)||"Unknown",thumb:audiusArt(t),duration:t.duration,stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP};}));
     }).catch(function(){$("results").innerHTML='<div class="mz-empty">Could not reach music network.</div>';});
   }
@@ -213,7 +213,7 @@
 
   /* ── Init: browse on free Audius; YouTube fires only on an explicit search ── */
   function audiusGenre(g){ if(g==="Trending"){audiusTrending();return;} setTitle("🎧 "+g,"via Audius");
-    audiusApi("/v1/tracks/trending?genre="+encodeURIComponent(g)).then(function(j){ engine="audius"; render((j.data||[]).slice(0,24).map(function(t){return {id:t.id,title:t.title,artist:(t.user&&t.user.name)||"Unknown",thumb:audiusArt(t),duration:t.duration,stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP};})); }); }
+    withTimeout(audiusApi("/v1/tracks/trending?genre="+encodeURIComponent(g)),4000).then(function(j){ engine="audius"; render((j.data||[]).slice(0,24).map(function(t){return {id:t.id,title:t.title,artist:(t.user&&t.user.name)||"Unknown",thumb:audiusArt(t),duration:t.duration,stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP};})); }); }
   fetch("/api/music/status").then(function(r){return r.json();}).then(function(s){
     ytAvailable = !!(s && s.youtube);
     if(ytAvailable){ loadYTApi(); var n=$("srcInfo"); if(n)n.textContent="· search any song (YouTube)"; }
