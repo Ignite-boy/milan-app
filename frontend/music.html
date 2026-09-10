@@ -555,7 +555,7 @@ a{
   box-shadow:
     0 30px 85px rgba(0,0,0,.4),
     inset 0 1px rgba(255,255,255,.08);
-  animation:musicSpin 24s linear infinite;
+  animation:none;
 }
 
 .disc-shine{
@@ -624,7 +624,7 @@ a{
   height:20px;
   border-radius:999px;
   background:linear-gradient(180deg,var(--music-gold2),var(--music-pink));
-  animation:musicBars 1.15s ease-in-out infinite alternate;
+  animation:none;
 }
 
 .hero-bars i:nth-child(2){height:31px;animation-delay:.08s}
@@ -1233,7 +1233,7 @@ a{
     heroPlay.addEventListener("click", () => {
       const first = document.querySelector(".mz-card");
       if (first) first.click();
-    });
+    }, {passive:true});
   }
 
   const observer = new MutationObserver(() => {
@@ -1483,4 +1483,4 @@ a{
 <script src="/milan-core.js?v=20260627" defer></script>
 <script src="/milan-v100-background-audio.js?v=20260710" defer></script>
 
-<script src="/milan-v100-background-audio.js?v=20260710" defer></script>
+
