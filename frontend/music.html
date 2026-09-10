@@ -1280,8 +1280,19 @@ a{
           else if(e.data===YT.PlayerState.ENDED){ if(repeat){yt.seekTo(0);yt.playVideo();} else next(); }
         }}});
   };
-  function loadYTApi(){ if(window.YT&&window.YT.Player){window.onYouTubeIframeAPIReady();return;}
-    var s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";document.head.appendChild(s); }
+  function loadYTApi(){
+    if(window.YT&&window.YT.Player){
+      window.onYouTubeIframeAPIReady();
+      return;
+    }
+    if(document.getElementById("milan-youtube-api")) return;
+
+    var s=document.createElement("script");
+    s.id="milan-youtube-api";
+    s.src="https://www.youtube.com/iframe_api";
+    s.async=true;
+    document.head.appendChild(s);
+  }
   function ytLoad(id){ if(!ytReady){ytPending=id;return;} yt.loadVideoById(id); yt.setVolume(parseInt($("vol").value,10)); }
   function startPoll(){ clearInterval(poll); poll=setInterval(function(){
       if(engine!=="youtube"||!yt||!yt.getDuration)return; var d=yt.getDuration(),c=yt.getCurrentTime();
@@ -1388,7 +1399,10 @@ a{
     var ck="mz_yt_"+q.toLowerCase().replace(/\s+/g," ").trim();
     try{ var c=JSON.parse(localStorage.getItem(ck)||"null"); if(c&&c.items&&Date.now()-c.at<21600000){ render(c.items); return Promise.resolve(); } }catch(e){}
     return fetch("/api/music/search?q="+encodeURIComponent(q)).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j;});})
-      .then(function(j){ var items=(j.items||[]).map(function(it){return {id:it.id,title:decode(it.title),artist:decode(it.channel),thumb:it.thumb};}); render(items); try{ localStorage.setItem(ck,JSON.stringify({at:Date.now(),items:items})); }catch(e){} })
+      .then(function(j){ var items=(j.items||[]).map(function(it){return {id:it.id,title:decode(it.title),artist:decode(it.channel),thumb:it.thumb};}); render(items); try{
+          localStorage.setItem(ck,JSON.stringify({at:Date.now(),items:items}));
+          localStorage.setItem("milanMusicLastResults",JSON.stringify({at:Date.now(),items:items.slice(0,24)}));
+        }catch(e){} })
       .catch(function(j){
         // Quota / rate-limit / any YouTube error -> fall back to Audius so search still works.
         if(j&&j.code==="no_key"){ ytAvailable=false; }
