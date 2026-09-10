@@ -341,15 +341,75 @@ router.get('/stream/:id', async (req, res) => {
 // Gives the real "type and see suggestions" experience without touching the Data API quota.
 router.get('/suggest', async (req, res) => {
   const q = String(req.query.q || '').trim();
-  if (!q) return res.json({ ok: true, suggestions: [] });
+
+  if (!q) {
+    return res.status(200).json({
+      ok: true,
+      suggestions: []
+    });
+  }
+
   try {
-    const r = await fetch('https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&hl=en&q=' + encodeURIComponent(q));
+    const url =
+      'https://suggestqueries.google.com/complete/search' +
+      '?client=firefox&ds=yt&hl=en&q=' +
+      encodeURIComponent(q);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+
+    let r;
+
+    try {
+      r = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36',
+          'Accept': 'application/json,text/plain,*/*'
+        }
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!r.ok) {
+      return res.status(200).json({
+        ok: true,
+        suggestions: []
+      });
+    }
+
     const txt = await r.text();
-    let data = []; try { data = JSON.parse(txt); } catch (_) {}
-    const suggestions = (Array.isArray(data) && Array.isArray(data[1])) ? data[1].slice(0, 10) : [];
-    res.json({ ok: true, suggestions });
-  } catch (e) {
-    res.json({ ok: true, suggestions: [] });
+
+    let data;
+    try {
+      data = JSON.parse(txt);
+    } catch (_) {
+      return res.status(200).json({
+        ok: true,
+        suggestions: []
+      });
+    }
+
+    const suggestions =
+      Array.isArray(data) &&
+      Array.isArray(data[1])
+        ? data[1]
+            .filter(v => typeof v === 'string')
+            .slice(0, 10)
+        : [];
+
+    return res.status(200).json({
+      ok: true,
+      suggestions
+    });
+  } catch (_) {
+    // Autocomplete must never crash the Vercel function.
+    return res.status(200).json({
+      ok: true,
+      suggestions: []
+    });
   }
 });
 
