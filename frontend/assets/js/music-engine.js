@@ -253,42 +253,82 @@
 
   /* ── Search / browse ──────────────────────────────────── */
   function setTitle(t,info){ $("sectionTitle").innerHTML=esc(t)+' <small>'+(info||"")+'</small>'; }
-  function ytSearch(q){ skel(12);
+  function ytSearch(q){
     var ck="mz_yt_"+q.toLowerCase().replace(/\s+/g," ").trim();
-    try{ var c=JSON.parse(localStorage.getItem(ck)||"null"); if(c&&c.items&&Date.now()-c.at<21600000){ render(c.items); return Promise.resolve(); } }catch(e){}
-    return withTimeout(fetch("/api/music/search?q="+encodeURIComponent(q),{credentials:"same-origin",cache:"no-store"}),2500).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j;});})
-      .then(function(j){ var items=(j.items||[]).map(function(it){return {id:it.id,title:decode(it.title),artist:decode(it.channel),thumb:it.thumb};}); render(items); try{
-          localStorage.setItem(ck,JSON.stringify({at:Date.now(),items:items}));
-          localStorage.setItem("milanMusicLastResults",JSON.stringify({at:Date.now(),items:items.slice(0,24)}));
-        }catch(e){} })
-      .catch(function(j){
-        // Quota / rate-limit / any YouTube error -> fall back to Audius so search still works.
-        if(j&&j.code==="no_key"){ ytAvailable=false; }
-        setTitle('🔎 "'+q+'"',"via Audius"); audiusSearch(q);
+
+    try{
+      var c=JSON.parse(localStorage.getItem(ck)||"null");
+      if(c&&c.items&&Date.now()-c.at<21600000){
+        render(c.items);
+        return Promise.resolve();
+      }
+    }catch(e){}
+
+    return withTimeout(
+      fetch("/api/music/search?q="+encodeURIComponent(q),{
+        credentials:"same-origin",
+        cache:"no-store"
+      }),
+      2500
+    )
+    .then(function(r){
+      return r.json().then(function(j){
+        if(!r.ok) throw j;
+        return j;
       });
-  }
-  function audiusSearch(q){ skel(12);
-    audiusApi("/v1/tracks/search?query="+encodeURIComponent(q)).then(function(j){
-      engine="audius";
-      var items=(j.data||[]).slice(0,30).map(function(t){
+    })
+    .then(function(j){
+      var items=(j.items||[]).map(function(it){
         return {
-          id:t.id,
-          title:t.title,
-          artist:(t.user&&t.user.name)||"Unknown",
-          thumb:audiusArt(t),
-          duration:t.duration,
-          stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP
+          id:it.id,
+          title:decode(it.title),
+          artist:decode(it.channel),
+          thumb:it.thumb,
+          youtube:true
         };
       });
 
+      if(!items.length){
+        throw new Error("No YouTube results");
+      }
+
       render(items);
 
-      if(!items.length){
-        $("results").innerHTML='<div class="mz-empty">No songs found. Try another search.</div>';
-      }
-    }).catch(function(){
-      $("results").innerHTML='<div class="mz-empty">Music search is temporarily unavailable.</div>';
+      try{
+        localStorage.setItem(
+          ck,
+          JSON.stringify({
+            at:Date.now(),
+            items:items
+          })
+        );
+      }catch(e){}
     });
+  }
+  function audiusSearch(q){ skel(12);
+    return audiusApi("/v1/tracks/search?query="+encodeURIComponent(q))
+      .then(function(j){
+        engine="audius";
+
+        var items=(j.data||[]).slice(0,30).map(function(t){
+          return {
+            id:t.id,
+            title:t.title,
+            artist:(t.user&&t.user.name)||"Unknown",
+            thumb:audiusArt(t),
+            duration:t.duration,
+            stream:audiusHost+"/v1/tracks/"+t.id+"/stream?app_name="+APP
+          };
+        });
+
+        render(items);
+
+        if(!items.length){
+          $("results").innerHTML='<div class="mz-empty">No songs found. Try another search.</div>';
+        }
+
+        return items;
+      });
   }
   function audiusTrending(){ skel(12); setTitle("🔥 Trending","via Audius · decentralized");
     withTimeout(audiusApi("/v1/tracks/trending"),4000).then(function(j){
@@ -306,62 +346,32 @@
     }
 
     searchT=setTimeout(function(){
-      setTitle('🔎 "'+q+'"',"via Audius");
-      audiusSearch(q);
+      runSearch(q);
     },180);
   }
   /* ── Real-YouTube-style autocomplete (free suggestions, no quota) ── */
   var sugT, sugItems=[], sugIdx=-1;
-  function runSearch(q){ q=(q||"").trim(); if(!q){ audiusTrending(); return; }
-    if(ytAvailable){ setTitle('🔎 "'+q+'"',"via YouTube"); ytSearch(q); } else { setTitle('🔎 "'+q+'"',"via Audius"); audiusSearch(q); } }
-  function hideSug(){ $("mzsug").classList.remove("show"); sugIdx=-1; }
-  function hlSug(){ var bs=$("mzsug").querySelectorAll("button"); for(var i=0;i<bs.length;i++){ bs[i].classList.toggle("active",i===sugIdx); } if(sugIdx>=0)$("q").value=sugItems[sugIdx]; }
-  function pickSug(i){ $("q").value=sugItems[i]; hideSug(); runSearch(sugItems[i]); }
-  function renderSug(list){ sugItems=list||[]; sugIdx=-1; var box=$("mzsug");
-    if(!sugItems.length){ hideSug(); return; }
-    box.innerHTML=sugItems.map(function(s){ return '<button type="button"><span class="si">🔍</span>'+esc(s)+'</button>'; }).join("");
-    var bs=box.querySelectorAll("button"); for(var i=0;i<bs.length;i++){ (function(k){ bs[k].addEventListener("click",function(){ pickSug(k); }); })(i); }
-    box.classList.add("show"); }
-  function fetchSug(q){ clearTimeout(sugT); if(!q.trim()){ hideSug(); return; }
-    sugT=setTimeout(function(){ fetch("/api/music/suggest?q="+encodeURIComponent(q),{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(j){ if(document.activeElement===$("q")) renderSug(j.suggestions||[]); }).catch(function(){ hideSug(); }); },110); }
-  $("q").addEventListener("input",function(){ fetchSug(this.value); });
-  $("q").addEventListener("keydown",function(e){
-    if(e.key==="ArrowDown"){ e.preventDefault(); if(sugItems.length){ sugIdx=Math.min(sugItems.length-1,sugIdx+1); hlSug(); } }
-    else if(e.key==="ArrowUp"){ e.preventDefault(); sugIdx=Math.max(-1,sugIdx-1); hlSug(); }
-    else if(e.key==="Enter"){ e.preventDefault(); hideSug(); runSearch(this.value); }
-    else if(e.key==="Escape"){ hideSug(); } });
-  document.addEventListener("click",function(e){ if(!e.target.closest(".mz-search")) hideSug(); });
+  function runSearch(q){
+    q=(q||"").trim();
 
-  function showKeyNote(){ var n=$("note"); n.style.display="block";
-    n.innerHTML='🎵 <b>Bollywood & Hollywood songs:</b> abhi player <b>Audius</b> (free, decentralized) chala raha hai. Saare commercial gaane (Bollywood/Hollywood) ke liye ek free <b>YouTube API key</b> daalo — <code>backend/.env</code> me <code>YOUTUBE_API_KEY</code>. Fir yahi player un sabhi gaano ko search + play karega.'; }
-
-  var YT_CHIPS=["Bollywood Hits","Hollywood Hits","Punjabi","Arijit Singh","90s Bollywood","Top English Songs","Lo-Fi beats","Bhakti Songs","Tamil Hits","Party Mix"];
-  var AUDIUS_CHIPS=["Trending","Electronic","Hip-Hop/Rap","Lo-Fi","R&B/Soul","Pop","Rock","Ambient"];
-  function buildChips(list,onClick){ $("chips").innerHTML=list.map(function(g,i){return '<button class="mz-chip'+(i===0?" on":"")+'" data-g="'+esc(g)+'">'+esc(g)+'</button>';}).join("");
-    Array.prototype.forEach.call(document.querySelectorAll(".mz-chip"),function(ch){ch.addEventListener("click",function(){
-      Array.prototype.forEach.call(document.querySelectorAll(".mz-chip"),function(x){x.classList.remove("on");}); ch.classList.add("on");
-      $("q").value=""; onClick(ch.getAttribute("data-g")); });}); }
-
-  if("mediaSession" in navigator){ try{
-    navigator.mediaSession.setActionHandler("play",function(){ if(engine==="youtube"){yt&&yt.playVideo();}else audio.play(); });
-    navigator.mediaSession.setActionHandler("pause",function(){ if(engine==="youtube"){yt&&yt.pauseVideo();}else audio.pause(); });
-    navigator.mediaSession.setActionHandler("nexttrack",next); navigator.mediaSession.setActionHandler("previoustrack",prev);
-    try{ navigator.mediaSession.setActionHandler("seekbackward",function(d){ var s=(d&&d.seekOffset)||10; if(engine==="youtube"){yt&&yt.seekTo(Math.max(0,yt.getCurrentTime()-s),true);}else audio.currentTime=Math.max(0,audio.currentTime-s); }); }catch(e){}
-    try{ navigator.mediaSession.setActionHandler("seekforward",function(d){ var s=(d&&d.seekOffset)||10; if(engine==="youtube"){yt&&yt.seekTo(yt.getCurrentTime()+s,true);}else audio.currentTime=audio.currentTime+s; }); }catch(e){}
-    try{ navigator.mediaSession.setActionHandler("seekto",function(d){ if(d&&d.seekTime!=null){ if(engine==="youtube"){yt&&yt.seekTo(d.seekTime,true);}else audio.currentTime=d.seekTime; } }); }catch(e){}
-  }catch(e){} }
-
-  /* ── Init: Audius-first, no status dependency ── */
-  buildChips(AUDIUS_CHIPS,audiusGenre);
-
-  if(typeof requestIdleCallback==="function"){
-    requestIdleCallback(function(){
+    if(!q){
       audiusTrending();
-    },{timeout:900});
-  }else{
-    setTimeout(function(){
-      audiusTrending();
-    },40);
+      return;
+    }
+
+    setTitle('🔎 "'+q+'"',"searching…");
+    skel(12);
+
+    // Primary: MILAN search API (YouTube-backed when configured).
+    // Fallback: direct Audius search, so search never becomes blank.
+    ytSearch(q)
+      .then(function(){
+        setTitle('🔎 "'+q+'"',"via YouTube");
+      })
+      .catch(function(){
+        setTitle('🔎 "'+q+'"',"via Audius");
+        return audiusSearch(q);
+      });
   }
 
 })();
