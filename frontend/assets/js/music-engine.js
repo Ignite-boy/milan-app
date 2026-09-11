@@ -537,3 +537,72 @@
   }
 
 })();
+
+/* ── MILAN Music live visualizer ─────────────────────────── */
+(function(){
+  var barsBox = document.querySelector(".hero-bars");
+  if(!barsBox) return;
+
+  var bars = Array.prototype.slice.call(
+    barsBox.querySelectorAll("i")
+  );
+
+  var audio = document.getElementById("audio");
+  if(!bars.length) return;
+
+  function paintIdle(){
+    barsBox.classList.remove("visualizer-active");
+    barsBox.classList.add("visualizer-idle");
+
+    bars.forEach(function(bar,i){
+      var h = 6 + ((i * 3) % 5);
+      bar.style.height = h + "px";
+      bar.style.transform = "scaleY(.7)";
+    });
+  }
+
+  function paintLive(time){
+    var active = audio && !audio.paused && !audio.ended;
+
+    if(!active){
+      paintIdle();
+      requestAnimationFrame(paintLive);
+      return;
+    }
+
+    barsBox.classList.remove("visualizer-idle");
+    barsBox.classList.add("visualizer-active");
+
+    bars.forEach(function(bar,i){
+      var wave1 = Math.abs(Math.sin(time * 0.006 + i * 0.72));
+      var wave2 = Math.abs(Math.sin(time * 0.011 - i * 0.38));
+      var wave3 = Math.abs(Math.cos(time * 0.0035 + i * 1.17));
+
+      var energy =
+        (wave1 * 0.45) +
+        (wave2 * 0.35) +
+        (wave3 * 0.20);
+
+      var height = 8 + Math.round(energy * 34);
+
+      bar.style.height = height + "px";
+      bar.style.transform =
+        "scaleY(" + (0.72 + energy * 0.55).toFixed(2) + ")";
+    });
+
+    requestAnimationFrame(paintLive);
+  }
+
+  if(audio){
+    audio.addEventListener("play", function(){
+      barsBox.classList.remove("visualizer-idle");
+      barsBox.classList.add("visualizer-active");
+    });
+
+    audio.addEventListener("pause", paintIdle);
+    audio.addEventListener("ended", paintIdle);
+  }
+
+  paintIdle();
+  requestAnimationFrame(paintLive);
+})();

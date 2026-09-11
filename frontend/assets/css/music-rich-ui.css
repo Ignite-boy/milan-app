@@ -1053,3 +1053,38 @@ a{
     transform:none;
   }
 }
+
+/* MILAN MUSIC — live equalizer visualizer */
+.hero-bars{
+  align-items:flex-end !important;
+  height:48px !important;
+  gap:5px !important;
+}
+
+.hero-bars i{
+  display:block !important;
+  width:4px !important;
+  height:10px !important;
+  min-height:6px !important;
+  border-radius:999px !important;
+  transform-origin:center bottom !important;
+  transition:height .08s linear,transform .08s linear,opacity .2s ease !important;
+  will-change:height,transform !important;
+  opacity:.9 !important;
+}
+
+.hero-bars.visualizer-idle i{
+  height:7px !important;
+  opacity:.45 !important;
+  transform:scaleY(.65) !important;
+}
+
+.hero-bars.visualizer-active i{
+  opacity:1 !important;
+}
+
+.hero-bars.visualizer-active i:nth-child(1),
+.hero-bars.visualizer-active i:nth-child(7),
+.hero-bars.visualizer-active i:nth-child(13){
+  filter:brightness(1.15);
+}
