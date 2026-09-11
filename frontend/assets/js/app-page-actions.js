@@ -257,9 +257,7 @@
 
     const enforce = () => {
       const saved = getSavedAvatar();
-      if (!saved || saved === lastAvatar) {
-        return;
-      }
+      if (!saved) return;
 
       lastAvatar = saved;
 
@@ -273,9 +271,51 @@
       ["myAvatar", "composerAvatar"].forEach(id => {
         setAvatar(id, saved);
       });
+
+      const preview = $("editProfilePhotoPreview");
+      if (preview) {
+        preview.src = saved;
+        preview.style.display = "block";
+      }
     };
 
     enforce();
+
+    const observer = new MutationObserver(() => {
+      if (window.__milanAvatarGuardWriting) return;
+
+      const saved = getSavedAvatar();
+      if (!saved) return;
+
+      const needsRepair = ["myAvatar", "composerAvatar"].some(id => {
+        const el = $(id);
+        if (!el) return false;
+        const img = el.querySelector("img");
+        return !img || String(img.getAttribute("src") || "") !== saved;
+      });
+
+      if (needsRepair) {
+        window.__milanAvatarGuardWriting = true;
+        try {
+          enforce();
+        } finally {
+          queueMicrotask(() => {
+            window.__milanAvatarGuardWriting = false;
+          });
+        }
+      }
+    });
+
+    if (document.body) {
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["src", "style"]
+      });
+    }
+
+    window.__milanAvatarGuardObserver = observer;
     window.__milanAvatarGuardEnforce = enforce;
   }
 
