@@ -399,7 +399,7 @@
     } catch {}
 
     const remoteAvatar = String(profileData.avatar || "").trim();
-    const restoredAvatar = remoteAvatar || localAvatar;
+    const restoredAvatar = remoteAvatar || "";
 
     if (remoteAvatar) {
       localAvatar = remoteAvatar;

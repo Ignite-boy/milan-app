@@ -324,21 +324,32 @@ router.put('/', auth, async (req, res) => {
     users[found.email] = found.user;
 
     if (hasNewAvatar) {
-      // First persist the normal user snapshot, then persist the DP again in
-      // its own durable remote DWN snapshot so a restarted node can restore it.
+      // Persist the profile locally, then persist the avatar in its own
+      // durable remote-DWN snapshot. Both must succeed before reporting
+      // the profile update as successful.
       const syncResult = await writeJsonAndSync(global.usersFile, users);
       if (!syncResult || syncResult.ok === false) {
         throw new Error(
-          syncResult?.error || 'Profile remote DWN DP persistence failed.'
+          syncResult?.error || 'Profile remote DWN persistence failed.'
         );
       }
 
-      await writeDurableProfileAvatar(
+      const durableResult = await writeDurableProfileAvatar(
         found.email,
         found.user.profile.avatar,
         recordId,
         found.user.did
       );
+
+      if (!durableResult || durableResult.ok === false) {
+        throw new Error(
+          durableResult?.error ||
+          durableResult?.skipped ||
+          'Profile avatar durable persistence failed.'
+        );
+      }
+
+      found.user.profile.avatarSync = 'durable-synced';
     } else {
       writeJson(global.usersFile, users);
     }
