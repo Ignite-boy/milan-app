@@ -180,8 +180,20 @@ router.get('/me', auth, asyncRoute(async (req, res) => {
   if (error) return res.status(500).json({ error: 'Account database unavailable', details: error.message, code: error.code });
   if (!dbUser) return res.status(404).json({ error: 'User not found' });
   let persistedAvatar = '';
-  try { const users = readJson(global.usersFile, {}); persistedAvatar = String(users?.[dbUser.email]?.profile?.avatar || '').trim(); } catch (e) { console.warn('[auth/me] persisted profile avatar read failed:', e.message); }
-  let avatar = persistedAvatar; const recordId = `profile-picture:${dbUser.did}`;
+  try {
+    const users = readJson(global.usersFile, {});
+    persistedAvatar = String(
+      users?.[dbUser.email]?.profile?.avatar || ''
+    ).trim();
+  } catch (e) {
+    console.warn('[auth/me] persisted profile avatar read failed:', e.message);
+  }
+
+  // /api/profile is the authoritative profile persistence layer.
+  // auth/me must never manufacture an empty avatar that can overwrite
+  // a previously restored/cached profile picture.
+  let avatar = persistedAvatar;
+  const recordId = `profile-picture:${dbUser.did}`;
   if (!avatar) {
     try {
       const base = process.env.MINI_DWN_ENDPOINT || process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com/api/dwn';
