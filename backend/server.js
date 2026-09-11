@@ -8,6 +8,7 @@ const { saveUsersHybrid } = require('./services/userStoreHybrid');
 const { ensureFile, hydrateFilesFromRealDwn, repairUsersFile } = require('./utils/store');
 const dwnStore = require('./services/dwnService');
 const { dwnRoot, databaseRoot, persistenceInfo } = require('./services/cloudDwnRegistry');
+require('./services/avatar-hydration-guard');
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || process.env.APP_PUBLIC_URL || process.env.SEO_CANONICAL_URL || 'https://milanlife.in';
 
 const app = express();
