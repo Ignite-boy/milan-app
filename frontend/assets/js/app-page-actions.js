@@ -203,12 +203,8 @@
         throw new Error("Profile picture was not returned by server.");
       }
 
-      // Persist the saved DP locally for fast restore.
-      try {
-        localStorage.setItem("milanAvatar", savedAvatar);
-      } catch {}
-
-      // Show the final saved DP.
+      // MILAN ONE: server/DWN response is the only avatar authority.
+      // Show the confirmed saved DP immediately.
       ["myAvatar", "composerAvatar"].forEach(id => {
         setAvatar(id, savedAvatar);
       });
@@ -237,106 +233,8 @@
   }
 
 
-  // Keep the persisted profile photo authoritative if another script
-  // explicitly calls the exported guard after a profile sync.
-  // app.html contains the canonical DOM mutation guard, so this module
-  // intentionally does not install a second observer or polling timer.
-  function installAvatarGuard() {
-    if (window.__milanAvatarGuardInstalled) return;
-    window.__milanAvatarGuardInstalled = true;
-
-    let lastAvatar = "";
-
-    const getSavedAvatar = () => {
-      try {
-        return String(localStorage.getItem("milanAvatar") || "").trim();
-      } catch {
-        return "";
-      }
-    };
-
-    const enforce = () => {
-      const saved = getSavedAvatar();
-      if (!saved) return;
-
-      lastAvatar = saved;
-
-      if (window.me) {
-        window.me.profile = {
-          ...(window.me.profile || {}),
-          avatar: saved
-        };
-      }
-
-      ["myAvatar", "composerAvatar"].forEach(id => {
-        setAvatar(id, saved);
-      });
-
-      const preview = $("editProfilePhotoPreview");
-      if (preview) {
-        preview.src = saved;
-        preview.style.display = "block";
-      }
-    };
-
-    enforce();
-
-    const observer = new MutationObserver(() => {
-      if (window.__milanAvatarGuardWriting) return;
-
-      const saved = getSavedAvatar();
-      if (!saved) return;
-
-      const needsRepair = ["myAvatar", "composerAvatar"].some(id => {
-        const el = $(id);
-        if (!el) return false;
-        const img = el.querySelector("img");
-        return !img || String(img.getAttribute("src") || "") !== saved;
-      });
-
-      if (needsRepair) {
-        window.__milanAvatarGuardWriting = true;
-        try {
-          enforce();
-        } finally {
-          queueMicrotask(() => {
-            window.__milanAvatarGuardWriting = false;
-          });
-        }
-      }
-    });
-
-    if (document.body) {
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["src", "style"]
-      });
-    }
-
-    window.__milanAvatarGuardObserver = observer;
-    window.__milanAvatarGuardEnforce = enforce;
-  }
-
-  function restoreAvatar() {
-    let saved = "";
-
-    try {
-      saved = localStorage.getItem("milanAvatar") || "";
-    } catch {}
-
-    if (!saved) return;
-
-    ["myAvatar", "composerAvatar"].forEach(id =>
-      setAvatar(id, saved)
-    );
-
-    if (window.me?.profile) {
-      window.me.profile.avatar = saved;
-    }
-  }
-
+  // MILAN ONE: avatar restoration is handled only by syncLiveProfileIdentity().
+ 
   async function syncLiveProfileIdentity() {
     const token = getToken();
     if (!token) return;
@@ -391,49 +289,26 @@
       profile ||
       {};
 
-    // DWN/server is authoritative. localStorage is only a fast
-    // fallback while the authoritative profile is unavailable.
-    let localAvatar = "";
-    try {
-      localAvatar = localStorage.getItem("milanAvatar") || "";
-    } catch {}
-
+    // MILAN ONE: /api/profile -> persistent DWN is the only avatar source.
     const remoteAvatar = String(profileData.avatar || "").trim();
-    const restoredAvatar = remoteAvatar || "";
 
     if (remoteAvatar) {
-      localAvatar = remoteAvatar;
-
-      try {
-        localStorage.setItem("milanAvatar", remoteAvatar);
-      } catch {}
-
       profileData.avatar = remoteAvatar;
-    } else if (localAvatar) {
-      profileData.avatar = localAvatar;
-    }
-
-    if (restoredAvatar) {
-      profileData.avatar = restoredAvatar;
-
-      try {
-        localStorage.setItem("milanAvatar", restoredAvatar);
-      } catch {}
 
       ["myAvatar", "composerAvatar"].forEach(id => {
-        setAvatar(id, restoredAvatar);
+        setAvatar(id, remoteAvatar);
       });
 
       const preview = $("editProfilePhotoPreview");
       if (preview) {
-        preview.src = restoredAvatar;
+        preview.src = remoteAvatar;
         preview.style.display = "block";
       }
 
       if (window.me) {
         window.me.profile = {
           ...(window.me.profile || {}),
-          avatar: restoredAvatar
+          avatar: remoteAvatar
         };
       }
     }
@@ -469,9 +344,7 @@
           ...(window.me.profile || {}),
           ...meProfile,
           ...profileData,
-          ...(localAvatar && !profileData.avatar
-            ? { avatar: localAvatar }
-            : {})
+          ...(profileData.avatar ? { avatar: profileData.avatar } : {})
         }
       };
     }
@@ -488,8 +361,7 @@
         localStorage.removeItem("milan_token");
         localStorage.removeItem("milanToken");
         localStorage.removeItem("milanBootCache");
-        localStorage.removeItem("milanAvatar");
-        sessionStorage.clear();
+          sessionStorage.clear();
       } finally {
         window.location.replace("/");
       }
@@ -497,20 +369,7 @@
   }
 
   function init() {
-    // Restore the last known DP immediately on every page load.
-    try {
-      const cached = localStorage.getItem("milanAvatar") || "";
-      if (cached) {
-        ["myAvatar", "composerAvatar"].forEach(id => setAvatar(id, cached));
-        if (window.me) {
-          window.me.profile = {
-            ...(window.me.profile || {}),
-            avatar: cached
-          };
-        }
-      }
-    } catch {}
-
+    // MILAN ONE: DP is restored only from syncLiveProfileIdentity().
     let photoInput = $("editProfilePhoto");
 
     if (photoInput) {
@@ -528,17 +387,9 @@
       }
     }
 
-    installAvatarGuard();
-    restoreAvatar();
-
     syncLiveProfileIdentity().finally(() => {
-      restoreAvatar();
-      try {
-        window.__milanAvatarGuardEnforce?.();
-      } catch {}
+      installLogout();
     });
-
-    installLogout();
   }
 
   if (document.readyState === "loading") {

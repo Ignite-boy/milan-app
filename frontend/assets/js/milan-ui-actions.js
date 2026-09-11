@@ -691,11 +691,7 @@
                 "";
 
             const savedAvatar =
-                profile.avatar ||
-                localStorage.getItem(
-                    "milanAvatar"
-                ) ||
-                "";
+                profile.avatar || "";
 
             const photo =
                 $("milanEditPhoto");
@@ -934,11 +930,6 @@
                     }
 
                     if (saved.avatar) {
-                        localStorage.setItem(
-                            "milanAvatar",
-                            saved.avatar
-                        );
-
                         [
                             "myAvatar",
                             "composerAvatar"

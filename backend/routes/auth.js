@@ -176,33 +176,35 @@ router.post('/login', authThrottle(15, 60_000), asyncRoute(async (req, res) => {
 }));
 
 router.get('/me', auth, asyncRoute(async (req, res) => {
-  const { data: dbUser, error } = await supabaseDb.from('users').select('id,email,name,did').eq('id', req.userId).maybeSingle();
-  if (error) return res.status(500).json({ error: 'Account database unavailable', details: error.message, code: error.code });
-  if (!dbUser) return res.status(404).json({ error: 'User not found' });
-  let persistedAvatar = '';
-  try {
-    const users = readJson(global.usersFile, {});
-    persistedAvatar = String(
-      users?.[dbUser.email]?.profile?.avatar || ''
-    ).trim();
-  } catch (e) {
-    console.warn('[auth/me] persisted profile avatar read failed:', e.message);
+  const { data: dbUser, error } = await supabaseDb
+    .from('users')
+    .select('id,email,name,did')
+    .eq('id', req.userId)
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({
+      error: 'Account database unavailable',
+      details: error.message,
+      code: error.code
+    });
   }
 
-  // /api/profile is the authoritative profile persistence layer.
-  // auth/me must never manufacture an empty avatar that can overwrite
-  // a previously restored/cached profile picture.
-  let avatar = persistedAvatar;
-  const recordId = `profile-picture:${dbUser.did}`;
-  if (!avatar) {
-    try {
-      const base = process.env.MINI_DWN_ENDPOINT || process.env.MILAN_LIVE_DWN_BASE || 'https://milan-app-pzhf.onrender.com/api/dwn';
-      const response = await fetch(`${base}/json-rpc`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer milan-v49-embedded-production-dwn-key' }, body: JSON.stringify({ jsonrpc: '2.0', id: Date.now().toString(), method: 'dwn.processMessage', params: { target: dbUser.did, message: { descriptor: { interface: 'Records', method: 'Read', recordId }, authorization: { payload: 'e30', signatures: [] } } } }) });
-      const body = await response.json(); const reply = body?.result?.reply;
-      if (reply?.status?.code === 200 && reply.encodedData) { const encoded = String(reply.encodedData).replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(String(reply.encodedData).length / 4) * 4, '='); const mime = reply.record?.dataFormat || 'image/jpeg'; avatar = `data:${mime};base64,${encoded}`; }
-    } catch (e) { console.warn('[auth/me] profile picture restore failed:', e.message); }
-  }
-  return res.json({ id: dbUser.id, email: dbUser.email, name: dbUser.name, did: dbUser.did, profile: { avatar, avatarRecordId: recordId }, settings: {}, emailVerified: true, twoFactorEnabled: false });
+  if (!dbUser) return res.status(404).json({ error: 'User not found' });
+
+  // MILAN ONE:
+  // auth/me is identity-only. Avatar persistence has exactly one source:
+  // GET /api/profile -> persistent DWN profile.
+  return res.json({
+    id: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name,
+    did: dbUser.did,
+    profile: {},
+    settings: {},
+    emailVerified: true,
+    twoFactorEnabled: false
+  });
 }));
 
 router.post('/verify-email', asyncRoute(async (req, res) => {
