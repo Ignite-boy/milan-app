@@ -143,17 +143,15 @@
     const token = getToken();
 
     if (!token) {
-      console.warn("[MILAN] Please login again before changing your profile picture.");
+      console.warn("[MILAN] Login required before changing DP.");
       input.value = "";
       return;
     }
 
-    let previewUrl = "";
+    const previewUrl = URL.createObjectURL(file);
 
     try {
-      // Show the selected DP immediately.
-      previewUrl = URL.createObjectURL(file);
-
+      // Immediate local preview.
       ["myAvatar", "composerAvatar"].forEach(id => {
         setAvatar(id, previewUrl);
       });
@@ -164,19 +162,18 @@
         preview.style.display = "block";
       }
 
-      // Compress before upload to keep the request fast.
-      const optimized = await compressProfileImage(file);
+      // IMPORTANT:
+      // Send the ORIGINAL uploaded file.
+      // No canvas conversion. No JPEG re-encoding.
+      const form = new FormData();
+      form.append("avatar", file, file.name);
 
-      // Persist locally only after the DWN/server confirms the save.
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
           Authorization: "Bearer " + token
         },
-        body: JSON.stringify({
-          avatar: optimized.dataUrl
-        })
+        body: form
       });
 
       const saved = await response.json().catch(() => ({}));
@@ -189,45 +186,20 @@
         );
       }
 
-      const savedProfile =
-        saved?.profile ||
-        saved?.data?.profile ||
-        saved;
-
-      const savedAvatar =
-        savedProfile?.avatar ||
-        saved?.avatar ||
-        optimized.dataUrl;
-
-      if (!savedAvatar) {
-        throw new Error("Profile picture was not returned by server.");
+      if (!saved.avatarRecordId) {
+        throw new Error("Real DWN profile-picture record was not confirmed.");
       }
 
-      // MILAN ONE: server/DWN response is the only avatar authority.
-      // Show the confirmed saved DP immediately.
-      ["myAvatar", "composerAvatar"].forEach(id => {
-        setAvatar(id, savedAvatar);
-      });
-
-      if (window.me) {
-        window.me.profile = {
-          ...(window.me.profile || {}),
-          ...(savedProfile || {}),
-          avatar: savedAvatar
-        };
-      }
-
-      if (preview) {
-        preview.src = "";
-        preview.style.display = "none";
-      }
+      console.log(
+        "[MILAN] DP saved to Real DWN:",
+        saved.avatarRecordId,
+        saved.avatarMime,
+        saved.avatarFileName
+      );
     } catch (error) {
       console.error("[MILAN] DP upload failed:", error);
-      console.warn("[MILAN] DP upload failed; temporary preview will not be persisted.");
     } finally {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      URL.revokeObjectURL(previewUrl);
       input.value = "";
     }
   }

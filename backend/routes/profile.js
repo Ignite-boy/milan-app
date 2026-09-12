@@ -1,5 +1,6 @@
 const { realDwnEngine } = require('../services/realDwnEngine');
 const express = require('express');
+const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const { readJson, writeJson, writeJsonAndSync, findUserById, addActivity } = require('../utils/store');
@@ -9,6 +10,13 @@ const MINI_DWN_ENDPOINT = (
 ).replace(/\/$/, '');
 
 const router = express.Router();
+const uploadDp = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 900000 },
+  fileFilter: (req, file, cb) => {
+    cb(null, /^image\\//i.test(file.mimetype));
+  }
+});
 
 const supabaseDb = createClient(
   process.env.SUPABASE_URL,
@@ -202,9 +210,10 @@ async function miniDwnProcess(target, message, encodedData) {
   throw lastError || new Error('Mini-DWN request failed');
 }
 
-async function writeProfilePicture(did, dataUrl, user) {
-  const parsed = dataUrlToDwn(dataUrl);
-  if (!parsed) return null;
+async function writeProfilePicture(did, file, user) {
+  if (!file?.buffer?.length) {
+    throw new Error('Profile picture file is missing.');
+  }
 
   if (!user?.dwn?.spaceId || !did) {
     throw new Error('User DWN space is unavailable.');
@@ -223,15 +232,9 @@ async function writeProfilePicture(did, dataUrl, user) {
       title: 'MILAN Profile Picture',
       schema: 'profile-picture',
       access: 'private',
-      dataFormat: parsed.mime,
-      dateCreated: new Date().toISOString(),
-      dateModified: new Date().toISOString(),
-      data: {
-        type: 'profile-picture',
-        avatar: dataUrl,
-        ownerDid: did,
-        spaceId: user.dwn.spaceId
-      }
+      dataFormat: file.mimetype,
+      binaryData: file.buffer,
+      fileName: file.originalname
     }
   );
 
@@ -240,15 +243,16 @@ async function writeProfilePicture(did, dataUrl, user) {
       result?.error ||
       result?.reason ||
       result?.detail ||
-      'Persistent DWN profile-picture write failed.'
+      'Real DWN profile-picture write failed.'
     );
   }
 
   return {
-    avatar: dataUrl,
     recordId,
     dwnRecordId: result.dwnRecordId || recordId,
     spaceId: user.dwn.spaceId,
+    mime: file.mimetype,
+    fileName: file.originalname,
     persistedInDwn: true
   };
 }
@@ -383,7 +387,7 @@ router.get('/', auth, async (req, res) => {
     avatarSync: avatar ? 'synced' : 'missing'
   });
 });
-router.put('/', auth, async (req, res) => {
+router.put('/', auth, uploadDp.single('avatar'), async (req, res) => {
   const users = readJson(global.usersFile, {});
   const found = await resolveAccount(req, users);
 
@@ -391,146 +395,43 @@ router.put('/', auth, async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const {
-    display_name,
-    username,
-    bio,
-    website,
-    avatar
-  } = req.body || {};
-
   try {
-    let dwnPicture = null;
-    let avatarSyncPending = false;
-
-    if (avatar && String(avatar).startsWith('data:image/')) {
-      // Validate the image synchronously, but NEVER block the API response
-      // on the remote Mini-DWN write.
-      const parsed = dataUrlToDwn(avatar);
-      if (!parsed) {
-        return res.status(400).json({ error: 'Invalid profile picture data.' });
-      }
-
-      dwnPicture = {
-        recordId: profileRecordId(found.user.did),
-        avatar: String(avatar),
-        liveDwn: false
-      };
-      avatarSyncPending = true;
-    } else {
-      // Name/bio/settings saves do not need to wait for a remote DP read.
-      dwnPicture = {
-        recordId:
-          found.user.profile?.avatarRecordId ||
-          profileRecordId(found.user.did),
-        avatar: found.user.profile?.avatar || ''
-      };
-    }
-
-    const cleanName = String(display_name || '').trim().slice(0, 80);
-    const cleanUsername = String(username || '')
-      .trim()
-      .replace(/^@+/, '')
-      .toLowerCase()
-      .slice(0, 30);
-
-    if (
-      cleanUsername &&
-      !/^[a-z0-9._]{3,30}$/.test(cleanUsername)
-    ) {
+    if (!req.file) {
       return res.status(400).json({
-        error: 'Username must be 3–30 characters using letters, numbers, dot or underscore.'
+        error: 'Profile picture file is required.'
       });
     }
 
+    const saved = await writeProfilePicture(
+      found.user.did,
+      req.file,
+      found.user
+    );
+
     found.user.profile = {
       ...(found.user.profile || {}),
-      display_name: cleanName,
-      username: cleanUsername,
-      bio: String(bio || '').trim().slice(0, 500),
-      website: String(website || '').trim().slice(0, 200),
-      avatar: dwnPicture?.avatar || '',
-      avatarRecordId:
-        dwnPicture?.recordId ||
-        profileRecordId(found.user.did),
-      avatarSync:
-        avatarSyncPending
-          ? 'pending'
-          : (found.user.profile?.avatarSync || 'synced'),
+      avatarRecordId: saved.dwnRecordId,
+      avatarMime: saved.mime,
+      avatarFileName: saved.fileName,
+      avatarSync: 'synced',
       updated_at: new Date().toISOString()
     };
 
-    if (found.user.id && cleanName) {
-      const { error: nameError } = await supabaseDb
-        .from('users')
-        .update({ name: cleanName })
-        .eq('id', found.user.id);
-
-      if (nameError) {
-        throw new Error(
-          'Profile name database update failed: ' +
-          nameError.message
-        );
-      }
-    }
-
-    // CRITICAL ORDER:
-    // 1) Persist the actual DP to Mini-DWN first.
-    // 2) Store the confirmed avatar in the user profile.
-    // 3) Persist/sync users.json only after the DP is confirmed.
-    if (avatarSyncPending) {
-      const saved = await writeProfilePicture(
-        found.user.did,
-        String(avatar),
-        found.user
-      );
-
-      if (!saved?.persistedInDwn) {
-        throw new Error('DWN did not confirm the profile picture save.');
-      }
-
-      found.user.profile = {
-        ...(found.user.profile || {}),
-        avatar: saved.avatar,
-        avatarRecordId: saved.dwnRecordId,
-        avatarSync: 'synced',
-        updated_at: new Date().toISOString()
-      };
-    }
-
     users[found.email] = found.user;
-
-
-    // CRITICAL DP RULE:
-    // The avatar is persisted locally immediately.
-    // Remote DWN synchronization is best-effort/background only.
     writeJson(global.usersFile, users);
-
-    void writeDurableProfileAvatar(
-      found.email,
-      found.user.profile?.avatar || '',
-      found.user.profile?.avatarRecordId ||
-        profileRecordId(found.user.did),
-      found.user.did
-    ).catch(error => {
-      console.warn(
-        '[profile] durable DP background sync failed:',
-        error.message
-      );
-    });
 
     addActivity(req.userId, 'profile.updated');
 
     return res.status(200).json({
-      ...found.user.profile,
-      avatar: found.user.profile.avatar,
-      avatarRecordId: found.user.profile.avatarRecordId,
-      avatarSync: found.user.profile.avatarSync
+      avatarRecordId: saved.dwnRecordId,
+      avatarMime: saved.mime,
+      avatarFileName: saved.fileName,
+      avatarSync: 'synced'
     });
   } catch (error) {
-    console.error('[profile] profile save failed:', error.message);
+    console.error('[profile] original-file DP save failed:', error.message);
     return res.status(502).json({
-      error: 'Profile save failed',
+      error: 'Profile picture save failed',
       detail: error.message
     });
   }

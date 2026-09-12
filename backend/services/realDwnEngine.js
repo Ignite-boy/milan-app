@@ -333,7 +333,9 @@ async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
       data: record.data || {}
     };
 
-    const bytes = toBytes(JSON.stringify(payload));
+    const bytes = record.binaryData
+      ? Buffer.from(record.binaryData)
+      : toBytes(JSON.stringify(payload));
 
     const writeOptions = {
       signer: node.signer,
