@@ -308,94 +308,86 @@ function base64UrlToBytes(value) {
 
 async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
   const opened = await openNode({ spaceId, rawSeedHex, knownDidUri });
-  if (!opened.ok) return { ok: false, reason: opened.reason, error: opened.error };
-  const { node } = opened;
+
+  if (!opened.ok) {
+    return {
+      ok: false,
+      reason: opened.reason,
+      error: opened.error
+    };
+  }
 
   try {
     const { sdk } = await loadSdk();
     const { RecordsWrite, DataStream } = sdk;
+    const { node } = opened;
+
     const payload = {
-      milanRecordId: record.id,
-      title: record.title,
-      schema: record.schema,
-      access: record.access || record.accessMode,
-      data: record.data,
-      media: record.data && record.data.media ? record.data.media : undefined,
-      dateCreated: record.dateCreated,
-      dateModified: record.dateModified
+      id: record.id || undefined,
+      title: record.title || 'MILAN Record',
+      schema: record.schema || 'record',
+      access: record.access || record.accessMode || 'private',
+      dataFormat: record.dataFormat || 'application/json',
+      dateCreated: record.dateCreated || new Date().toISOString(),
+      dateModified: record.dateModified || new Date().toISOString(),
+      data: record.data || {}
     };
+
     const bytes = toBytes(JSON.stringify(payload));
 
     const writeOptions = {
       signer: node.signer,
-      dataFormat: 'application/json',
-      schema: `https://milanlife.in/schemas/${safeName(record.schema || 'record')}`,
+      dataFormat: payload.dataFormat,
+      schema: `https://milanlife.in/schemas/${safeName(payload.schema)}`,
       data: bytes,
-      tags: record.id ? { milanRecordId: String(record.id) } : undefined
+      tags: record.id
+        ? { milanRecordId: String(record.id) }
+        : undefined
     };
 
-    if (record.id) writeOptions.recordId = String(record.id);
+    if (record.id) {
+      writeOptions.recordId = String(record.id);
+    }
 
     const rw = await RecordsWrite.create(writeOptions);
-    const encodedData = bytesToBase64Url(bytes);
 
-    try {
-      const remote = await remoteDwnRequest({
-        target: node.tenantDid,
-        message: rw.message,
-        encodedData
-      });
-
-      const status = remote?.status?.code;
-      if (status === 202 || status === 200) {
-        return {
-          ok: true,
-          status,
-          dwnRecordId: rw.message && rw.message.recordId,
-          tenantDid: node.tenantDid,
-          spaceId,
-          remote: true,
-          detail: remote?.status?.detail
-        };
+    // DP/PERSISTENCE AUTHORITY:
+    // Write directly into THIS USER'S persistent DWN datastore.
+    const response = await node.dwn.processMessage(
+      node.tenantDid,
+      rw.message,
+      {
+        dataStream: DataStream.fromBytes(bytes)
       }
+    );
 
+    const status = response?.status?.code;
+
+    if (status !== 202 && status !== 200) {
       return {
         ok: false,
         status,
-        reason: 'remote-write-rejected',
-        tenantDid: node.tenantDid,
+        reason: 'dwn-write-rejected',
+        detail: response?.status?.detail,
         spaceId,
-        detail: remote?.status?.detail
-      };
-    } catch (remoteErr) {
-      console.warn('[real-dwn] remote RecordsWrite failed:', remoteErr.message);
-
-      // DP persistence must live in the user's persistent DWN datastore.
-      // If the remote transport is unavailable, use the already-opened
-      // per-user DWN node so the record is still written to its DATASTORE.
-      console.warn(
-        '[real-dwn] remote RecordsWrite unavailable; writing to persistent user DWN node:',
-        remoteErr.message
-      );
-
-      const res = await node.dwn.processMessage(node.tenantDid, rw.message, {
-        dataStream: DataStream.fromBytes(bytes)
-      });
-
-      const status = res.status && res.status.code;
-      return {
-        ok: status === 202 || status === 200,
-        status,
-        dwnRecordId: rw.message && rw.message.recordId,
-        tenantDid: node.tenantDid,
-        spaceId,
-        remote: false,
-        detail: res.status && res.status.detail,
-        remoteError: remoteErr.message
+        dwnRecordId: rw.message?.recordId || null
       };
     }
+
+    return {
+      ok: true,
+      status,
+      dwnRecordId: rw.message?.recordId || null,
+      tenantDid: node.tenantDid,
+      spaceId,
+      source: 'persistent-user-dwn-datastore'
+    };
   } catch (err) {
-    return { ok: false, reason: 'write-failed', error: err.message };
+    return {
+      ok: false,
+      reason: 'write-failed',
+      error: err.message
+    };
   }
 }
 
