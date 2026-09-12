@@ -414,27 +414,12 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       filter: { recordId: String(recordId) }
     });
 
-    let response;
-
-    try {
-      response = await remoteDwnRequest({
-        target: node.tenantDid,
-        message: read.message
-      });
-    } catch (remoteErr) {
-      console.warn('[real-dwn] remote RecordsRead failed:', remoteErr.message);
-
-      if (realDwnNodeClient.remoteOnly()) {
-        return {
-          ok: false,
-          reason: 'remote-read-failed',
-          remote: true,
-          remoteError: remoteErr.message
-        };
-      }
-
-      response = await node.dwn.processMessage(node.tenantDid, read.message);
-    }
+    // AUTHORITATIVE USER DWN READ:
+    // Read directly from this user's persistent DWN DATASTORE.
+    const response = await node.dwn.processMessage(
+      node.tenantDid,
+      read.message
+    );
 
     if (response?.status?.code !== 200) {
       return {
@@ -444,20 +429,35 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       };
     }
 
-    const entry = response.entry || response.record;
-    if (!entry) return { ok: false, status: 404, reason: 'record-not-found' };
+    const entry = response.entry;
+    if (!entry) {
+      return {
+        ok: false,
+        status: 404,
+        reason: 'record-not-found'
+      };
+    }
 
     let bytes = null;
-    if (response.encodedData) {
-      bytes = base64UrlToBytes(response.encodedData);
-    } else if (entry.encodedData) {
-      bytes = base64UrlToBytes(entry.encodedData);
+
+    if (entry.encodedData) {
+      const base64 = String(entry.encodedData)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(
+          Math.ceil(String(entry.encodedData).length / 4) * 4,
+          '='
+        );
+      bytes = Buffer.from(base64, 'base64');
     } else if (entry.data) {
       bytes = Buffer.from(await DataStream.toBytes(entry.data));
     }
 
     if (!bytes || !bytes.length) {
-      return { ok: false, reason: 'record-data-empty' };
+      return {
+        ok: false,
+        reason: 'record-data-empty'
+      };
     }
 
     return {
@@ -465,10 +465,17 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       status: 200,
       recordId: String(recordId),
       descriptor: entry.descriptor || {},
-      data: bytes
+      data: bytes,
+      source: 'user-persistent-dwn-datastore',
+      spaceId,
+      tenantDid: node.tenantDid
     };
   } catch (err) {
-    return { ok: false, reason: 'read-failed', error: err.message };
+    return {
+      ok: false,
+      reason: 'read-failed',
+      error: err.message
+    };
   }
 }
 
