@@ -457,3 +457,40 @@
     initNavigation();
   }
 })();
+
+async function restoreDwnAvatarAfterLogin() {
+  try {
+    const token = localStorage.getItem("milanToken");
+    if (!token) return;
+
+    const response = await fetch("/api/profile", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
+      },
+      cache: "no-store"
+    });
+
+    if (!response.ok) return;
+
+    const profile = await response.json();
+    const avatar = String(profile?.avatar || "").trim();
+
+    if (!avatar.startsWith("data:image/")) return;
+
+    ["myAvatar", "composerAvatar"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.src = avatar;
+      el.style.backgroundImage = `url("${avatar}")`;
+    });
+  } catch (error) {
+    console.warn("[avatar] DWN restore failed:", error.message);
+  }
+}
+
+if (!window.__milanDwnAvatarRestoreInstalled) {
+  window.__milanDwnAvatarRestoreInstalled = true;
+  restoreDwnAvatarAfterLogin();
+}
