@@ -770,6 +770,13 @@ function listenWithFallback(port, attempts = 0) {
   });
 }
 
+// IMPORTANT FOR RENDER:
+// Bind the HTTP port BEFORE any potentially slow DWN hydration/initialization.
+// Render health checks must be able to reach /health immediately after startup.
+if (!process.env.VERCEL) {
+  listenWithFallback(PORT);
+}
+
 (async () => {
   const filesToHydrate = [
     global.usersFile, global.recordsFile, global.protocolsFile, global.activityFile,
@@ -778,15 +785,26 @@ function listenWithFallback(port, attempts = 0) {
     path.join(DATA_DIR, 'APP_RECORD_INDEX.json'),
     global.feedbackFile, global.securityReportsFile
   ];
+  console.log('[STARTUP] hydrate begin');
   const hydrate = await hydrateFilesFromRealDwn(filesToHydrate);
+  console.log('[STARTUP] hydrate done');
   const usersRepair = repairUsersFile(global.usersFile);
   console.log('Production DWN database hydrate:', hydrate);
   console.log('Milan users database repair:', usersRepair);
+  console.log('[STARTUP] initDwn begin');
   const status = await dwnStore.initDwn();
+  console.log('[STARTUP] initDwn done');
   console.log('DWN storage status:', status);
   try {
     const { realDwnEngine } = require('./services/cloudDwnRegistry');
-    const engineStatus = await realDwnEngine.engineStatus();
+    console.log('[STARTUP] engineStatus begin');
+    const engineStatus = await Promise.race([
+      realDwnEngine.engineStatus(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('engineStatus startup timeout')), 5000)
+      )
+    ]);
+    console.log('[STARTUP] engineStatus done');
     console.log('Real per-user DWN engine:', engineStatus);
     // Gracefully close all open user DWN nodes (flush LevelDB) on shutdown.
     const shutdown = async (sig) => {
@@ -798,6 +816,6 @@ function listenWithFallback(port, attempts = 0) {
   } catch (err) {
     console.warn('Real DWN engine init skipped:', err.message);
   }
-  if(!process.env.VERCEL){ listenWithFallback(PORT); } })(); module.exports = app; 
+})(); module.exports = app; 
 
 
