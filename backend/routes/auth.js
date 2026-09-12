@@ -58,8 +58,22 @@ async function loadUsersFromDwn() {
     const normalized = normalizePulledSnapshot(pulled);
     if (normalized.ok && normalized.data && typeof normalized.data === 'object' && !Array.isArray(normalized.data)) {
       global.__milanHydratingFromDwn = true;
-      if (!process.env.VERCEL) writeJson(global.usersFile, cleanUsersDb(normalized.data));
-      return cleanUsersDb(normalized.data);
+      const remoteUsers = cleanUsersDb(normalized.data);
+      const localUsers = cleanUsersDb(readJson(global.usersFile, {}));
+
+      // NEVER let a partial/older remote snapshot erase users that already
+      // exist locally. Remote records win for the same email; local-only
+      // users are preserved until their next authoritative sync.
+      const mergedUsers = {
+        ...localUsers,
+        ...remoteUsers
+      };
+
+      if (!process.env.VERCEL) {
+        writeJson(global.usersFile, mergedUsers);
+      }
+
+      return mergedUsers;
     }
   } catch (err) { console.warn('DWN users hydrate failed:', err.message); }
   finally { global.__milanHydratingFromDwn = false; }
@@ -73,9 +87,25 @@ async function loadUsersFromDwnDetailed() {
     const normalized = normalizePulledSnapshot(pulled);
     if (normalized.ok && normalized.data && typeof normalized.data === 'object' && !Array.isArray(normalized.data)) {
       global.__milanHydratingFromDwn = true;
-      if (!process.env.VERCEL) writeJson(global.usersFile, cleanUsersDb(normalized.data));
-      const cleanedUsers = cleanUsersDb(normalized.data);
-      return { users: cleanedUsers, fromRemote: true, missing: Object.keys(cleanedUsers).length === 0 };
+      const remoteUsers = cleanUsersDb(normalized.data);
+      const localUsers = cleanUsersDb(readJson(global.usersFile, {}));
+
+      // Preserve local-only users when the remote snapshot is incomplete.
+      // Remote data remains authoritative for records present remotely.
+      const mergedUsers = {
+        ...localUsers,
+        ...remoteUsers
+      };
+
+      if (!process.env.VERCEL) {
+        writeJson(global.usersFile, mergedUsers);
+      }
+
+      return {
+        users: mergedUsers,
+        fromRemote: true,
+        missing: Object.keys(mergedUsers).length === 0
+      };
     }
     repairUsersFile(global.usersFile);
     return { users: cleanUsersDb(readJson(global.usersFile, {})), fromRemote: false, missing: true, error: normalized.error };
@@ -121,10 +151,10 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
   const id = uuidv4();
   const displayName = name || email.split('@')[0];
 
-  // Minimal registration critical path:
-  // local DID + password hash + one authoritative Supabase INSERT.
+  // Real DWN identity + password hash + one authoritative Supabase INSERT.
   const passwordHashPromise = bcrypt.hash(password, 10);
-  const { did } = generateDIDAndRawSeed();
+  const identity = await mintRealUserIdentity({ userId: id, email });
+  const { did, spaceId } = identity;
   const passwordHash = await passwordHashPromise;
 
   const { error: insertError } = await supabaseDb
@@ -152,14 +182,65 @@ router.post('/register', authThrottle(10, 60_000), asyncRoute(async (req, res) =
 
   console.log('[auth] account created in Supabase:', email, id);
 
+  // CRITICAL: keep the local user index in sync with the real DWN identity.
+  // Supabase is authoritative for login, while users.json carries the
+  // per-user isolated DWN space metadata required by profile persistence.
+  try {
+    const currentUsers = readJson(global.usersFile, {});
+    currentUsers[email] = {
+      ...(currentUsers[email] || {}),
+      id,
+      email,
+      name: displayName,
+      did,
+      dwn: {
+        ...((currentUsers[email] || {}).dwn || {}),
+        assignedAt: new Date().toISOString(),
+        spaceId,
+        endpoint: `${process.env.REAL_DWN_NODE_ENDPOINT || 'https://mini-dwn.onrender.com'}/api/isolated-dwn/${spaceId}`,
+        dwnEndpoint: `${process.env.REAL_DWN_NODE_ENDPOINT || 'https://mini-dwn.onrender.com'}/api/isolated-dwn/${spaceId}`,
+        mode: 'production-remote-dwn',
+        isolation: 'single-user',
+        realDwnConfigured: true,
+        realCloudConfigured: true,
+        realDwnProtocol: true,
+        remoteOnly: true
+      },
+      dwnEndpoint: `${process.env.REAL_DWN_NODE_ENDPOINT || 'https://mini-dwn.onrender.com'}/api/isolated-dwn/${spaceId}`,
+      settings: {
+        ...((currentUsers[email] || {}).settings || {}),
+        dwnSpaceId: spaceId,
+        dwnEndpoint: `${process.env.REAL_DWN_NODE_ENDPOINT || 'https://mini-dwn.onrender.com'}/api/isolated-dwn/${spaceId}`,
+        dwnIsolation: 'single-user',
+        dwnMode: 'production-remote-dwn'
+      },
+      profile: {
+        ...((currentUsers[email] || {}).profile || {}),
+        avatar: '',
+        avatarRecordId: `profile-picture:${did}`,
+        avatarSync: 'missing'
+      }
+    };
+
+    writeJson(global.usersFile, currentUsers);
+
+    console.log('[auth] local DWN user provisioned:', email, spaceId);
+  } catch (localProvisionError) {
+    console.error('[auth] local DWN user provision failed:', localProvisionError.message);
+    return res.status(500).json({
+      error: 'DWN user provisioning failed',
+      details: localProvisionError.message
+    });
+  }
+
   return res.status(201).json({
     message: 'Registered successfully',
     id,
     email,
     name: displayName,
     did,
-    spaceId: `milan-${id}`,
-    real: false
+    spaceId,
+    real: true
   });
 }));
 

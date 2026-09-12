@@ -26,6 +26,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const realDwnNodeClient = require('./realDwnNodeClient');
 
 let _sdk = null;
 let _dids = null;
@@ -69,34 +70,79 @@ function nodeStoreRoot(spaceId) {
   return path.join(persistRoot(), safeName(spaceId));
 }
 
-async function resolveUserDid({ dids }, { spaceId, knownDidUri }) {
+async function resolveUserDid({ dids }, { spaceId, knownDidUri, createIfMissing = false }) {
   const { DidKey } = dids;
   const portableFile = path.join(nodeStoreRoot(spaceId), 'portable-did.json');
 
-  try {
-    if (fs.existsSync(portableFile)) {
-      const portable = JSON.parse(fs.readFileSync(portableFile, 'utf8'));
-      const didApi = await DidKey.import({ portableDid: portable });
-      if (knownDidUri && didApi.uri !== knownDidUri) {
-        throw new Error(`Persisted DWN DID mismatch: expected ${knownDidUri}, found ${didApi.uri}`);
-      }
-      return await asSignable(didApi);
+  if (fs.existsSync(portableFile)) {
+    const portable = JSON.parse(fs.readFileSync(portableFile, 'utf8'));
+    const didApi = await DidKey.import({ portableDid: portable });
+
+    if (knownDidUri && didApi.uri !== knownDidUri) {
+      throw new Error(
+        `Persisted DWN DID mismatch: expected ${knownDidUri}, found ${didApi.uri}`
+      );
     }
-  } catch (err) {
-    if (knownDidUri && /Persisted DWN DID mismatch:/.test(err.message)) throw err;
+
+    return await asSignable(didApi);
   }
 
-  // A user-backed DWN must never silently receive a replacement DID.
-  // Without the original portable identity, fail closed instead of
-  // creating a new tenant and making the user's existing records orphaned.
-  if (knownDidUri) {
-    throw new Error('Persisted DWN identity is unavailable for the known user DID.');
+  if (!createIfMissing) {
+    throw new Error(
+      knownDidUri
+        ? 'Persisted DWN identity is unavailable for the known user DID.'
+        : 'DWN identity is not persisted.'
+    );
   }
 
   const didApi = await DidKey.create();
   const portable = await didApi.export();
   persistPortable(portableFile, portable);
+
+  if (knownDidUri && didApi.uri !== knownDidUri) {
+    throw new Error(
+      `New DWN DID mismatch: expected ${knownDidUri}, found ${didApi.uri}`
+    );
+  }
+
   return await asSignable(didApi);
+}
+
+async function createUserIdentity({ spaceId }) {
+  if (!enabled()) {
+    throw new Error('Real DWN engine is disabled.');
+  }
+
+  if (!spaceId) {
+    throw new Error('Missing DWN spaceId.');
+  }
+
+  const { dids } = await loadSdk();
+  const { DidKey } = dids;
+  const portableFile = path.join(nodeStoreRoot(spaceId), 'portable-did.json');
+
+  fs.mkdirSync(nodeStoreRoot(spaceId), { recursive: true });
+
+  if (fs.existsSync(portableFile)) {
+    const portable = JSON.parse(fs.readFileSync(portableFile, 'utf8'));
+    const didApi = await DidKey.import({ portableDid: portable });
+
+    return {
+      did: didApi.uri,
+      spaceId,
+      real: true
+    };
+  }
+
+  const didApi = await DidKey.create();
+  const portable = await didApi.export();
+  persistPortable(portableFile, portable);
+
+  return {
+    did: didApi.uri,
+    spaceId,
+    real: true
+  };
 }
 
 function persistPortable(file, portable) {
@@ -148,7 +194,10 @@ async function openNode({ spaceId, rawSeedHex, knownDidUri }) {
       });
 
       const dwn = await Dwn.create({ messageStore, dataStore, eventLog, resumableTaskStore });
-      const { uri, signer, didApi } = await resolveUserDid({ dids }, { spaceId, rawSeedHex, knownDidUri });
+      const { uri, signer, didApi } = await resolveUserDid(
+        { dids },
+        { spaceId, rawSeedHex, knownDidUri, createIfMissing: !knownDidUri }
+      );
 
       const node = {
         spaceId,
@@ -178,6 +227,83 @@ function toBytes(value) {
   if (value instanceof Uint8Array) return value;
   if (typeof value === 'string') return new TextEncoder().encode(value);
   return new TextEncoder().encode(JSON.stringify(value));
+}
+
+async function remoteDwnRequest({ message, target, encodedData }) {
+  const endpoint = String(
+    process.env.REAL_DWN_NODE_ENDPOINT ||
+    'https://mini-dwn.onrender.com'
+  ).replace(/\/+$/, '');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+
+  const apiKey = String(
+    process.env.REAL_DWN_NODE_API_KEY ||
+    'milan-v49-embedded-production-dwn-key'
+  ).trim();
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+  const body = {
+    jsonrpc: '2.0',
+    id: `milan-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+    method: 'dwn.processMessage',
+    params: {
+      target,
+      message
+    }
+  };
+
+  if (encodedData) body.params.encodedData = encodedData;
+
+  const response = await fetch(`${endpoint}/json-rpc`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  });
+
+  const text = await response.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (_) {
+    throw new Error(`Remote DWN returned non-JSON (${response.status})`);
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `Remote DWN HTTP ${response.status}: ${
+        json?.error?.message || json?.error || text.slice(0, 300)
+      }`
+    );
+  }
+
+  if (json?.error) {
+    throw new Error(
+      `Remote DWN RPC error: ${
+        json.error.message || JSON.stringify(json.error)
+      }`
+    );
+  }
+
+  return json?.result?.reply || json?.result || json;
+}
+
+function bytesToBase64Url(bytes) {
+  return Buffer.from(bytes).toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function base64UrlToBytes(value) {
+  const b64 = String(value)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+    .padEnd(Math.ceil(String(value).length / 4) * 4, '=');
+  return Buffer.from(b64, 'base64');
 }
 
 async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
@@ -211,19 +337,63 @@ async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
     if (record.id) writeOptions.recordId = String(record.id);
 
     const rw = await RecordsWrite.create(writeOptions);
-    const res = await node.dwn.processMessage(node.tenantDid, rw.message, {
-      dataStream: DataStream.fromBytes(bytes)
-    });
+    const encodedData = bytesToBase64Url(bytes);
 
-    const status = res.status && res.status.code;
-    return {
-      ok: status === 202 || status === 200,
-      status,
-      dwnRecordId: rw.message && rw.message.recordId,
-      tenantDid: node.tenantDid,
-      spaceId,
-      detail: res.status && res.status.detail
-    };
+    try {
+      const remote = await remoteDwnRequest({
+        target: node.tenantDid,
+        message: rw.message,
+        encodedData
+      });
+
+      const status = remote?.status?.code;
+      if (status === 202 || status === 200) {
+        return {
+          ok: true,
+          status,
+          dwnRecordId: rw.message && rw.message.recordId,
+          tenantDid: node.tenantDid,
+          spaceId,
+          remote: true,
+          detail: remote?.status?.detail
+        };
+      }
+
+      return {
+        ok: false,
+        status,
+        reason: 'remote-write-rejected',
+        tenantDid: node.tenantDid,
+        spaceId,
+        detail: remote?.status?.detail
+      };
+    } catch (remoteErr) {
+      console.warn('[real-dwn] remote RecordsWrite failed:', remoteErr.message);
+
+      // DP persistence must live in the user's persistent DWN datastore.
+      // If the remote transport is unavailable, use the already-opened
+      // per-user DWN node so the record is still written to its DATASTORE.
+      console.warn(
+        '[real-dwn] remote RecordsWrite unavailable; writing to persistent user DWN node:',
+        remoteErr.message
+      );
+
+      const res = await node.dwn.processMessage(node.tenantDid, rw.message, {
+        dataStream: DataStream.fromBytes(bytes)
+      });
+
+      const status = res.status && res.status.code;
+      return {
+        ok: status === 202 || status === 200,
+        status,
+        dwnRecordId: rw.message && rw.message.recordId,
+        tenantDid: node.tenantDid,
+        spaceId,
+        remote: false,
+        detail: res.status && res.status.detail,
+        remoteError: remoteErr.message
+      };
+    }
   } catch (err) {
     return { ok: false, reason: 'write-failed', error: err.message };
   }
@@ -244,7 +414,28 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       filter: { recordId: String(recordId) }
     });
 
-    const response = await node.dwn.processMessage(node.tenantDid, read.message);
+    let response;
+
+    try {
+      response = await remoteDwnRequest({
+        target: node.tenantDid,
+        message: read.message
+      });
+    } catch (remoteErr) {
+      console.warn('[real-dwn] remote RecordsRead failed:', remoteErr.message);
+
+      if (realDwnNodeClient.remoteOnly()) {
+        return {
+          ok: false,
+          reason: 'remote-read-failed',
+          remote: true,
+          remoteError: remoteErr.message
+        };
+      }
+
+      response = await node.dwn.processMessage(node.tenantDid, read.message);
+    }
+
     if (response?.status?.code !== 200) {
       return {
         ok: false,
@@ -253,16 +444,14 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       };
     }
 
-    const entry = response.entry;
+    const entry = response.entry || response.record;
     if (!entry) return { ok: false, status: 404, reason: 'record-not-found' };
 
     let bytes = null;
-    if (entry.encodedData) {
-      const base64 = String(entry.encodedData)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-        .padEnd(Math.ceil(String(entry.encodedData).length / 4) * 4, '=');
-      bytes = Buffer.from(base64, 'base64');
+    if (response.encodedData) {
+      bytes = base64UrlToBytes(response.encodedData);
+    } else if (entry.encodedData) {
+      bytes = base64UrlToBytes(entry.encodedData);
     } else if (entry.data) {
       bytes = Buffer.from(await DataStream.toBytes(entry.data));
     }
@@ -294,7 +483,28 @@ async function queryRecords({ spaceId, rawSeedHex, knownDidUri }, filter = {}) {
       ? filter
       : { dataFormat: 'application/json' };
     const rq = await RecordsQuery.create({ signer: node.signer, filter: effectiveFilter });
-    const res = await node.dwn.processMessage(node.tenantDid, rq.message);
+
+    let res;
+    try {
+      res = await remoteDwnRequest({
+        target: node.tenantDid,
+        message: rq.message
+      });
+    } catch (remoteErr) {
+      console.warn('[real-dwn] remote RecordsQuery failed:', remoteErr.message);
+
+      if (realDwnNodeClient.remoteOnly()) {
+        return {
+          ok: false,
+          reason: 'remote-query-failed',
+          remote: true,
+          remoteError: remoteErr.message
+        };
+      }
+
+      res = await node.dwn.processMessage(node.tenantDid, rq.message);
+    }
+
     return {
       ok: res.status && res.status.code === 200,
       status: res.status && res.status.code,
@@ -358,6 +568,7 @@ async function engineStatus() {
 }
 
 module.exports = {
+  createUserIdentity,
   enabled,
   setPersistRoot,
   openNode,
