@@ -368,6 +368,52 @@
     });
   }
 
+  async function restoreAvatarFromDwn() {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + token,
+          Accept: "application/json"
+        },
+        cache: "no-store"
+      });
+
+      if (!response.ok) return;
+
+      const profile = await response.json();
+      const avatar = String(
+        profile?.avatar ||
+        profile?.profile?.avatar ||
+        ""
+      ).trim();
+
+      if (!avatar.startsWith("data:image/")) return;
+
+      ["myAvatar", "composerAvatar"].forEach(id => {
+        setAvatar(id, avatar);
+      });
+
+      const preview = $("editProfilePhotoPreview");
+      if (preview) {
+        preview.src = avatar;
+        preview.style.display = "block";
+      }
+
+      if (window.me) {
+        window.me.profile = {
+          ...(window.me.profile || {}),
+          avatar
+        };
+      }
+    } catch (error) {
+      console.warn("[MILAN] persistent DWN avatar restore failed:", error.message);
+    }
+  }
+
   function init() {
     // MILAN ONE: DP is restored only from syncLiveProfileIdentity().
     let photoInput = $("editProfilePhoto");
@@ -387,7 +433,8 @@
       }
     }
 
-    syncLiveProfileIdentity().finally(() => {
+    syncLiveProfileIdentity().finally(async () => {
+      await restoreAvatarFromDwn();
       installLogout();
     });
   }

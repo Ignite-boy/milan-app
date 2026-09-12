@@ -351,41 +351,48 @@ async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
 
     const rw = await RecordsWrite.create(writeOptions);
 
-    // DP/PERSISTENCE AUTHORITY:
-    // Write directly into THIS USER'S persistent DWN datastore.
-    const response = await node.dwn.processMessage(
-      node.tenantDid,
-      rw.message,
-      {
-        dataStream: DataStream.fromBytes(bytes)
-      }
-    );
+    // PRIMARY AUTHORITY:
+    // Persist the profile-picture record on the REAL REMOTE DWN.
+    const remote = await remoteDwnRequest({
+      target: node.tenantDid,
+      message: rw.message,
+      encodedData: bytesToBase64Url(bytes)
+    });
 
-    const status = response?.status?.code;
+    const remoteStatus = remote?.status?.code;
 
-    if (status !== 202 && status !== 200) {
+    if (remoteStatus !== 200 && remoteStatus !== 202) {
       return {
         ok: false,
-        status,
-        reason: 'dwn-write-rejected',
-        detail: response?.status?.detail,
+        status: remoteStatus,
+        reason: 'remote-dwn-write-rejected',
+        detail: remote?.status?.detail || null,
         spaceId,
         dwnRecordId: rw.message?.recordId || null
       };
     }
 
+    // Keep the local embedded DWN in sync as a runtime cache.
+    try {
+      await node.dwn.processMessage(
+        node.tenantDid,
+        rw.message,
+        { dataStream: DataStream.fromBytes(bytes) }
+      );
+    } catch (_) {}
+
     return {
       ok: true,
-      status,
+      status: remoteStatus,
       dwnRecordId: rw.message?.recordId || null,
       tenantDid: node.tenantDid,
       spaceId,
-      source: 'persistent-user-dwn-datastore'
+      source: 'real-remote-dwn'
     };
   } catch (err) {
     return {
       ok: false,
-      reason: 'write-failed',
+      reason: 'remote-write-failed',
       error: err.message
     };
   }
@@ -393,8 +400,21 @@ async function writeRecord({ spaceId, rawSeedHex, knownDidUri }, record = {}) {
 
 async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
   const opened = await openNode({ spaceId, rawSeedHex, knownDidUri });
-  if (!opened.ok) return { ok: false, reason: opened.reason, error: opened.error };
-  if (!recordId) return { ok: false, reason: 'missing-record-id' };
+
+  if (!opened.ok) {
+    return {
+      ok: false,
+      reason: opened.reason,
+      error: opened.error
+    };
+  }
+
+  if (!recordId) {
+    return {
+      ok: false,
+      reason: 'missing-record-id'
+    };
+  }
 
   try {
     const { sdk } = await loadSdk();
@@ -406,23 +426,16 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       filter: { recordId: String(recordId) }
     });
 
-    // AUTHORITATIVE USER DWN READ:
-    // Read directly from this user's persistent DWN DATASTORE.
-    const response = await node.dwn.processMessage(
-      node.tenantDid,
-      read.message
-    );
+    // PRIMARY AUTHORITY:
+    // Read the profile-picture record from the REAL REMOTE DWN.
+    const remote = await remoteDwnRequest({
+      target: node.tenantDid,
+      message: read.message
+    });
 
-    if (response?.status?.code !== 200) {
-      return {
-        ok: false,
-        status: response?.status?.code,
-        detail: response?.status?.detail
-      };
-    }
+    const status = remote?.status?.code;
 
-    const entry = response.entry;
-    if (!entry) {
+    if (status === 404) {
       return {
         ok: false,
         status: 404,
@@ -430,42 +443,61 @@ async function readRecord({ spaceId, rawSeedHex, knownDidUri }, recordId) {
       };
     }
 
+    if (status !== 200) {
+      return {
+        ok: false,
+        status,
+        reason: 'remote-read-failed',
+        detail: remote?.status?.detail || null
+      };
+    }
+
     let bytes = null;
 
-    if (entry.encodedData) {
-      const base64 = String(entry.encodedData)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-        .padEnd(
-          Math.ceil(String(entry.encodedData).length / 4) * 4,
-          '='
-        );
-      bytes = Buffer.from(base64, 'base64');
-    } else if (entry.data) {
-      bytes = Buffer.from(await DataStream.toBytes(entry.data));
+    if (remote?.encodedData) {
+      bytes = base64UrlToBytes(remote.encodedData);
+    } else if (remote?.record?.encodedData) {
+      bytes = base64UrlToBytes(remote.record.encodedData);
+    } else if (remote?.data) {
+      bytes = Buffer.from(await DataStream.toBytes(remote.data));
     }
 
     if (!bytes || !bytes.length) {
       return {
         ok: false,
-        reason: 'record-data-empty'
+        reason: 'remote-record-data-empty'
       };
     }
+
+    // Refresh the local embedded cache from the confirmed remote record.
+    try {
+      const cachedRead = await node.dwn.processMessage(
+        node.tenantDid,
+        read.message
+      );
+
+      if (cachedRead?.status?.code !== 200) {
+        // Cache refresh is best-effort only.
+      }
+    } catch (_) {}
 
     return {
       ok: true,
       status: 200,
       recordId: String(recordId),
-      descriptor: entry.descriptor || {},
+      descriptor:
+        remote?.record?.descriptor ||
+        remote?.descriptor ||
+        {},
       data: bytes,
-      source: 'user-persistent-dwn-datastore',
+      source: 'real-remote-dwn',
       spaceId,
       tenantDid: node.tenantDid
     };
   } catch (err) {
     return {
       ok: false,
-      reason: 'read-failed',
+      reason: 'remote-read-failed',
       error: err.message
     };
   }

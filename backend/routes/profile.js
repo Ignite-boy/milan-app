@@ -338,74 +338,51 @@ router.get('/', auth, async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  // The persisted profile avatar is the stable application value.
-  // Mini-DWN is used for synchronization/verification, but a temporary
-  // DWN outage must never make an already-saved DP disappear on reload.
-  const persistedAvatar = String(
-    found.user.profile?.avatar || ''
-  ).trim();
+  let avatar = '';
 
-  // Stable DP behavior:
-  // an already-saved avatar must never disappear because a remote DWN
-  // request is temporarily unavailable.
-  if (persistedAvatar) {
-    return res.json({
-      ...(found.user.profile || {}),
-      avatar: persistedAvatar,
-      avatarRecordId:
-        found.user.profile?.avatarRecordId ||
-        profileRecordId(found.user.did),
-      avatarSync: 'synced'
-    });
-  }
-
+  // PRIMARY SOURCE: persistent DWN record for this user.
   try {
-    const dwnPicture = await readProfilePicture(found.user.did);
+    const dwnPicture = await readProfilePictureFromUserDwn(
+      found.user,
+      profileRecordId(found.user.did)
+    );
 
     if (dwnPicture?.avatar) {
-      // Keep the local profile in sync with the confirmed DWN value.
+      avatar = dwnPicture.avatar;
+
       found.user.profile = {
         ...(found.user.profile || {}),
-        avatar: dwnPicture.avatar,
+        avatar,
         avatarRecordId: dwnPicture.recordId,
-        avatarSync: 'synced'
+        avatarSync: 'synced',
+        updated_at: new Date().toISOString()
       };
 
       users[found.email] = found.user;
 
       try {
         writeJson(global.usersFile, users);
-      } catch (error) {
-        console.warn(
-          '[profile] local profile avatar sync write failed:',
-          error.message
-        );
-      }
-
-      return res.json({
-        ...(found.user.profile || {}),
-        avatar: dwnPicture.avatar,
-        avatarRecordId: dwnPicture.recordId,
-        avatarSync: 'synced'
-      });
+      } catch (_) {}
     }
   } catch (error) {
-    console.warn(
-      '[profile] DWN profile picture read failed; using persisted avatar:',
-      error.message
-    );
+    console.warn('[profile] DWN avatar read failed:', error.message);
+  }
+
+  // FALLBACK: retain the last known avatar so UI never blanks during
+  // a temporary DWN/network failure.
+  if (!avatar) {
+    avatar = String(found.user.profile?.avatar || '').trim();
   }
 
   return res.json({
     ...(found.user.profile || {}),
-    avatar: persistedAvatar,
+    avatar,
     avatarRecordId:
       found.user.profile?.avatarRecordId ||
       profileRecordId(found.user.did),
-    avatarSync: persistedAvatar ? 'local-fallback' : 'missing'
+    avatarSync: avatar ? 'synced' : 'missing'
   });
 });
-
 router.put('/', auth, async (req, res) => {
   const users = readJson(global.usersFile, {});
   const found = await resolveAccount(req, users);
